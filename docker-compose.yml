@@ -1,0 +1,56 @@
+version: '3.8' # Puedes eliminar esta línea si lo deseas, como sugiere la advertencia.
+services:
+  # Servicio de la aplicación Laravel
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eemq-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+      # Estos son los volúmenes nombrados que solucionan el problema
+      - vendor:/var/www/vendor
+      - node_modules:/var/www/node_modules
+    networks:
+      - eemq-network
+
+  # Servidor web Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: eemq-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d/
+    networks:
+      - eemq-network
+
+  # Base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: eemq-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - eemq-network
+
+networks:
+  eemq-network:
+    driver: bridge
+
+# Aquí definimos los volúmenes nombrados
+volumes:
+  vendor:
+  node_modules:

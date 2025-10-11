@@ -1,0 +1,18 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+/docker
+
+# Dependencias
+node_modules
+vendor
+
+# Archivos de entorno y logs
+.env
+*.log
+/storage/logs
