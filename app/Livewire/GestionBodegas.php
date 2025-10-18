@@ -9,7 +9,13 @@ class GestionBodegas extends Component
     public $bodegas = [];
     public $isModalOpen = false;
     public $nombre;
-    public $tipo = 'Física'; // Default value
+    public $tipo = null;
+    public $showTipoDropdown = false;
+
+    public $tiposDisponibles = [
+        ['id' => 1, 'nombre' => 'Física'],
+        ['id' => 2, 'nombre' => 'Responsabilidad'],
+    ];
 
     public function mount()
     {
@@ -30,11 +36,25 @@ class GestionBodegas extends Component
     public function openModal()
     {
         $this->isModalOpen = true;
+        $this->showTipoDropdown = false;
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
+        $this->nombre = null;
+        $this->tipo = null;
+    }
+
+    public function selectTipo($tipo)
+    {
+        $this->tipo = $tipo;
+        $this->showTipoDropdown = false;
+    }
+
+    public function clearTipo()
+    {
+        $this->tipo = null;
     }
 
     public function saveBodega()

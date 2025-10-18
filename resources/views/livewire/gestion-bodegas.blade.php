@@ -62,14 +62,44 @@
                     <div class="space-y-6">
                         <div>
                             <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre de la Bodega</label>
-                            <input type="text" id="nombre" wire:model="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <input type="text" id="nombre" wire:model="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base">
                         </div>
                         <div>
-                            <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo</label>
-                            <select id="tipo" wire:model="tipo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option>Física</option>
-                                <option>Responsabilidad</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                            <div class="relative">
+                                @if($tipo)
+                                    <div class="flex items-center justify-between mt-1 w-full px-4 pr-4 py-3 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                                        <span>{{ $tipo }}</span>
+                                        <button type="button" wire:click.prevent="clearTipo" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">
+                                            ×
+                                        </button>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showTipoDropdown') }">
+                                        <input
+                                            type="text"
+                                            @click="open = true"
+                                            @click.outside="open = false"
+                                            readonly
+                                            class="mt-1 block w-full px-4 py-3 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-md shadow-sm cursor-pointer"
+                                            placeholder="Seleccionar tipo..."
+                                        >
+                                        <div x-show="open"
+                                             x-transition
+                                             @click.away="open = false"
+                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg">
+                                            <ul>
+                                                @foreach ($tiposDisponibles as $tipoItem)
+                                                    <li wire:click.prevent="selectTipo('{{ $tipoItem['nombre'] }}')"
+                                                        class="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors">
+                                                        {{ $tipoItem['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div class="mt-8 flex justify-end">

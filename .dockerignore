@@ -1,6 +1,7 @@
 # Git
 .git
 .gitignore
+.gitattributes
 
 # Docker
 .dockerignore
@@ -14,5 +15,25 @@ vendor
 
 # Archivos de entorno y logs
 .env
+.env.*
+!.env.example
 *.log
 /storage/logs
+/storage/*.key
+
+# Enlaces simbólicos
+public/storage
+
+# Archivos de desarrollo
+README.md
+README-DOCKER.md
+phpunit.xml
+.phpunit.result.cache
+tests/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
