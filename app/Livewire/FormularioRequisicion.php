@@ -39,18 +39,32 @@ class FormularioRequisicion extends Component
             ['id' => 0xC3, 'descripcion' => 'Cinta aislante', 'precio' => 3.25],
             ['id' => 0xD4, 'descripcion' => 'Guantes de seguridad', 'precio' => 8.50],
             ['id' => 0xE5, 'descripcion' => 'Fusibles de 15A', 'precio' => 1.25],
+            
         ];
         $this->productosSeleccionados = [];
+    }
+
+    private function normalizeString($string)
+    {
+        // Normalizar para búsqueda insensible a tildes y mayúsculas
+        $string = mb_strtolower($string, 'UTF-8');
+        $unwanted = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'Á' => 'a', 'É' => 'e', 'Í' => 'i', 'Ó' => 'o', 'Ú' => 'u',
+            'ñ' => 'n', 'Ñ' => 'n'
+        ];
+        return strtr($string, $unwanted);
     }
 
     public function getOrigenResultsProperty()
     {
         $results = [];
-        
+        $search = trim($this->searchOrigen);
+
         // Always add bodegas first
         foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchOrigen) || 
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
+            if (empty($search) ||
+                str_contains($this->normalizeString($bodega['nombre']), $this->normalizeString($search))) {
                 $results[] = [
                     'id' => 'B' . $bodega['id'],
                     'nombre' => $bodega['nombre'],
@@ -61,8 +75,8 @@ class FormularioRequisicion extends Component
 
         // Then add empleados
         foreach ($this->empleados as $empleado) {
-            if (empty($this->searchOrigen) || 
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchOrigen))) {
+            if (empty($search) ||
+                str_contains($this->normalizeString($empleado['nombre']), $this->normalizeString($search))) {
                 $results[] = [
                     'id' => 'E' . $empleado['id'],
                     'nombre' => $empleado['nombre'],
@@ -77,11 +91,12 @@ class FormularioRequisicion extends Component
     public function getDestinoResultsProperty()
     {
         $results = [];
-        
+        $search = trim($this->searchDestino);
+
         // Always add bodegas first
         foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchDestino) || 
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
+            if (empty($search) ||
+                str_contains($this->normalizeString($bodega['nombre']), $this->normalizeString($search))) {
                 $results[] = [
                     'id' => 'B' . $bodega['id'],
                     'nombre' => $bodega['nombre'],
@@ -92,8 +107,8 @@ class FormularioRequisicion extends Component
 
         // Then add empleados
         foreach ($this->empleados as $empleado) {
-            if (empty($this->searchDestino) || 
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
+            if (empty($search) ||
+                str_contains($this->normalizeString($empleado['nombre']), $this->normalizeString($search))) {
                 $results[] = [
                     'id' => 'E' . $empleado['id'],
                     'nombre' => $empleado['nombre'],
@@ -167,20 +182,25 @@ class FormularioRequisicion extends Component
 
     public function getProductoResultsProperty()
     {
-        if (empty($this->searchProducto)) {
-            return $this->productos;
+        if (empty(trim($this->searchProducto))) {
+            return [];
         }
 
-        $search = strtolower(trim($this->searchProducto));
+        $search = trim($this->searchProducto);
+        $searchNormalized = $this->normalizeString($search);
+        $searchClean = str_replace(['0x', '#', ' '], '', $searchNormalized);
 
-        return array_filter($this->productos, function($producto) use ($search) {
+        return array_filter($this->productos, function($producto) use ($searchNormalized, $searchClean) {
             // Convertir el ID a hexadecimal para la comparación
             $idHex = strtolower(dechex($producto['id']));
 
-            // Buscar tanto en el ID hexadecimal como en la descripción
-            return str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
-                   str_contains((string)$producto['id'], $search);
+            // Normalizar la descripción
+            $descripcionNormalized = $this->normalizeString($producto['descripcion']);
+
+            // Buscar en descripción, ID hexadecimal, o ID decimal
+            return str_contains($descripcionNormalized, $searchNormalized) ||
+                   str_contains($idHex, $searchClean) ||
+                   str_contains((string)$producto['id'], $searchClean);
         });
     }
 

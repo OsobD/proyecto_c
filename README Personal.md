@@ -1,28 +1,14 @@
-# 1. Clonar
 git clone <url>
 cd eemq_preliminar
+git checkout <rama>              # si es necesario
+composer install                 # instala dependencias PHP
+cp .env.docker .env             # configura entorno
+docker-compose build --no-cache # construye contenedores
+docker-compose up -d            # levanta contenedores
 
-# 2. Composer (dependencias PHP/Laravel)
-composer install
+# Dentro del contenedor, instala dependencias JS y compila:
+docker exec -it eemq-app npm install
+docker exec -it eemq-app npm run build
 
-# 3. NPM (dependencias JavaScript)
-npm install
-
-# 4. Alpine.js
-npm install alpinejs
-# (Luego agregar import en resources/js/app.js como mostré arriba)
-
-# 5. Configurar entorno
-cp .env.example .env
-php artisan key:generate
-
-# 6. Base de datos
-php artisan migrate
-
-# 7. Build (desarrollo - deja corriendo)
-npm run dev
-# O para producción:
-npm run build
-
-# 8. Servidor (en otra terminal)
-php artisan serve
+# Si necesitas migrar:
+docker exec -it eemq-app php artisan migrate

@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="{{ route('requisiciones') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('requisiciones') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Requisiciones</a>
+                    <a href="{{ route('requisiciones') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('requisiciones') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Traslados</a>
                     <a href="{{ route('devoluciones') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('devoluciones') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Devoluciones</a>
                     <a href="{{ route('bodegas') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bodegas') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bodegas</a>
                     <a href="{{ route('productos') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('productos') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Productos</a>

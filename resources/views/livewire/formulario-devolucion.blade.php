@@ -18,28 +18,29 @@
                                 </button>
                             </div>
                         @else
-                            <div class="relative" x-data="{ open: @entangle('showOrigenDropdown') }">
+                            <div class="relative" x-data="{ focused: false }">
                                 <input
                                     type="text"
                                     wire:model.live.debounce.300ms="searchOrigen"
-                                    @click="open = true"
-                                    @click.outside="open = false"
+                                    @focus="focused = true"
+                                    @blur="setTimeout(() => focused = false, 200)"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
                                     placeholder="Buscar origen..."
                                 >
-                                <div x-show="open"
-                                     x-transition
-                                     @click.away="open = false"
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                    <ul>
-                                        @foreach ($this->origenResults as $result)
-                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
-                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre'] }} ({{ $result['tipo'] }})
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
+                                @if(count($this->origenResults) > 0)
+                                    <div x-show="focused"
+                                         x-transition
+                                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                        <ul>
+                                            @foreach ($this->origenResults as $result)
+                                                <li wire:click="selectOrigen('{{ $result['id'] }}', '{{ addslashes($result['nombre']) }}', '{{ $result['tipo'] }}')"
+                                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                    {{ $result['nombre'] }} ({{ $result['tipo'] }})
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -57,28 +58,29 @@
                                 </button>
                             </div>
                         @else
-                            <div class="relative" x-data="{ open: @entangle('showDestinoDropdown') }">
+                            <div class="relative" x-data="{ focused: false }">
                                 <input
                                     type="text"
                                     wire:model.live.debounce.300ms="searchDestino"
-                                    @click="open = true"
-                                    @click.outside="open = false"
+                                    @focus="focused = true"
+                                    @blur="setTimeout(() => focused = false, 200)"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
                                     placeholder="Buscar destino..."
                                 >
-                                <div x-show="open"
-                                     x-transition
-                                     @click.away="open = false"
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                    <ul>
-                                        @foreach ($this->destinoResults as $result)
-                                            <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
-                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre'] }} ({{ $result['tipo'] }})
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
+                                @if(count($this->destinoResults) > 0)
+                                    <div x-show="focused"
+                                         x-transition
+                                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                        <ul>
+                                            @foreach ($this->destinoResults as $result)
+                                                <li wire:click="selectDestino('{{ $result['id'] }}', '{{ addslashes($result['nombre']) }}', '{{ $result['tipo'] }}')"
+                                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                    {{ $result['nombre'] }} ({{ $result['tipo'] }})
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -100,31 +102,32 @@
             {{-- Búsqueda de productos --}}
             <div class="mt-8 pt-4 border-t border-gray-200">
                 <label for="searchProducto" class="block text-sm font-medium text-gray-700">Buscar producto:</label>
-                <div class="relative" x-data="{ open: @entangle('showProductoDropdown') }">
+                <div class="relative" x-data="{ focused: false }">
                     <input
                         type="text"
                         id="searchProducto"
                         wire:model.live.debounce.300ms="searchProducto"
-                        @click="open = true"
-                        @click.outside="open = false"
+                        @focus="focused = true"
+                        @blur="setTimeout(() => focused = false, 200)"
                         wire:keydown.enter.prevent="seleccionarPrimerResultado"
                         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
                         placeholder="Buscar por ID (0xA1) o descripción..."
                     >
-                    <div x-show="open"
-                         x-transition
-                         @click.away="open = false"
-                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
-                        <ul>
-                            @foreach ($this->productoResults as $producto)
-                                <li wire:click.prevent="selectProducto({{ $producto['id'] }})"
-                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
-                                    <span class="font-mono text-gray-500 mr-2">0x{{ strtoupper(dechex($producto['id'])) }}</span>
-                                    <span>{{ $producto['descripcion'] }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
+                    @if(count($this->productoResults) > 0)
+                        <div x-show="focused"
+                             x-transition
+                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                            <ul>
+                                @foreach ($this->productoResults as $producto)
+                                    <li wire:click="selectProducto({{ $producto['id'] }})"
+                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
+                                        <span class="font-mono text-gray-500 mr-2">0x{{ strtoupper(dechex($producto['id'])) }}</span>
+                                        <span>{{ $producto['descripcion'] }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                 </div>
             </div>
 
