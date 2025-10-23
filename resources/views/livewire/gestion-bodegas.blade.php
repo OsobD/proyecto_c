@@ -51,67 +51,120 @@
     </div>
 
     {{-- Modal Form --}}
-    @if ($isModalOpen)
-        <div class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
-                <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="text-xl font-semibold text-gray-800">Crear/Editar Bodega</h3>
-                    <button wire:click="closeModal()" class="text-gray-500 hover:text-gray-800">&times;</button>
-                </div>
-                <form wire:submit.prevent="saveBodega" class="mt-4">
-                    <div class="space-y-6">
-                        <div>
-                            <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre de la Bodega</label>
-                            <input type="text" id="nombre" wire:model="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                            <div class="relative">
-                                @if($tipo)
-                                    <div class="flex items-center justify-between mt-1 w-full px-4 pr-4 py-3 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                        <span>{{ $tipo }}</span>
-                                        <button type="button" wire:click.prevent="clearTipo" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">
-                                            ×
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="relative" x-data="{ open: @entangle('showTipoDropdown') }">
-                                        <input
-                                            type="text"
-                                            @click="open = true"
-                                            @click.outside="open = false"
-                                            readonly
-                                            class="mt-1 block w-full px-4 py-3 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-md shadow-sm cursor-pointer"
-                                            placeholder="Seleccionar tipo..."
-                                        >
-                                        <div x-show="open"
-                                             x-transition
-                                             @click.away="open = false"
-                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg">
-                                            <ul>
-                                                @foreach ($tiposDisponibles as $tipoItem)
-                                                    <li wire:click.prevent="selectTipo('{{ $tipoItem['nombre'] }}')"
-                                                        class="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors">
-                                                        {{ $tipoItem['nombre'] }}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-8 flex justify-end">
-                        <button type="button" wire:click="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg mr-2">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            Guardar
-                        </button>
-                    </div>
-                </form>
+    <div x-data="{
+            show: @entangle('isModalOpen'),
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModal">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-semibold text-gray-800">Crear/Editar Bodega</h3>
+                <button wire:click="closeModal()" class="text-gray-500 hover:text-gray-800">&times;</button>
             </div>
+            <form wire:submit.prevent="saveBodega" class="mt-4">
+                <div class="space-y-6">
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre de la Bodega</label>
+                        <input type="text" id="nombre" wire:model="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                        <div class="relative">
+                            @if($tipo)
+                                <div class="flex items-center justify-between mt-1 w-full px-4 pr-4 py-3 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                                    <span>{{ $tipo }}</span>
+                                    <button type="button" wire:click.prevent="clearTipo" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">
+                                        ×
+                                    </button>
+                                </div>
+                            @else
+                                <div class="relative" x-data="{ open: @entangle('showTipoDropdown') }">
+                                    <input
+                                        type="text"
+                                        @click="open = true"
+                                        @click.outside="open = false"
+                                        readonly
+                                        class="mt-1 block w-full px-4 py-3 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-md shadow-sm cursor-pointer"
+                                        placeholder="Seleccionar tipo..."
+                                    >
+                                    <div x-show="open"
+                                         x-transition
+                                         @click.away="open = false"
+                                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg">
+                                        <ul>
+                                            @foreach ($tiposDisponibles as $tipoItem)
+                                                <li wire:click.prevent="selectTipo('{{ $tipoItem['nombre'] }}')"
+                                                    class="px-4 py-3 cursor-pointer hover:bg-indigo-50 transition-colors">
+                                                    {{ $tipoItem['nombre'] }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end">
+                    <button type="button" wire:click="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg mr-2">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                        Guardar
+                    </button>
+                </div>
+            </form>
         </div>
-    @endif
+    </div>
+
+    <style>
+        /* Animaciones de entrada */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Animaciones de salida */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+        }
+    </style>
 </div>

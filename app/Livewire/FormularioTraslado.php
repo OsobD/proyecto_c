@@ -4,9 +4,8 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
-class FormularioRequisicion extends Component
+class FormularioTraslado extends Component
 {
-    public $empleados = [];
     public $bodegas = [];
     public $productos = [];
     public $searchOrigen = '';
@@ -18,6 +17,8 @@ class FormularioRequisicion extends Component
     public $showDestinoDropdown = false;
     public $showProductoDropdown = false;
     public $productosSeleccionados = [];
+    public $correlativo = '';
+    public $observaciones = '';
 
     public function mount()
     {
@@ -27,12 +28,6 @@ class FormularioRequisicion extends Component
             ['id' => 3, 'nombre' => 'Bodega Sur'],
         ];
 
-        $this->empleados = [
-            ['id' => 1, 'nombre' => 'Juan Pérez'],
-            ['id' => 2, 'nombre' => 'María García'],
-            ['id' => 3, 'nombre' => 'Carlos López'],
-        ];
-
         $this->productos = [
             ['id' => 0xA1, 'descripcion' => 'Tornillos de acero inoxidable', 'precio' => 0.50],
             ['id' => 0xB2, 'descripcion' => 'Abrazaderas de metal', 'precio' => 2.75],
@@ -40,6 +35,7 @@ class FormularioRequisicion extends Component
             ['id' => 0xD4, 'descripcion' => 'Guantes de seguridad', 'precio' => 8.50],
             ['id' => 0xE5, 'descripcion' => 'Fusibles de 15A', 'precio' => 1.25],
         ];
+
         $this->productosSeleccionados = [];
     }
 
@@ -47,7 +43,7 @@ class FormularioRequisicion extends Component
     {
         $results = [];
 
-        // Only show bodegas as origin (Bodega -> Tarjeta)
+        // Only show bodegas for traslados (Bodega -> Bodega)
         foreach ($this->bodegas as $bodega) {
             if (empty($this->searchOrigen) ||
                 str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
@@ -66,14 +62,14 @@ class FormularioRequisicion extends Component
     {
         $results = [];
 
-        // Only show empleados/tarjetas as destination (Bodega -> Tarjeta)
-        foreach ($this->empleados as $empleado) {
+        // Only show bodegas for traslados (Bodega -> Bodega)
+        foreach ($this->bodegas as $bodega) {
             if (empty($this->searchDestino) ||
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
                 $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Tarjeta'
+                    'id' => 'B' . $bodega['id'],
+                    'nombre' => $bodega['nombre'],
+                    'tipo' => 'Bodega'
                 ];
             }
         }
@@ -201,6 +197,6 @@ class FormularioRequisicion extends Component
 
     public function render()
     {
-        return view('livewire.formulario-requisicion');
+        return view('livewire.formulario-traslado');
     }
 }

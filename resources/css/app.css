@@ -9,3 +9,8 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Alpine.js x-cloak - Oculta elementos hasta que Alpine esté listo */
+[x-cloak] {
+    display: none !important;
+}

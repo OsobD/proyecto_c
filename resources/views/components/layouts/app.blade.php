@@ -17,11 +17,79 @@
                 </div>
 
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="{{ route('requisiciones') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('requisiciones') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Traslados</a>
-                    <a href="{{ route('devoluciones') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('devoluciones') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Devoluciones</a>
+                    {{-- Dropdown de Compras --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['compras', 'compras.*']) ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }} flex items-center">
+                            Compras
+                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-cloak
+                             x-transition
+                             class="absolute left-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                            <a href="{{ route('compras') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('compras') && !request()->routeIs('compras.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Inicio
+                            </a>
+                            <a href="{{ route('compras.nueva') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('compras.nueva') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Nueva Compra
+                            </a>
+                            <a href="{{ route('compras.historial') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('compras.historial') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Historial
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Dropdown de Traslados --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['traslados', 'traslados.*', 'requisiciones', 'devoluciones']) ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }} flex items-center">
+                            Traslados
+                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-cloak
+                             x-transition
+                             class="absolute left-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                            <a href="{{ route('traslados') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Inicio
+                            </a>
+                            <a href="{{ route('requisiciones') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('requisiciones') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Nueva Requisición
+                            </a>
+                            <a href="{{ route('devoluciones') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('devoluciones') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Nueva Devolución
+                            </a>
+                            <a href="{{ route('traslados.historial') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('traslados.historial') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Historial
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Dropdown de Productos --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['productos', 'productos.*']) ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }} flex items-center">
+                            Productos
+                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-cloak
+                             x-transition
+                             class="absolute left-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                            <a href="{{ route('productos') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('productos') && !request()->routeIs('productos.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Gestión de Productos
+                            </a>
+                            <a href="{{ route('productos.categorias') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('productos.categorias') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Gestión de Categorías
+                            </a>
+                        </div>
+                    </div>
+
                     <a href="{{ route('bodegas') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bodegas') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bodegas</a>
-                    <a href="{{ route('productos') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('productos') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Productos</a>
-                    <a href="{{ route('compras.nueva') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('compras.nueva') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Registrar Compra</a>
                     <a href="{{ route('usuarios') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('usuarios') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Usuarios</a>
                     <a href="{{ route('proveedores') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('proveedores') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Proveedores</a>
                     <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bitácora</a>
@@ -48,6 +116,5 @@
     </main>
 
     @livewireScripts
-    @vite('resources/js/app.js')
 </body>
 </html>

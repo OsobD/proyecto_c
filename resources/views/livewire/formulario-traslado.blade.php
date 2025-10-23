@@ -2,18 +2,18 @@
     {{-- Breadcrumbs --}}
     <x-breadcrumbs :items="[
         ['label' => 'Inicio', 'url' => '/', 'icon' => true],
-        ['label' => 'Traslados', 'url' => '/traslados'],
-        ['label' => 'Nueva Requisición'],
+        ['label' => 'Traslados', 'url' => route('traslados')],
+        ['label' => 'Nuevo Traslado'],
     ]" />
 
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Formulario de Requisición</h1>
+        <h1 class="text-2xl font-bold text-gray-800">Formulario de Traslado entre Bodegas</h1>
     </div>
 
     <div class="bg-white p-6 rounded-lg shadow-md">
         <form>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Selección de Bodega Origen --}}
+                {{-- Selección de Origen (Solo Bodegas) --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Bodega Origen:</label>
                     <div class="relative">
@@ -50,9 +50,9 @@
                     </div>
                 </div>
 
-                {{-- Selección de Tarjeta Destino --}}
+                {{-- Selección de Destino (Solo Bodegas) --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Tarjeta Destino (Empleado):</label>
+                    <label class="block text-sm font-medium text-gray-700">Bodega Destino:</label>
                     <div class="relative">
                         @if($selectedDestino)
                             <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
@@ -68,7 +68,7 @@
                                     wire:model.live.debounce.300ms="searchDestino"
                                     @click="open = true"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                                    placeholder="Buscar empleado/tarjeta..."
+                                    placeholder="Buscar bodega destino..."
                                 >
                                 <div x-show="open"
                                      x-transition
@@ -142,7 +142,7 @@
 
             {{-- Lista de Productos Seleccionados --}}
             <div class="mt-8">
-                <h2 class="text-lg font-semibold text-gray-800">Productos en la Requisición</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Productos a Trasladar</h2>
                 <div class="overflow-x-auto mt-4">
                     <table class="min-w-full bg-white">
                         <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -195,7 +195,7 @@
 
             <div class="mt-8 flex justify-end">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    Completar Requisición
+                    Completar Traslado
                 </button>
             </div>
         </form>
