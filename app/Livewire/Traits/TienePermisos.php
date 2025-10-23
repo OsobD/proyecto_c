@@ -2,23 +2,42 @@
 
 namespace App\Livewire\Traits;
 
+/**
+ * @trait TienePermisos
+ * @package App\Livewire\Traits
+ * @brief Trait para gestionar un sistema de permisos simulado basado en roles.
+ *
+ * Este trait proporciona métodos para verificar si un usuario tiene permiso para
+ * realizar ciertas acciones. Simula un usuario autenticado y define un conjunto
+ * de permisos para los roles 'admin', 'supervisor' y 'operador'. Está diseñado
+ * para ser utilizado en componentes de Livewire que requieren control de acceso.
+ */
 trait TienePermisos
 {
     /**
-     * Usuario simulado actual con su rol
-     * En producción, esto vendría de la sesión/auth
+     * @brief Obtiene el usuario simulado actual.
+     * En una aplicación real, esta información debería provenir del sistema de
+     * autenticación de Laravel (ej. `auth()->user()`).
+     *
+     * @return array Datos del usuario simulado.
      */
     public function getUsuarioActual()
     {
+        // Simulación del usuario actual. Roles posibles: 'admin', 'supervisor', 'operador'.
         return [
             'id' => 1,
             'nombre' => 'David Bautista',
-            'rol' => 'operador', // Roles: admin, supervisor, operador
+            'rol' => 'operador',
         ];
     }
 
     /**
-     * Verifica si el usuario tiene permiso para una acción
+     * @brief Verifica si el usuario actual tiene un permiso específico.
+     * Comprueba el rol del usuario contra una matriz de permisos predefinida.
+     * El rol 'admin' tiene acceso a todas las acciones ('*').
+     *
+     * @param string $accion El permiso a verificar (ej. 'compras.editar').
+     * @return bool `true` si el usuario tiene el permiso, `false` en caso contrario.
      */
     public function tienePermiso($accion)
     {
@@ -26,39 +45,30 @@ trait TienePermisos
         $rol = $usuario['rol'];
 
         $permisos = [
-            'admin' => ['*'], // Admin tiene todos los permisos
+            'admin' => ['*'],
             'supervisor' => [
-                'compras.ver',
-                'compras.crear',
-                'compras.editar',
-                'compras.desactivar',
-                'traslados.ver',
-                'traslados.crear',
-                'traslados.editar',
-                'traslados.desactivar',
-                'reportes.generar',
-                'reportes.exportar',
+                'compras.ver', 'compras.crear', 'compras.editar', 'compras.desactivar',
+                'traslados.ver', 'traslados.crear', 'traslados.editar', 'traslados.desactivar',
+                'reportes.generar', 'reportes.exportar',
             ],
             'operador' => [
-                'compras.ver',
-                'compras.crear',
-                'traslados.ver',
-                'traslados.crear',
+                'compras.ver', 'compras.crear',
+                'traslados.ver', 'traslados.crear',
                 'reportes.generar',
             ],
         ];
 
-        // Admin tiene todos los permisos
         if (isset($permisos[$rol]) && in_array('*', $permisos[$rol])) {
             return true;
         }
 
-        // Verificar si el rol tiene el permiso específico
         return isset($permisos[$rol]) && in_array($accion, $permisos[$rol]);
     }
 
     /**
-     * Verifica si el usuario es supervisor o admin
+     * @brief Comprueba si el rol del usuario actual es 'supervisor' o 'admin'.
+     *
+     * @return bool
      */
     public function esSupervisorOAdmin()
     {
@@ -67,7 +77,9 @@ trait TienePermisos
     }
 
     /**
-     * Verifica si el usuario es admin
+     * @brief Comprueba si el rol del usuario actual es 'admin'.
+     *
+     * @return bool
      */
     public function esAdmin()
     {
@@ -76,7 +88,12 @@ trait TienePermisos
     }
 
     /**
-     * Lanza un mensaje de error si no tiene permiso
+     * @brief Método de conveniencia para verificar un permiso y mostrar un mensaje de error.
+     * Si el usuario no tiene el permiso, muestra un mensaje flash de error y retorna `false`.
+     *
+     * @param string $accion El permiso a verificar.
+     * @param string|null $mensaje Mensaje de error personalizado.
+     * @return bool `true` si la verificación es exitosa, `false` si no tiene permiso.
      */
     public function verificarPermiso($accion, $mensaje = null)
     {

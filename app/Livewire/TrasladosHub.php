@@ -4,11 +4,43 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
+/**
+ * @class TrasladosHub
+ * @package App\Livewire
+ * @brief Componente principal para la gestión de traslados y movimientos de inventario.
+ *
+ * Este componente actúa como un panel de control para el módulo de traslados,
+ * mostrando estadísticas clave (requisiciones, traslados, devoluciones) y una
+ * lista de los movimientos más recientes. Actualmente, utiliza datos de ejemplo.
+ */
 class TrasladosHub extends Component
 {
+    /**
+     * @var array
+     * @brief Almacena estadísticas relevantes del módulo de traslados.
+     *
+     * Incluye el total de requisiciones, traslados y devoluciones del mes,
+     * así como el número de movimientos pendientes.
+     */
     public $estadisticas = [];
+
+    /**
+     * @var array
+     * @brief Almacena una lista de los traslados registrados recientemente.
+     *
+     * Cada traslado es un array con 'id', 'tipo', 'correlativo', 'origen',
+     * 'destino', 'fecha' y 'estado'.
+     */
     public $trasladosRecientes = [];
 
+    /**
+     * @brief Método que se ejecuta al inicializar el componente.
+     *
+     * Carga datos de ejemplo para las estadísticas y la lista de traslados
+     * recientes. En el futuro, debería obtener estos datos de la base de datos.
+     *
+     * @return void
+     */
     public function mount()
     {
         // Estadísticas simuladas
@@ -51,6 +83,11 @@ class TrasladosHub extends Component
         ];
     }
 
+    /**
+     * @brief Renderiza la vista del componente.
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
     public function render()
     {
         return view('livewire.traslados-hub');
