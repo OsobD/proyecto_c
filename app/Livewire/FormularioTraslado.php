@@ -5,60 +5,59 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * Componente FormularioDevolucion
+ * Componente FormularioTraslado
  *
- * Formulario flexible para registrar devoluciones de productos. Permite
- * devoluciones en múltiples direcciones: Bodega↔Bodega, Empleado→Bodega, etc.
- * Incluye campo para especificar motivo de la devolución.
+ * Formulario para registrar traslados de productos entre bodegas físicas.
+ * Flujo: Bodega Origen → Bodega Destino
  *
  * @package App\Livewire
- * @see resources/views/livewire/formulario-devolucion.blade.php
+ * @see resources/views/livewire/formulario-traslado.blade.php
  */
-class FormularioDevolucion extends Component
+class FormularioTraslado extends Component
 {
-    /** @var array Listado de empleados */
-    public $empleados = [];
-
     /** @var array Listado de bodegas */
     public $bodegas = [];
 
     /** @var array Listado de productos */
     public $productos = [];
 
-    /** @var string Término de búsqueda para origen */
+    /** @var string Término de búsqueda para bodega origen */
     public $searchOrigen = '';
 
-    /** @var string Término de búsqueda para destino */
+    /** @var string Término de búsqueda para bodega destino */
     public $searchDestino = '';
 
     /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
 
-    /** @var array|null Origen seleccionado (bodega o empleado) */
+    /** @var array|null Bodega origen seleccionada */
     public $selectedOrigen = null;
 
-    /** @var array|null Destino seleccionado (bodega o empleado) */
+    /** @var array|null Bodega destino seleccionada */
     public $selectedDestino = null;
 
-    /** @var bool Controla dropdown de origen */
+    /** @var bool Controla dropdown de bodega origen */
     public $showOrigenDropdown = false;
 
-    /** @var bool Controla dropdown de destino */
+    /** @var bool Controla dropdown de bodega destino */
     public $showDestinoDropdown = false;
 
     /** @var bool Controla dropdown de productos */
     public $showProductoDropdown = false;
 
-    /** @var array Productos agregados a la devolución */
+    /** @var array Productos agregados al traslado */
     public $productosSeleccionados = [];
 
-    /** @var string Motivo de la devolución */
-    public $motivo = '';
+    /** @var string Número correlativo del traslado */
+    public $correlativo = '';
+
+    /** @var string Observaciones del traslado */
+    public $observaciones = '';
 
     /**
      * Inicializa el componente con datos mock de prueba
      *
-     * @todo Reemplazar con consultas a BD: Bodega::all(), User::all(), Producto::all()
+     * @todo Reemplazar con consultas a BD: Bodega::all(), Producto::all()
      * @return void
      */
     public function mount()
@@ -67,13 +66,6 @@ class FormularioDevolucion extends Component
             ['id' => 1, 'nombre' => 'Bodega Central'],
             ['id' => 2, 'nombre' => 'Bodega Norte'],
             ['id' => 3, 'nombre' => 'Bodega Sur'],
-            ['id' => 4, 'nombre' => 'Bodega de Devoluciones'],
-        ];
-
-        $this->empleados = [
-            ['id' => 1, 'nombre' => 'Juan Pérez'],
-            ['id' => 2, 'nombre' => 'María García'],
-            ['id' => 3, 'nombre' => 'Carlos López'],
         ];
 
         $this->productos = [
@@ -91,7 +83,7 @@ class FormularioDevolucion extends Component
     {
         $results = [];
 
-        // Always add bodegas first
+        // Only show bodegas for traslados (Bodega -> Bodega)
         foreach ($this->bodegas as $bodega) {
             if (empty($this->searchOrigen) ||
                 str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
@@ -103,18 +95,6 @@ class FormularioDevolucion extends Component
             }
         }
 
-        // Then add empleados
-        foreach ($this->empleados as $empleado) {
-            if (empty($this->searchOrigen) ||
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchOrigen))) {
-                $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Empleado'
-                ];
-            }
-        }
-
         return $results;
     }
 
@@ -122,7 +102,7 @@ class FormularioDevolucion extends Component
     {
         $results = [];
 
-        // Always add bodegas first
+        // Only show bodegas for traslados (Bodega -> Bodega)
         foreach ($this->bodegas as $bodega) {
             if (empty($this->searchDestino) ||
                 str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
@@ -130,18 +110,6 @@ class FormularioDevolucion extends Component
                     'id' => 'B' . $bodega['id'],
                     'nombre' => $bodega['nombre'],
                     'tipo' => 'Bodega'
-                ];
-            }
-        }
-
-        // Then add empleados
-        foreach ($this->empleados as $empleado) {
-            if (empty($this->searchDestino) ||
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
-                $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Empleado'
                 ];
             }
         }
@@ -274,6 +242,6 @@ class FormularioDevolucion extends Component
      */
     public function render()
     {
-        return view('livewire.formulario-devolucion');
+        return view('livewire.formulario-traslado');
     }
 }

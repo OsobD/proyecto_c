@@ -1,41 +1,46 @@
 <div>
+    {{-- Breadcrumbs --}}
+    <x-breadcrumbs :items="[
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Requisiciones', 'url' => '/requisiciones'],
+        ['label' => 'Nueva Requisición'],
+    ]" />
+
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Formulario de Traslado</h1>
+        <h1 class="text-2xl font-bold text-gray-800">Formulario de Requisición</h1>
     </div>
 
     <div class="bg-white p-6 rounded-lg shadow-md">
         <form>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{-- Origin Selection --}}
+                {{-- Selección de Bodega Origen --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Origen:</label>
+                    <label class="block text-sm font-medium text-gray-700">Bodega Origen:</label>
                     <div class="relative">
                         @if($selectedOrigen)
                             <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <span>{{ $selectedOrigen['nombre'] }} ({{ $selectedOrigen['tipo'] }})</span>
+                                <span>{{ $selectedOrigen['nombre'] }}</span>
                                 <button type="button" wire:click.prevent="clearOrigen" class="text-gray-400 hover:text-gray-600">
                                     ×
                                 </button>
                             </div>
                         @else
-                            <div class="relative" x-data="{ focused: false }">
+                            <div class="relative" x-data="{ open: @entangle('showOrigenDropdown') }" @click.outside="open = false">
                                 <input
                                     type="text"
-                                    wire:model.live="searchOrigen"
-                                    @focus="focused = true; $wire.set('showOrigenDropdown', true)"
-                                    @blur="setTimeout(() => { focused = false; $wire.set('showOrigenDropdown', false) }, 200)"
+                                    wire:model.live.debounce.300ms="searchOrigen"
+                                    @click="open = true"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                                    placeholder="Buscar origen..."
+                                    placeholder="Buscar bodega origen..."
                                 >
-                                <div x-show="focused && {{ count($this->origenResults) > 0 ? 'true' : 'false' }}"
+                                <div x-show="open"
                                      x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                                     <ul>
                                         @foreach ($this->origenResults as $result)
-                                            <li wire:click="selectOrigen('{{ $result['id'] }}', '{{ addslashes($result['nombre']) }}', '{{ $result['tipo'] }}')"
+                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre'] }} ({{ $result['tipo'] }})
+                                                {{ $result['nombre'] }}
                                             </li>
                                         @endforeach
                                     </ul>
@@ -45,35 +50,34 @@
                     </div>
                 </div>
 
-                {{-- Destination Selection --}}
+                {{-- Selección de Tarjeta Destino --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Destino:</label>
+                    <label class="block text-sm font-medium text-gray-700">Tarjeta Destino (Empleado):</label>
                     <div class="relative">
                         @if($selectedDestino)
                             <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <span>{{ $selectedDestino['nombre'] }} ({{ $selectedDestino['tipo'] }})</span>
+                                <span>{{ $selectedDestino['nombre'] }}</span>
                                 <button type="button" wire:click.prevent="clearDestino" class="text-gray-400 hover:text-gray-600">
                                     ×
                                 </button>
                             </div>
                         @else
-                            <div class="relative" x-data="{ focused: false }">
+                            <div class="relative" x-data="{ open: @entangle('showDestinoDropdown') }" @click.outside="open = false">
                                 <input
                                     type="text"
-                                    wire:model.live="searchDestino"
-                                    @focus="focused = true; $wire.set('showDestinoDropdown', true)"
-                                    @blur="setTimeout(() => { focused = false; $wire.set('showDestinoDropdown', false) }, 200)"
+                                    wire:model.live.debounce.300ms="searchDestino"
+                                    @click="open = true"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                                    placeholder="Buscar destino..."
+                                    placeholder="Buscar empleado/tarjeta..."
                                 >
-                                <div x-show="focused && {{ count($this->destinoResults) > 0 ? 'true' : 'false' }}"
+                                <div x-show="open"
                                      x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                                     <ul>
                                         @foreach ($this->destinoResults as $result)
-                                            <li wire:click="selectDestino('{{ $result['id'] }}', '{{ addslashes($result['nombre']) }}', '{{ $result['tipo'] }}')"
+                                            <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre'] }} ({{ $result['tipo'] }})
+                                                {{ $result['nombre'] }}
                                             </li>
                                         @endforeach
                                     </ul>
@@ -84,37 +88,48 @@
                 </div>
 
             </div>
-             {{-- No. de Solicitud / Correlativo --}}
-            <div class="mb-6">
-                <label for="noSolicitud" class="block text-sm font-medium text-gray-700">No. de Solicitud / Correlativo:</label>
+
+            {{-- Correlativo --}}
+            <div class="mt-6">
+                <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
                 <input
                     type="text"
-                    id="noSolicitud"
-                    wire:model="noSolicitud"
-                    class="mt-1 block w-full md:w-1/2 pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                    placeholder="Ingrese el número de solicitud..."
-                >
+                    id="correlativo"
+                    wire:model="correlativo"
+                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="Ingrese el correlativo...">
             </div>
+
+            {{-- Observaciones --}}
+            <div class="mt-6 p-6 bg-gray-50 rounded-lg">
+                <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones:</label>
+                <textarea
+                    id="observaciones"
+                    wire:model="observaciones"
+                    rows="3"
+                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="Ingrese observaciones..."></textarea>
+            </div>
+
             {{-- Búsqueda de productos --}}
             <div class="mt-8 pt-4 border-t border-gray-200">
                 <label for="searchProducto" class="block text-sm font-medium text-gray-700">Buscar producto:</label>
-                <div class="relative" x-data="{ focused: false }">
+                <div class="relative" x-data="{ open: @entangle('showProductoDropdown') }" @click.outside="open = false">
                     <input
                         type="text"
                         id="searchProducto"
-                        wire:model.live="searchProducto"
-                        @focus="focused = true; $wire.set('showProductoDropdown', true)"
-                        @blur="setTimeout(() => { focused = false; $wire.set('showProductoDropdown', false) }, 200)"
+                        wire:model.live.debounce.300ms="searchProducto"
+                        @click="open = true"
                         wire:keydown.enter.prevent="seleccionarPrimerResultado"
                         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                        placeholder="Buscar por código (0xA1, A1) o nombre del producto..."
+                        placeholder="Buscar por ID (0xA1) o descripción..."
                     >
-                    <div x-show="focused && {{ count($this->productoResults) > 0 ? 'true' : 'false' }}"
+                    <div x-show="open"
                          x-transition
-                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                         <ul>
                             @foreach ($this->productoResults as $producto)
-                                <li wire:click="selectProducto({{ $producto['id'] }})"
+                                <li wire:click.prevent="selectProducto({{ $producto['id'] }})"
                                     class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
                                     <span class="font-mono text-gray-500 mr-2">0x{{ strtoupper(dechex($producto['id'])) }}</span>
                                     <span>{{ $producto['descripcion'] }}</span>
@@ -127,7 +142,7 @@
 
             {{-- Lista de Productos Seleccionados --}}
             <div class="mt-8">
-                <h2 class="text-lg font-semibold text-gray-800">Productos en el Traslado</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Productos en la Requisición</h2>
                 <div class="overflow-x-auto mt-4">
                     <table class="min-w-full bg-white">
                         <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -180,7 +195,7 @@
 
             <div class="mt-8 flex justify-end">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    Completar Traslado
+                    Completar Requisición
                 </button>
             </div>
         </form>

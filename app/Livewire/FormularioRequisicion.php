@@ -4,21 +4,60 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
+/**
+ * Componente FormularioRequisicion
+ *
+ * Formulario para registrar requisiciones de productos desde bodega hacia
+ * tarjetas de responsabilidad (empleados).
+ * Flujo: Bodega → Tarjeta de Responsabilidad (Empleado)
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/formulario-requisicion.blade.php
+ */
 class FormularioRequisicion extends Component
 {
+    /** @var array Listado de empleados (tarjetas de responsabilidad) */
     public $empleados = [];
+
+    /** @var array Listado de bodegas */
     public $bodegas = [];
+
+    /** @var array Listado de productos */
     public $productos = [];
+
+    /** @var string Término de búsqueda para bodega origen */
     public $searchOrigen = '';
+
+    /** @var string Término de búsqueda para empleado destino */
     public $searchDestino = '';
+
+    /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
+
+    /** @var array|null Bodega origen seleccionada */
     public $selectedOrigen = null;
+
+    /** @var array|null Empleado destino seleccionado */
     public $selectedDestino = null;
+
+    /** @var bool Controla dropdown de bodega origen */
     public $showOrigenDropdown = false;
+
+    /** @var bool Controla dropdown de empleado destino */
     public $showDestinoDropdown = false;
+
+    /** @var bool Controla dropdown de productos */
     public $showProductoDropdown = false;
+
+    /** @var array Productos agregados a la requisición */
     public $productosSeleccionados = [];
 
+    /**
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Bodega::all(), User::all(), Producto::all()
+     * @return void
+     */
     public function mount()
     {
         $this->bodegas = [
@@ -39,48 +78,22 @@ class FormularioRequisicion extends Component
             ['id' => 0xC3, 'descripcion' => 'Cinta aislante', 'precio' => 3.25],
             ['id' => 0xD4, 'descripcion' => 'Guantes de seguridad', 'precio' => 8.50],
             ['id' => 0xE5, 'descripcion' => 'Fusibles de 15A', 'precio' => 1.25],
-            
         ];
         $this->productosSeleccionados = [];
-    }
-
-    private function normalizeString($string)
-    {
-        // Normalizar para búsqueda insensible a tildes y mayúsculas
-        $string = mb_strtolower($string, 'UTF-8');
-        $unwanted = [
-            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
-            'Á' => 'a', 'É' => 'e', 'Í' => 'i', 'Ó' => 'o', 'Ú' => 'u',
-            'ñ' => 'n', 'Ñ' => 'n'
-        ];
-        return strtr($string, $unwanted);
     }
 
     public function getOrigenResultsProperty()
     {
         $results = [];
-        $search = trim($this->searchOrigen);
 
-        // Always add bodegas first
+        // Only show bodegas as origin (Bodega -> Tarjeta)
         foreach ($this->bodegas as $bodega) {
-            if (empty($search) ||
-                str_contains($this->normalizeString($bodega['nombre']), $this->normalizeString($search))) {
+            if (empty($this->searchOrigen) ||
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
                 $results[] = [
                     'id' => 'B' . $bodega['id'],
                     'nombre' => $bodega['nombre'],
                     'tipo' => 'Bodega'
-                ];
-            }
-        }
-
-        // Then add empleados
-        foreach ($this->empleados as $empleado) {
-            if (empty($search) ||
-                str_contains($this->normalizeString($empleado['nombre']), $this->normalizeString($search))) {
-                $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Empleado'
                 ];
             }
         }
@@ -91,28 +104,15 @@ class FormularioRequisicion extends Component
     public function getDestinoResultsProperty()
     {
         $results = [];
-        $search = trim($this->searchDestino);
 
-        // Always add bodegas first
-        foreach ($this->bodegas as $bodega) {
-            if (empty($search) ||
-                str_contains($this->normalizeString($bodega['nombre']), $this->normalizeString($search))) {
-                $results[] = [
-                    'id' => 'B' . $bodega['id'],
-                    'nombre' => $bodega['nombre'],
-                    'tipo' => 'Bodega'
-                ];
-            }
-        }
-
-        // Then add empleados
+        // Only show empleados/tarjetas as destination (Bodega -> Tarjeta)
         foreach ($this->empleados as $empleado) {
-            if (empty($search) ||
-                str_contains($this->normalizeString($empleado['nombre']), $this->normalizeString($search))) {
+            if (empty($this->searchDestino) ||
+                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
                 $results[] = [
                     'id' => 'E' . $empleado['id'],
                     'nombre' => $empleado['nombre'],
-                    'tipo' => 'Empleado'
+                    'tipo' => 'Tarjeta'
                 ];
             }
         }
@@ -182,25 +182,20 @@ class FormularioRequisicion extends Component
 
     public function getProductoResultsProperty()
     {
-        if (empty(trim($this->searchProducto))) {
-            return [];
+        if (empty($this->searchProducto)) {
+            return $this->productos;
         }
 
-        $search = trim($this->searchProducto);
-        $searchNormalized = $this->normalizeString($search);
-        $searchClean = str_replace(['0x', '#', ' '], '', $searchNormalized);
+        $search = strtolower(trim($this->searchProducto));
 
-        return array_filter($this->productos, function($producto) use ($searchNormalized, $searchClean) {
+        return array_filter($this->productos, function($producto) use ($search) {
             // Convertir el ID a hexadecimal para la comparación
             $idHex = strtolower(dechex($producto['id']));
 
-            // Normalizar la descripción
-            $descripcionNormalized = $this->normalizeString($producto['descripcion']);
-
-            // Buscar en descripción, ID hexadecimal, o ID decimal
-            return str_contains($descripcionNormalized, $searchNormalized) ||
-                   str_contains($idHex, $searchClean) ||
-                   str_contains((string)$producto['id'], $searchClean);
+            // Buscar tanto en el ID hexadecimal como en la descripción
+            return str_contains(strtolower($producto['descripcion']), $search) ||
+                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
+                   str_contains((string)$producto['id'], $search);
         });
     }
 
@@ -243,6 +238,11 @@ class FormularioRequisicion extends Component
         });
     }
 
+    /**
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
+     */
     public function render()
     {
         return view('livewire.formulario-requisicion');

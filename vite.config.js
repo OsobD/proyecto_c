@@ -10,4 +10,12 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    server: {
+        host: '0.0.0.0', // Escuchar en todas las interfaces para Docker
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost', // El navegador conectará a localhost
+        },
+    },
 });
