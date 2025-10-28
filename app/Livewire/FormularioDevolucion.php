@@ -5,52 +5,60 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class FormularioDevolucion
- * @package App\Livewire
- * @brief Componente para gestionar el formulario de devolución de productos.
+ * Componente FormularioDevolucion
  *
- * Este componente maneja la lógica para registrar una devolución, permitiendo
- * seleccionar un origen y un destino (que pueden ser bodegas o empleados),
- * buscar y agregar productos, y especificar un motivo para la devolución.
+ * Formulario flexible para registrar devoluciones de productos. Permite
+ * devoluciones en múltiples direcciones: Bodega↔Bodega, Empleado→Bodega, etc.
+ * Incluye campo para especificar motivo de la devolución.
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/formulario-devolucion.blade.php
  */
 class FormularioDevolucion extends Component
 {
-    // --- PROPIEDADES PÚBLICAS ---
-
-    /** @var array Datos de ejemplo para empleados, bodegas y productos. */
+    /** @var array Listado de empleados */
     public $empleados = [];
+
+    /** @var array Listado de bodegas */
     public $bodegas = [];
+
+    /** @var array Listado de productos */
     public $productos = [];
 
-    /** @var string Término de búsqueda para el origen de la devolución. */
+    /** @var string Término de búsqueda para origen */
     public $searchOrigen = '';
-    /** @var string Término de búsqueda para el destino de la devolución. */
+
+    /** @var string Término de búsqueda para destino */
     public $searchDestino = '';
-    /** @var string Término de búsqueda para los productos. */
+
+    /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
 
-    /** @var array|null Entidad de origen seleccionada (bodega o empleado). */
+    /** @var array|null Origen seleccionado (bodega o empleado) */
     public $selectedOrigen = null;
-    /** @var array|null Entidad de destino seleccionada (bodega o empleado). */
+
+    /** @var array|null Destino seleccionado (bodega o empleado) */
     public $selectedDestino = null;
 
-    /** @var bool Controla la visibilidad del dropdown de resultados para el origen. */
+    /** @var bool Controla dropdown de origen */
     public $showOrigenDropdown = false;
-    /** @var bool Controla la visibilidad del dropdown de resultados para el destino. */
+
+    /** @var bool Controla dropdown de destino */
     public $showDestinoDropdown = false;
-    /** @var bool Controla la visibilidad del dropdown de resultados para los productos. */
+
+    /** @var bool Controla dropdown de productos */
     public $showProductoDropdown = false;
 
-    /** @var array Lista de productos agregados a la devolución. */
+    /** @var array Productos agregados a la devolución */
     public $productosSeleccionados = [];
-    /** @var string Motivo o justificación de la devolución. */
+
+    /** @var string Motivo de la devolución */
     public $motivo = '';
 
-    // --- MÉTODOS DE CICLO DE VIDA ---
-
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
-     * Carga datos de ejemplo para bodegas, empleados y productos.
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Bodega::all(), User::all(), Producto::all()
      * @return void
      */
     public function mount()
@@ -79,141 +87,147 @@ class FormularioDevolucion extends Component
         $this->productosSeleccionados = [];
     }
 
-    /**
-     * @brief Hook que se ejecuta al actualizar propiedades de búsqueda.
-     * Muestra el dropdown de resultados correspondiente.
-     * @return void
-     */
-    public function updated($propertyName)
-    {
-        if (in_array($propertyName, ['searchOrigen', 'searchDestino', 'searchProducto'])) {
-            $dropdown = 'show' . ucfirst(str_replace('search', '', $propertyName)) . 'Dropdown';
-            $this->$dropdown = true;
-        }
-    }
-
-
-    // --- PROPIEDADES COMPUTADAS ---
-
-    /**
-     * @brief Filtra bodegas y empleados para el campo "origen" según el término de búsqueda.
-     * @return array
-     */
     public function getOrigenResultsProperty()
     {
         $results = [];
-        $search = strtolower($this->searchOrigen);
 
+        // Always add bodegas first
         foreach ($this->bodegas as $bodega) {
-            if (empty($search) || str_contains(strtolower($bodega['nombre']), $search)) {
-                $results[] = ['id' => 'B' . $bodega['id'], 'nombre' => $bodega['nombre'], 'tipo' => 'Bodega'];
+            if (empty($this->searchOrigen) ||
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
+                $results[] = [
+                    'id' => 'B' . $bodega['id'],
+                    'nombre' => $bodega['nombre'],
+                    'tipo' => 'Bodega'
+                ];
             }
         }
+
+        // Then add empleados
         foreach ($this->empleados as $empleado) {
-            if (empty($search) || str_contains(strtolower($empleado['nombre']), $search)) {
-                $results[] = ['id' => 'E' . $empleado['id'], 'nombre' => $empleado['nombre'], 'tipo' => 'Empleado'];
+            if (empty($this->searchOrigen) ||
+                str_contains(strtolower($empleado['nombre']), strtolower($this->searchOrigen))) {
+                $results[] = [
+                    'id' => 'E' . $empleado['id'],
+                    'nombre' => $empleado['nombre'],
+                    'tipo' => 'Empleado'
+                ];
             }
         }
+
         return $results;
     }
 
-    /**
-     * @brief Filtra bodegas y empleados para el campo "destino" según el término de búsqueda.
-     * @return array
-     */
     public function getDestinoResultsProperty()
     {
         $results = [];
-        $search = strtolower($this->searchDestino);
 
+        // Always add bodegas first
         foreach ($this->bodegas as $bodega) {
-            if (empty($search) || str_contains(strtolower($bodega['nombre']), $search)) {
-                $results[] = ['id' => 'B' . $bodega['id'], 'nombre' => $bodega['nombre'], 'tipo' => 'Bodega'];
+            if (empty($this->searchDestino) ||
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
+                $results[] = [
+                    'id' => 'B' . $bodega['id'],
+                    'nombre' => $bodega['nombre'],
+                    'tipo' => 'Bodega'
+                ];
             }
         }
+
+        // Then add empleados
         foreach ($this->empleados as $empleado) {
-            if (empty($search) || str_contains(strtolower($empleado['nombre']), $search)) {
-                $results[] = ['id' => 'E' . $empleado['id'], 'nombre' => $empleado['nombre'], 'tipo' => 'Empleado'];
+            if (empty($this->searchDestino) ||
+                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
+                $results[] = [
+                    'id' => 'E' . $empleado['id'],
+                    'nombre' => $empleado['nombre'],
+                    'tipo' => 'Empleado'
+                ];
             }
         }
+
         return $results;
     }
 
-    /**
-     * @brief Filtra los productos basados en el término de búsqueda.
-     * @return array
-     */
+    public function selectOrigen($id, $nombre, $tipo)
+    {
+        $this->selectedOrigen = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'tipo' => $tipo
+        ];
+        $this->searchOrigen = '';
+        $this->showOrigenDropdown = false;
+    }
+
+    public function selectDestino($id, $nombre, $tipo)
+    {
+        $this->selectedDestino = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'tipo' => $tipo
+        ];
+        $this->searchDestino = '';
+        $this->showDestinoDropdown = false;
+    }
+
+    public function clearOrigen()
+    {
+        $this->selectedOrigen = null;
+        $this->searchOrigen = '';
+        $this->showOrigenDropdown = false;
+    }
+
+    public function clearDestino()
+    {
+        $this->selectedDestino = null;
+        $this->searchDestino = '';
+        $this->showDestinoDropdown = false;
+    }
+
+    public function updatedSearchOrigen()
+    {
+        $this->showOrigenDropdown = true;
+    }
+
+    public function updatedSearchDestino()
+    {
+        $this->showDestinoDropdown = true;
+    }
+
+    public function updatedSearchProducto()
+    {
+        $this->showProductoDropdown = true;
+    }
+
+    public function seleccionarPrimerResultado()
+    {
+        $resultados = $this->productoResults;
+        if (!empty($resultados)) {
+            $primerProducto = array_values($resultados)[0];
+            $this->selectProducto($primerProducto['id']);
+        }
+    }
+
     public function getProductoResultsProperty()
     {
         if (empty($this->searchProducto)) {
             return $this->productos;
         }
+
         $search = strtolower(trim($this->searchProducto));
-        return array_filter($this->productos, fn($p) => str_contains(strtolower($p['descripcion']), $search) || str_contains(strtolower(dechex($p['id'])), $search));
+
+        return array_filter($this->productos, function($producto) use ($search) {
+            // Convertir el ID a hexadecimal para la comparación
+            $idHex = strtolower(dechex($producto['id']));
+
+            // Buscar tanto en el ID hexadecimal como en la descripción
+            return str_contains(strtolower($producto['descripcion']), $search) ||
+                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
+                   str_contains((string)$producto['id'], $search);
+        });
     }
 
-    /**
-     * @brief Calcula el subtotal del valor de los productos en la devolución.
-     * @return float
-     */
-    public function getSubtotalProperty()
-    {
-        return collect($this->productosSeleccionados)->sum(fn($p) => $p['cantidad'] * $p['precio']);
-    }
-
-    // --- MÉTODOS DE MANEJO DE SELECCIÓN ---
-
-    /**
-     * @brief Establece la entidad de origen seleccionada.
-     * @param string $id ID de la entidad (ej. 'B1' o 'E2').
-     * @param string $nombre Nombre de la entidad.
-     * @param string $tipo Tipo de entidad ('Bodega' o 'Empleado').
-     * @return void
-     */
-    public function selectOrigen($id, $nombre, $tipo)
-    {
-        $this->selectedOrigen = ['id' => $id, 'nombre' => $nombre, 'tipo' => $tipo];
-        $this->searchOrigen = '';
-        $this->showOrigenDropdown = false;
-    }
-
-    /**
-     * @brief Establece la entidad de destino seleccionada.
-     * @param string $id ID de la entidad.
-     * @param string $nombre Nombre de la entidad.
-     * @param string $tipo Tipo de entidad.
-     * @return void
-     */
-    public function selectDestino($id, $nombre, $tipo)
-    {
-        $this->selectedDestino = ['id' => $id, 'nombre' => $nombre, 'tipo' => $tipo];
-        $this->searchDestino = '';
-        $this->showDestinoDropdown = false;
-    }
-
-    /**
-     * @brief Limpia la selección del origen.
-     * @return void
-     */
-    public function clearOrigen()
-    {
-        $this->selectedOrigen = null;
-    }
-
-    /**
-     * @brief Limpia la selección del destino.
-     * @return void
-     */
-    public function clearDestino()
-    {
-        $this->selectedDestino = null;
-    }
-
-    /**
-     * @brief Selecciona un producto y lo agrega a la lista de devolución.
-     * @param int $productoId ID del producto.
-     * @return void
-     */
     public function selectProducto($productoId)
     {
         $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
@@ -229,37 +243,13 @@ class FormularioDevolucion extends Component
         $this->showProductoDropdown = false;
     }
 
-    /**
-     * @brief Selecciona el primer producto de la lista de resultados de búsqueda.
-     * @return void
-     */
-    public function seleccionarPrimerResultado()
-    {
-        $resultados = $this->productoResults;
-        if (!empty($resultados)) {
-            $this->selectProducto(array_values($resultados)[0]['id']);
-        }
-    }
-
-    /**
-     * @brief Elimina un producto de la lista de devolución.
-     * @param int $productoId ID del producto a eliminar.
-     * @return void
-     */
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_values(array_filter(
-            $this->productosSeleccionados,
-            fn($item) => $item['id'] !== (int)$productoId
-        ));
+        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
+            return $item['id'] !== (int)$productoId;
+        });
     }
 
-    /**
-     * @brief Actualiza la cantidad de un producto en la lista.
-     * @param int $productoId ID del producto a actualizar.
-     * @param int $cantidad Nueva cantidad (mínimo 1).
-     * @return void
-     */
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
@@ -270,9 +260,17 @@ class FormularioDevolucion extends Component
         }
     }
 
+    public function getSubtotalProperty()
+    {
+        return collect($this->productosSeleccionados)->sum(function($producto) {
+            return $producto['cantidad'] * $producto['precio'];
+        });
+    }
+
     /**
-     * @brief Renderiza la vista del componente.
-     * @return \Illuminate\Contracts\View\View
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
      */
     public function render()
     {

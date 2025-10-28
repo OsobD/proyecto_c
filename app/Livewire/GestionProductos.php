@@ -5,53 +5,72 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class GestionProductos
- * @package App\Livewire
- * @brief Componente para la gestión integral de productos.
+ * Componente GestionProductos
  *
- * Este componente permite buscar, crear, editar y cambiar el estado de los
- * productos. Incluye una funcionalidad para visualizar el historial de costos
- * de un producto y permite la creación de nuevas categorías a través de un
- * sub-modal sin salir del formulario principal del producto.
+ * Gestiona el CRUD completo de productos del sistema de inventario.
+ * Permite crear, editar, buscar, activar/desactivar productos y visualizar
+ * su historial de compras.
+ *
+ * **Funcionalidades principales:**
+ * - Listado de productos con búsqueda en tiempo real
+ * - Creación y edición de productos mediante modal
+ * - Asociación de productos con categorías
+ * - Creación rápida de categorías desde el mismo formulario (sub-modal)
+ * - Activación/desactivación de productos (soft delete)
+ * - Visualización de historial de compras por producto
+ *
+ * **Estado de desarrollo:**
+ * Actualmente utiliza datos mock. Pendiente integración con modelos Eloquent
+ * (Producto, Categoria) y base de datos real.
+ *
+ * @package App\Livewire
+ * @version 1.0
+ * @see resources/views/livewire/gestion-productos.blade.php Vista asociada
  */
 class GestionProductos extends Component
 {
-    // --- PROPIEDADES PÚBLICAS ---
-
-    /** @var array Lista de todos los productos. */
+    // Propiedades de datos
+    /** @var array Lista de productos del sistema */
     public $productos = [];
-    /** @var array Lista de todas las categorías disponibles. */
+
+    /** @var array Lista de categorías disponibles */
     public $categorias = [];
-    /** @var string Término de búsqueda para filtrar productos. */
+
+    // Propiedades de búsqueda y filtrado
+    /** @var string Término de búsqueda para filtrar productos */
     public $searchProducto = '';
-    /** @var bool Controla la visibilidad del modal principal (crear/editar producto). */
+
+    // Propiedades de control de UI
+    /** @var bool Controla visibilidad del modal de producto */
     public $showModal = false;
-    /** @var bool Controla la visibilidad del sub-modal para crear categorías. */
+
+    /** @var bool Controla visibilidad del sub-modal de categoría */
     public $showSubModalCategoria = false;
-    /** @var int|null ID del producto cuyo historial de costos se está mostrando. */
+
+    /** @var int|null ID del producto cuyo historial está expandido */
     public $showHistorial = null;
-    /** @var int|null ID del producto que se está editando. Null si se crea uno nuevo. */
+
+    /** @var int|null ID del producto en edición (null = modo creación) */
     public $editingId = null;
 
-    // --- CAMPOS DEL FORMULARIO DE PRODUCTO ---
-
-    /** @var string Código del producto. */
+    // Campos del formulario de producto
+    /** @var string Código único del producto */
     public $codigo = '';
-    /** @var string Descripción del producto. */
+
+    /** @var string Descripción del producto */
     public $descripcion = '';
-    /** @var int|string ID de la categoría seleccionada. */
+
+    /** @var string|int ID de la categoría seleccionada */
     public $categoriaId = '';
 
-    // --- CAMPO PARA CREAR CATEGORÍA ---
-
-    /** @var string Nombre de la nueva categoría a crear en el sub-modal. */
+    // Campo para crear categoría
+    /** @var string Nombre de nueva categoría a crear */
     public $nuevaCategoriaNombre = '';
 
-    // --- MÉTODOS DE CICLO DE VIDA ---
-
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
-     * Carga datos de ejemplo para productos y categorías.
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Producto::all() y Categoria::all()
      * @return void
      */
     public function mount()
@@ -64,45 +83,92 @@ class GestionProductos extends Component
         ];
 
         $this->productos = [
-            ['id' => 1, 'codigo' => 'PROD-001', 'descripcion' => 'Tornillos', 'categoria_id' => 1, 'activo' => true, 'historial' => [['fecha' => '2024-01-15', 'proveedor' => 'Ferretería A', 'costo' => 15.50, 'factura' => 'F-001']]],
-            ['id' => 2, 'codigo' => 'PROD-002', 'descripcion' => 'Abrazaderas', 'categoria_id' => 2, 'activo' => true, 'historial' => []],
-            ['id' => 3, 'codigo' => 'PROD-003', 'descripcion' => 'Cinta aislante', 'categoria_id' => 2, 'activo' => false, 'historial' => []],
+            [
+                'id' => 1,
+                'codigo' => 'PROD-001',
+                'descripcion' => 'Tornillos de acero inoxidable',
+                'categoria_id' => 1,
+                'activo' => true,
+                'historial' => [
+                    ['fecha' => '2024-01-15', 'proveedor' => 'Ferretería El Martillo', 'costo' => 15.50, 'factura' => 'F-001'],
+                    ['fecha' => '2024-02-20', 'proveedor' => 'Ferretería El Martillo', 'costo' => 16.00, 'factura' => 'F-045'],
+                ],
+            ],
+            [
+                'id' => 2,
+                'codigo' => 'PROD-002',
+                'descripcion' => 'Abrazaderas de metal',
+                'categoria_id' => 2,
+                'activo' => true,
+                'historial' => [
+                    ['fecha' => '2024-01-10', 'proveedor' => 'Suministros Industriales', 'costo' => 5.75, 'factura' => 'F-120'],
+                ],
+            ],
+            [
+                'id' => 3,
+                'codigo' => 'PROD-003',
+                'descripcion' => 'Cinta aislante',
+                'categoria_id' => 2,
+                'activo' => true,
+                'historial' => [],
+            ],
+            [
+                'id' => 4,
+                'codigo' => 'PROD-004',
+                'descripcion' => 'Guantes de seguridad',
+                'categoria_id' => 3,
+                'activo' => true,
+                'historial' => [],
+            ],
+            [
+                'id' => 5,
+                'codigo' => 'PROD-005',
+                'descripcion' => 'Fusibles de 15A',
+                'categoria_id' => 2,
+                'activo' => false,
+                'historial' => [],
+            ],
         ];
     }
 
-    // --- PROPIEDADES COMPUTADAS ---
-
     /**
-     * @brief Filtra los productos según el término de búsqueda.
-     * La búsqueda se aplica sobre el código, descripción y nombre de la categoría.
-     * @return array
+     * Computed property: Retorna productos filtrados por búsqueda
+     *
+     * Filtra por código, descripción o nombre de categoría.
+     *
+     * @return array Lista de productos que coinciden con el término de búsqueda
      */
     public function getProductosFiltradosProperty()
     {
-        if (empty($this->searchProducto)) return $this->productos;
+        if (empty($this->searchProducto)) {
+            return $this->productos;
+        }
+
         $search = strtolower(trim($this->searchProducto));
+
         return array_filter($this->productos, function($producto) use ($search) {
+            $categoriaNombre = $this->getNombreCategoria($producto['categoria_id']);
             return str_contains(strtolower($producto['codigo']), $search) ||
                    str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains(strtolower($this->getNombreCategoria($producto['categoria_id'])), $search);
+                   str_contains(strtolower($categoriaNombre), $search);
         });
     }
 
     /**
-     * @brief Obtiene una lista de las categorías que están activas.
-     * @return array
+     * Computed property: Retorna solo categorías activas
+     *
+     * @return array Categorías con estado activo = true
      */
     public function getCategoriasActivasProperty()
     {
         return array_filter($this->categorias, fn($cat) => $cat['activo']);
     }
 
-    // --- MÉTODOS AUXILIARES ---
-
     /**
-     * @brief Obtiene el nombre de una categoría a partir de su ID.
-     * @param int $categoriaId ID de la categoría.
-     * @return string Nombre de la categoría o 'Sin categoría' si no se encuentra.
+     * Obtiene el nombre de una categoría por su ID
+     *
+     * @param int $categoriaId ID de la categoría a buscar
+     * @return string Nombre de la categoría o 'Sin categoría' si no existe
      */
     public function getNombreCategoria($categoriaId)
     {
@@ -110,10 +176,9 @@ class GestionProductos extends Component
         return $categoria ? $categoria['nombre'] : 'Sin categoría';
     }
 
-    // --- MÉTODOS DE MANEJO DEL MODAL PRINCIPAL ---
-
     /**
-     * @brief Abre el modal en modo de creación de producto.
+     * Abre el modal de producto en modo creación
+     *
      * @return void
      */
     public function abrirModal()
@@ -123,13 +188,17 @@ class GestionProductos extends Component
     }
 
     /**
-     * @brief Abre el modal en modo de edición con los datos de un producto.
-     * @param int $id ID del producto a editar.
+     * Abre el modal de producto en modo edición
+     *
+     * Carga los datos del producto seleccionado en el formulario.
+     *
+     * @param int $id ID del producto a editar
      * @return void
      */
     public function editarProducto($id)
     {
         $producto = collect($this->productos)->firstWhere('id', $id);
+
         if ($producto) {
             $this->editingId = $id;
             $this->codigo = $producto['codigo'];
@@ -140,19 +209,11 @@ class GestionProductos extends Component
     }
 
     /**
-     * @brief Cierra el modal principal y reinicia el formulario.
-     * @return void
-     */
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    // --- MÉTODOS DE LÓGICA DE NEGOCIO ---
-
-    /**
-     * @brief Guarda un producto nuevo o actualiza uno existente.
+     * Guarda un producto (crear o actualizar según editingId)
+     *
+     * Valida los campos del formulario y persiste los cambios.
+     * Muestra mensaje de éxito mediante flash session.
+     *
      * @return void
      */
     public function guardarProducto()
@@ -161,46 +222,63 @@ class GestionProductos extends Component
             'codigo' => 'required|min:3|max:50',
             'descripcion' => 'required|min:3|max:255',
             'categoriaId' => 'required',
+        ], [
+            'codigo.required' => 'El código del producto es obligatorio.',
+            'codigo.min' => 'El código debe tener al menos 3 caracteres.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.min' => 'La descripción debe tener al menos 3 caracteres.',
+            'categoriaId.required' => 'Debe seleccionar una categoría.',
         ]);
 
         if ($this->editingId) {
-            $this->productos = array_map(function($p) {
-                if ($p['id'] === $this->editingId) {
-                    $p['codigo'] = $this->codigo;
-                    $p['descripcion'] = $this->descripcion;
-                    $p['categoria_id'] = (int)$this->categoriaId;
+            // Actualizar producto existente
+            $this->productos = array_map(function($prod) {
+                if ($prod['id'] === $this->editingId) {
+                    $prod['codigo'] = $this->codigo;
+                    $prod['descripcion'] = $this->descripcion;
+                    $prod['categoria_id'] = (int)$this->categoriaId;
                 }
-                return $p;
+                return $prod;
             }, $this->productos);
         } else {
-            $newId = count($this->productos) > 0 ? max(array_column($this->productos, 'id')) + 1 : 1;
+            // Crear nuevo producto
+            $newId = max(array_column($this->productos, 'id')) + 1;
             $this->productos[] = [
-                'id' => $newId, 'codigo' => $this->codigo,
-                'descripcion' => $this->descripcion, 'categoria_id' => (int)$this->categoriaId,
-                'activo' => true, 'historial' => [],
+                'id' => $newId,
+                'codigo' => $this->codigo,
+                'descripcion' => $this->descripcion,
+                'categoria_id' => (int)$this->categoriaId,
+                'activo' => true,
+                'historial' => [],
             ];
         }
+
         $this->closeModal();
-        session()->flash('message', $this->editingId ? 'Producto actualizado.' : 'Producto creado.');
+        session()->flash('message', $this->editingId ? 'Producto actualizado exitosamente.' : 'Producto creado exitosamente.');
     }
 
     /**
-     * @brief Cambia el estado (activo/inactivo) de un producto.
-     * @param int $id ID del producto a modificar.
+     * Cambia el estado activo/inactivo de un producto (soft delete)
+     *
+     * @param int $id ID del producto a activar/desactivar
      * @return void
      */
     public function toggleEstado($id)
     {
-        $this->productos = array_map(function($p) use ($id) {
-            if ($p['id'] === $id) $p['activo'] = !$p['activo'];
-            return $p;
+        $this->productos = array_map(function($prod) use ($id) {
+            if ($prod['id'] === $id) {
+                $prod['activo'] = !$prod['activo'];
+            }
+            return $prod;
         }, $this->productos);
+
         session()->flash('message', 'Estado del producto actualizado.');
     }
 
     /**
-     * @brief Muestra u oculta el historial de costos de un producto.
-     * @param int $id ID del producto.
+     * Expande/colapsa el historial de compras de un producto
+     *
+     * @param int $id ID del producto cuyo historial se desea ver
      * @return void
      */
     public function toggleHistorial($id)
@@ -208,10 +286,9 @@ class GestionProductos extends Component
         $this->showHistorial = $this->showHistorial === $id ? null : $id;
     }
 
-    // --- MÉTODOS DEL SUB-MODAL DE CATEGORÍA ---
-
     /**
-     * @brief Abre el sub-modal para crear una nueva categoría.
+     * Abre el sub-modal para crear nueva categoría
+     *
      * @return void
      */
     public function abrirSubModalCategoria()
@@ -221,22 +298,37 @@ class GestionProductos extends Component
     }
 
     /**
-     * @brief Guarda la nueva categoría y la selecciona en el formulario de producto.
+     * Guarda una nueva categoría desde el sub-modal
+     *
+     * Al crear exitosamente, selecciona automáticamente la nueva categoría
+     * en el formulario principal de producto.
+     *
      * @return void
      */
     public function guardarNuevaCategoria()
     {
-        $this->validate(['nuevaCategoriaNombre' => 'required|min:3|max:100']);
+        $this->validate([
+            'nuevaCategoriaNombre' => 'required|min:3|max:100',
+        ], [
+            'nuevaCategoriaNombre.required' => 'El nombre de la categoría es obligatorio.',
+            'nuevaCategoriaNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+        ]);
 
-        $newId = count($this->categorias) > 0 ? max(array_column($this->categorias, 'id')) + 1 : 1;
-        $this->categorias[] = ['id' => $newId, 'nombre' => $this->nuevaCategoriaNombre, 'activo' => true];
+        $newId = max(array_column($this->categorias, 'id')) + 1;
+        $this->categorias[] = [
+            'id' => $newId,
+            'nombre' => $this->nuevaCategoriaNombre,
+            'activo' => true,
+        ];
 
         $this->categoriaId = $newId;
-        $this->closeSubModalCategoria();
+        $this->showSubModalCategoria = false;
+        $this->nuevaCategoriaNombre = '';
     }
 
     /**
-     * @brief Cierra el sub-modal de creación de categoría.
+     * Cierra el sub-modal de categoría
+     *
      * @return void
      */
     public function closeSubModalCategoria()
@@ -246,7 +338,19 @@ class GestionProductos extends Component
     }
 
     /**
-     * @brief Reinicia las propiedades del formulario del modal principal.
+     * Cierra el modal principal de producto
+     *
+     * @return void
+     */
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
+    /**
+     * Limpia los campos del formulario y errores de validación
+     *
      * @return void
      */
     private function resetForm()
@@ -259,8 +363,9 @@ class GestionProductos extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
-     * @return \Illuminate\Contracts\View\View
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
      */
     public function render()
     {

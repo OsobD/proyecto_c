@@ -5,29 +5,23 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class GestionProveedores
- * @package App\Livewire
- * @brief Componente para la gestión de proveedores.
+ * Componente GestionProveedores
  *
- * Este componente se encarga de mostrar una lista de los proveedores
- * registrados en el sistema. Actualmente, utiliza datos de ejemplo.
+ * Gestiona el listado de proveedores del sistema de inventario.
+ * Muestra información básica de cada proveedor (nombre, contacto, estado).
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/gestion-proveedores.blade.php
  */
 class GestionProveedores extends Component
 {
-    /**
-     * @var array
-     * @brief Almacena la lista de proveedores.
-     *
-     * Cada proveedor es un array asociativo con 'id', 'nombre', 'contacto' y 'estado'.
-     */
+    /** @var array Listado de proveedores */
     public $proveedores = [];
 
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
+     * Inicializa el componente con datos mock de prueba
      *
-     * Carga los datos de ejemplo en la propiedad $proveedores. En una implementación
-     * futura, este método debería obtener los datos desde la base de datos.
-     *
+     * @todo Reemplazar con consultas a BD: Proveedor::all()
      * @return void
      */
     public function mount()
@@ -40,9 +34,9 @@ class GestionProveedores extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
+     * Renderiza la vista del componente
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\View\View
      */
     public function render()
     {

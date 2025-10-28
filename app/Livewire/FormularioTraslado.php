@@ -5,53 +5,59 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class FormularioTraslado
- * @package App\Livewire
- * @brief Componente para gestionar el formulario de traslado de productos entre bodegas.
+ * Componente FormularioTraslado
  *
- * Este componente maneja la lógica para registrar un traslado de productos desde
- * una bodega de origen a una bodega de destino. Permite buscar y seleccionar las
- * bodegas, así como los productos a trasladar.
+ * Formulario para registrar traslados de productos entre bodegas físicas.
+ * Flujo: Bodega Origen → Bodega Destino
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/formulario-traslado.blade.php
  */
 class FormularioTraslado extends Component
 {
-    // --- PROPIEDADES PÚBLICAS ---
-
-    /** @var array Datos de ejemplo para bodegas y productos. */
+    /** @var array Listado de bodegas */
     public $bodegas = [];
+
+    /** @var array Listado de productos */
     public $productos = [];
 
-    /** @var string Término de búsqueda para la bodega de origen. */
+    /** @var string Término de búsqueda para bodega origen */
     public $searchOrigen = '';
-    /** @var string Término de búsqueda para la bodega de destino. */
+
+    /** @var string Término de búsqueda para bodega destino */
     public $searchDestino = '';
-    /** @var string Término de búsqueda para los productos. */
+
+    /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
 
-    /** @var array|null Bodega de origen seleccionada. */
+    /** @var array|null Bodega origen seleccionada */
     public $selectedOrigen = null;
-    /** @var array|null Bodega de destino seleccionada. */
+
+    /** @var array|null Bodega destino seleccionada */
     public $selectedDestino = null;
 
-    /** @var bool Controla la visibilidad del dropdown de resultados para el origen. */
+    /** @var bool Controla dropdown de bodega origen */
     public $showOrigenDropdown = false;
-    /** @var bool Controla la visibilidad del dropdown de resultados para el destino. */
+
+    /** @var bool Controla dropdown de bodega destino */
     public $showDestinoDropdown = false;
-    /** @var bool Controla la visibilidad del dropdown de resultados para los productos. */
+
+    /** @var bool Controla dropdown de productos */
     public $showProductoDropdown = false;
 
-    /** @var array Lista de productos agregados al traslado. */
+    /** @var array Productos agregados al traslado */
     public $productosSeleccionados = [];
-    /** @var string Correlativo o número de referencia del traslado. */
+
+    /** @var string Número correlativo del traslado */
     public $correlativo = '';
-    /** @var string Observaciones o notas adicionales sobre el traslado. */
+
+    /** @var string Observaciones del traslado */
     public $observaciones = '';
 
-    // --- MÉTODOS DE CICLO DE VIDA ---
-
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
-     * Carga datos de ejemplo para bodegas y productos.
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Bodega::all(), Producto::all()
      * @return void
      */
     public function mount()
@@ -73,135 +79,123 @@ class FormularioTraslado extends Component
         $this->productosSeleccionados = [];
     }
 
-    /**
-     * @brief Hook que se ejecuta al actualizar propiedades de búsqueda.
-     * Muestra el dropdown de resultados correspondiente.
-     * @return void
-     */
-    public function updated($propertyName)
-    {
-        if (in_array($propertyName, ['searchOrigen', 'searchDestino', 'searchProducto'])) {
-            $dropdown = 'show' . ucfirst(str_replace('search', '', $propertyName)) . 'Dropdown';
-            $this->$dropdown = true;
-        }
-    }
-
-    // --- PROPIEDADES COMPUTADAS ---
-
-    /**
-     * @brief Filtra las bodegas para el campo "origen" según el término de búsqueda.
-     * @return array
-     */
     public function getOrigenResultsProperty()
     {
-        $search = strtolower($this->searchOrigen);
-        return collect($this->bodegas)
-            ->filter(fn($bodega) => empty($search) || str_contains(strtolower($bodega['nombre']), $search))
-            ->map(fn($bodega) => ['id' => 'B' . $bodega['id'], 'nombre' => $bodega['nombre'], 'tipo' => 'Bodega'])
-            ->all();
+        $results = [];
+
+        // Only show bodegas for traslados (Bodega -> Bodega)
+        foreach ($this->bodegas as $bodega) {
+            if (empty($this->searchOrigen) ||
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
+                $results[] = [
+                    'id' => 'B' . $bodega['id'],
+                    'nombre' => $bodega['nombre'],
+                    'tipo' => 'Bodega'
+                ];
+            }
+        }
+
+        return $results;
     }
 
-    /**
-     * @brief Filtra las bodegas para el campo "destino" según el término de búsqueda.
-     * @return array
-     */
     public function getDestinoResultsProperty()
     {
-        $search = strtolower($this->searchDestino);
-        return collect($this->bodegas)
-            ->filter(fn($bodega) => empty($search) || str_contains(strtolower($bodega['nombre']), $search))
-            ->map(fn($bodega) => ['id' => 'B' . $bodega['id'], 'nombre' => $bodega['nombre'], 'tipo' => 'Bodega'])
-            ->all();
+        $results = [];
+
+        // Only show bodegas for traslados (Bodega -> Bodega)
+        foreach ($this->bodegas as $bodega) {
+            if (empty($this->searchDestino) ||
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
+                $results[] = [
+                    'id' => 'B' . $bodega['id'],
+                    'nombre' => $bodega['nombre'],
+                    'tipo' => 'Bodega'
+                ];
+            }
+        }
+
+        return $results;
     }
 
-    /**
-     * @brief Filtra los productos basados en el término de búsqueda.
-     * @return array
-     */
-    public function getProductoResultsProperty()
-    {
-        if (empty($this->searchProducto)) return $this->productos;
-        $search = strtolower(trim($this->searchProducto));
-        return array_filter($this->productos, fn($p) =>
-            str_contains(strtolower($p['descripcion']), $search) ||
-            str_contains(strtolower(dechex($p['id'])), $search)
-        );
-    }
-
-    /**
-     * @brief Calcula el subtotal del valor de los productos en el traslado.
-     * @return float
-     */
-    public function getSubtotalProperty()
-    {
-        return collect($this->productosSeleccionados)->sum(fn($p) => $p['cantidad'] * $p['precio']);
-    }
-
-    // --- MÉTODOS DE MANEJO DE SELECCIÓN ---
-
-    /**
-     * @brief Establece la bodega de origen seleccionada.
-     * @param string $id ID de la bodega.
-     * @param string $nombre Nombre de la bodega.
-     * @param string $tipo Tipo ('Bodega').
-     * @return void
-     */
     public function selectOrigen($id, $nombre, $tipo)
     {
-        $this->selectedOrigen = ['id' => $id, 'nombre' => $nombre, 'tipo' => $tipo];
+        $this->selectedOrigen = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'tipo' => $tipo
+        ];
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
     }
 
-    /**
-     * @brief Establece la bodega de destino seleccionada.
-     * @param string $id ID de la bodega.
-     * @param string $nombre Nombre de la bodega.
-     * @param string $tipo Tipo ('Bodega').
-     * @return void
-     */
     public function selectDestino($id, $nombre, $tipo)
     {
-        $this->selectedDestino = ['id' => $id, 'nombre' => $nombre, 'tipo' => $tipo];
+        $this->selectedDestino = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'tipo' => $tipo
+        ];
         $this->searchDestino = '';
         $this->showDestinoDropdown = false;
     }
 
-    /**
-     * @brief Limpia la selección del origen.
-     * @return void
-     */
     public function clearOrigen()
     {
         $this->selectedOrigen = null;
+        $this->searchOrigen = '';
+        $this->showOrigenDropdown = false;
     }
 
-    /**
-     * @brief Limpia la selección del destino.
-     * @return void
-     */
     public function clearDestino()
     {
         $this->selectedDestino = null;
+        $this->searchDestino = '';
+        $this->showDestinoDropdown = false;
     }
 
-    /**
-     * @brief Selecciona el primer producto de la lista de resultados de búsqueda.
-     * @return void
-     */
+    public function updatedSearchOrigen()
+    {
+        $this->showOrigenDropdown = true;
+    }
+
+    public function updatedSearchDestino()
+    {
+        $this->showDestinoDropdown = true;
+    }
+
+    public function updatedSearchProducto()
+    {
+        $this->showProductoDropdown = true;
+    }
+
     public function seleccionarPrimerResultado()
     {
         $resultados = $this->productoResults;
         if (!empty($resultados)) {
-            $this->selectProducto(array_values($resultados)[0]['id']);
+            $primerProducto = array_values($resultados)[0];
+            $this->selectProducto($primerProducto['id']);
         }
     }
 
-    /**
-     * @brief Selecciona un producto y lo agrega a la lista de traslado.
-     * @param int $productoId ID del producto.
-     * @return void
-     */
+    public function getProductoResultsProperty()
+    {
+        if (empty($this->searchProducto)) {
+            return $this->productos;
+        }
+
+        $search = strtolower(trim($this->searchProducto));
+
+        return array_filter($this->productos, function($producto) use ($search) {
+            // Convertir el ID a hexadecimal para la comparación
+            $idHex = strtolower(dechex($producto['id']));
+
+            // Buscar tanto en el ID hexadecimal como en la descripción
+            return str_contains(strtolower($producto['descripcion']), $search) ||
+                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
+                   str_contains((string)$producto['id'], $search);
+        });
+    }
+
     public function selectProducto($productoId)
     {
         $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
@@ -217,25 +211,13 @@ class FormularioTraslado extends Component
         $this->showProductoDropdown = false;
     }
 
-    /**
-     * @brief Elimina un producto de la lista de traslado.
-     * @param int $productoId ID del producto a eliminar.
-     * @return void
-     */
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_values(array_filter(
-            $this->productosSeleccionados,
-            fn($item) => $item['id'] !== (int)$productoId
-        ));
+        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
+            return $item['id'] !== (int)$productoId;
+        });
     }
 
-    /**
-     * @brief Actualiza la cantidad de un producto en la lista.
-     * @param int $productoId ID del producto a actualizar.
-     * @param int $cantidad Nueva cantidad (mínimo 1).
-     * @return void
-     */
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
@@ -246,9 +228,17 @@ class FormularioTraslado extends Component
         }
     }
 
+    public function getSubtotalProperty()
+    {
+        return collect($this->productosSeleccionados)->sum(function($producto) {
+            return $producto['cantidad'] * $producto['precio'];
+        });
+    }
+
     /**
-     * @brief Renderiza la vista del componente.
-     * @return \Illuminate\Contracts\View\View
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
      */
     public function render()
     {

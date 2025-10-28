@@ -5,40 +5,26 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class ComprasHub
- * @package App\Livewire
- * @brief Componente principal para la gestión de compras.
+ * Componente ComprasHub
  *
- * Este componente actúa como un panel de control para el módulo de compras,
- * mostrando estadísticas clave y una lista de las compras más recientes.
- * Actualmente, utiliza datos de ejemplo.
+ * Dashboard principal del módulo de compras. Muestra estadísticas del mes
+ * y un resumen de las compras más recientes.
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/compras-hub.blade.php
  */
 class ComprasHub extends Component
 {
-    /**
-     * @var array
-     * @brief Almacena estadísticas relevantes del módulo de compras.
-     *
-     * Incluye total de compras del mes, monto total, compras pendientes y
-     * el número de proveedores activos.
-     */
+    /** @var array Estadísticas del mes actual */
     public $estadisticas = [];
 
-    /**
-     * @var array
-     * @brief Almacena una lista de las compras registradas recientemente.
-     *
-     * Cada compra es un array con 'id', 'numero_factura', 'proveedor',
-     * 'fecha', 'monto' y 'estado'.
-     */
+    /** @var array Listado de compras recientes */
     public $comprasRecientes = [];
 
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
+     * Inicializa el componente con datos mock
      *
-     * Carga datos de ejemplo para las estadísticas y la lista de compras
-     * recientes. En el futuro, debería obtener estos datos de la base de datos.
-     *
+     * @todo Conectar con BD: Compra::where('mes', now()->month)->get()
      * @return void
      */
     public function mount()
@@ -80,11 +66,6 @@ class ComprasHub extends Component
         ];
     }
 
-    /**
-     * @brief Renderiza la vista del componente.
-     *
-     * @return \Illuminate\Contracts\View\View
-     */
     public function render()
     {
         return view('livewire.compras-hub');

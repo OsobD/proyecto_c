@@ -5,29 +5,23 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class ConfiguracionSistema
- * @package App\Livewire
- * @brief Componente para gestionar la configuración general del sistema.
+ * Componente ConfiguracionSistema
  *
- * Este componente permite a los administradores ajustar parámetros clave
- * del sistema, como el valor del Impuesto al Valor Agregado (IVA).
+ * Permite configurar parámetros globales del sistema como el porcentaje de IVA,
+ * umbrales de stock, y otras configuraciones administrativas.
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/configuracion-sistema.blade.php
  */
 class ConfiguracionSistema extends Component
 {
-    /**
-     * @var float
-     * @brief Porcentaje del Impuesto al Valor Agregado (IVA).
-     *
-     * Este valor se utiliza para los cálculos de impuestos en los módulos
-     * de compras y ventas. El valor se representa como un porcentaje, por
-     * ejemplo, 12.0 para el 12%.
-     */
+    /** @var float Porcentaje de IVA aplicable (Guatemala: 12%) */
     public $iva = 12.0;
 
     /**
-     * @brief Renderiza la vista del componente.
+     * Renderiza la vista del componente
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\View\View
      */
     public function render()
     {

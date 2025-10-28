@@ -5,40 +5,26 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class TrasladosHub
- * @package App\Livewire
- * @brief Componente principal para la gestión de traslados y movimientos de inventario.
+ * Componente TrasladosHub
  *
- * Este componente actúa como un panel de control para el módulo de traslados,
- * mostrando estadísticas clave (requisiciones, traslados, devoluciones) y una
- * lista de los movimientos más recientes. Actualmente, utiliza datos de ejemplo.
+ * Dashboard principal del módulo de traslados. Muestra estadísticas del mes
+ * (requisiciones, traslados, devoluciones) y un resumen de los movimientos más recientes.
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/traslados-hub.blade.php
  */
 class TrasladosHub extends Component
 {
-    /**
-     * @var array
-     * @brief Almacena estadísticas relevantes del módulo de traslados.
-     *
-     * Incluye el total de requisiciones, traslados y devoluciones del mes,
-     * así como el número de movimientos pendientes.
-     */
+    /** @var array Estadísticas del mes actual */
     public $estadisticas = [];
 
-    /**
-     * @var array
-     * @brief Almacena una lista de los traslados registrados recientemente.
-     *
-     * Cada traslado es un array con 'id', 'tipo', 'correlativo', 'origen',
-     * 'destino', 'fecha' y 'estado'.
-     */
+    /** @var array Listado de traslados recientes */
     public $trasladosRecientes = [];
 
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
+     * Inicializa el componente con datos mock
      *
-     * Carga datos de ejemplo para las estadísticas y la lista de traslados
-     * recientes. En el futuro, debería obtener estos datos de la base de datos.
-     *
+     * @todo Conectar con BD: Traslado::where('mes', now()->month)->get()
      * @return void
      */
     public function mount()
@@ -84,9 +70,9 @@ class TrasladosHub extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
+     * Renderiza la vista del componente
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\View\View
      */
     public function render()
     {

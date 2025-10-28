@@ -5,39 +5,45 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class GestionBodegas
- * @package App\Livewire
- * @brief Componente para la gestión de bodegas y tarjetas de responsabilidad.
+ * Componente GestionBodegas
  *
- * Este componente permite a los usuarios ver una lista de las bodegas existentes
- * (tanto físicas como de responsabilidad) y agregar nuevas a través de un modal.
+ * Gestiona el CRUD de bodegas del sistema de inventario. Permite administrar tanto
+ * bodegas físicas como tarjetas de responsabilidad (bodegas virtuales asignadas a personas).
+ *
+ * **Tipos de bodegas:**
+ * - Física: Almacenes o bodegas físicas de la organización
+ * - Responsabilidad: Tarjetas de responsabilidad asignadas a personas específicas
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/gestion-bodegas.blade.php
  */
 class GestionBodegas extends Component
 {
-    // --- PROPIEDADES PÚBLICAS ---
-
-    /** @var array Lista de bodegas a mostrar. */
+    /** @var array Listado de bodegas */
     public $bodegas = [];
-    /** @var bool Controla la visibilidad del modal de creación/edición. */
+
+    /** @var bool Controla visibilidad del modal */
     public $isModalOpen = false;
-    /** @var string Nombre de la nueva bodega. */
+
+    /** @var string|null Nombre de la bodega */
     public $nombre;
-    /** @var string|null Tipo de la nueva bodega ('Física' o 'Responsabilidad'). */
+
+    /** @var string|null Tipo de bodega seleccionado */
     public $tipo = null;
-    /** @var bool Controla la visibilidad del dropdown para seleccionar el tipo. */
+
+    /** @var bool Controla visibilidad del dropdown de tipo */
     public $showTipoDropdown = false;
 
-    /** @var array Lista de los tipos de bodega disponibles para la selección. */
+    /** @var array Tipos de bodega disponibles */
     public $tiposDisponibles = [
         ['id' => 1, 'nombre' => 'Física'],
         ['id' => 2, 'nombre' => 'Responsabilidad'],
     ];
 
-    // --- MÉTODOS DE CICLO DE VIDA ---
-
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
-     * Carga datos de ejemplo para la lista de bodegas.
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Bodega::all()
      * @return void
      */
     public function mount()
@@ -51,56 +57,43 @@ class GestionBodegas extends Component
         ];
     }
 
-    // --- MÉTODOS DE MANEJO DEL MODAL ---
+    /**
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
+     */
+    public function render()
+    {
+        return view('livewire.gestion-bodegas');
+    }
 
     /**
-     * @brief Abre el modal para crear una nueva bodega.
+     * Abre el modal para crear/editar bodega
+     *
      * @return void
      */
     public function openModal()
     {
-        $this->resetForm();
         $this->isModalOpen = true;
+        $this->showTipoDropdown = false;
     }
 
     /**
-     * @brief Cierra el modal y reinicia el formulario.
+     * Cierra el modal y limpia el formulario
+     *
      * @return void
      */
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->resetForm();
-    }
-
-    /**
-     * @brief Reinicia las propiedades del formulario del modal.
-     * @return void
-     */
-    private function resetForm()
-    {
-        $this->nombre = '';
+        $this->nombre = null;
         $this->tipo = null;
-        $this->showTipoDropdown = false;
     }
 
     /**
-     * @brief Simula el guardado de una nueva bodega.
-     * En una implementación real, aquí iría la lógica de validación y
-     * almacenamiento en la base de datos.
-     * @return void
-     */
-    public function saveBodega()
-    {
-        // Lógica de validación y guardado iría aquí.
-        $this->closeModal();
-    }
-
-    // --- MÉTODOS DE SELECCIÓN ---
-
-    /**
-     * @brief Establece el tipo de bodega seleccionado desde el dropdown.
-     * @param string $tipo El tipo de bodega a seleccionar.
+     * Selecciona un tipo de bodega desde el dropdown
+     *
+     * @param string $tipo Tipo de bodega seleccionado
      * @return void
      */
     public function selectTipo($tipo)
@@ -110,7 +103,8 @@ class GestionBodegas extends Component
     }
 
     /**
-     * @brief Limpia la selección de tipo de bodega.
+     * Limpia la selección de tipo de bodega
+     *
      * @return void
      */
     public function clearTipo()
@@ -119,11 +113,13 @@ class GestionBodegas extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
-     * @return \Illuminate\Contracts\View\View
+     * Guarda la bodega (crear o actualizar)
+     *
+     * @todo Implementar validación y persistencia en BD
+     * @return void
      */
-    public function render()
+    public function saveBodega()
     {
-        return view('livewire.gestion-bodegas');
+        $this->closeModal();
     }
 }

@@ -5,29 +5,22 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class GestionUsuarios
- * @package App\Livewire
- * @brief Componente para la gestión de usuarios del sistema.
+ * Componente GestionUsuarios
  *
- * Este componente se encarga de mostrar una lista de los usuarios registrados.
- * Actualmente, utiliza datos de ejemplo para la visualización.
+ * Gestiona el listado de usuarios del sistema con su información básica (nombre, email, rol).
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/gestion-usuarios.blade.php
  */
 class GestionUsuarios extends Component
 {
-    /**
-     * @var array
-     * @brief Almacena la lista de usuarios.
-     *
-     * Cada usuario es un array asociativo con 'id', 'nombre', 'email' y 'rol'.
-     */
+    /** @var array Listado de usuarios del sistema */
     public $usuarios = [];
 
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
+     * Inicializa el componente con datos mock de prueba
      *
-     * Carga los datos de ejemplo de usuarios. En una implementación futura,
-     * este método debería obtener los datos desde la base de datos.
-     *
+     * @todo Reemplazar con consultas a BD: User::all()
      * @return void
      */
     public function mount()
@@ -40,9 +33,9 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
+     * Renderiza la vista del componente
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\View\View
      */
     public function render()
     {

@@ -5,34 +5,27 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class BitacoraSistema
- * @package App\Livewire
- * @brief Componente de Livewire para gestionar y mostrar la bitácora del sistema.
+ * Componente BitacoraSistema
  *
- * Este componente se encarga de obtener y presentar los registros de actividad
- * (logs) del sistema. Actualmente, utiliza datos de ejemplo para la visualización.
+ * Muestra el registro de actividades del sistema (audit log) con información
+ * de acciones realizadas por usuarios, timestamps y descripciones detalladas.
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/bitacora-sistema.blade.php
  */
 class BitacoraSistema extends Component
 {
-    /**
-     * @var array
-     * @brief Almacena los registros de la bitácora del sistema.
-     *
-     * Cada registro es un array asociativo con 'fecha', 'usuario', 'accion' y 'descripcion'.
-     */
+    /** @var array Listado de registros de auditoría */
     public $logs = [];
 
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
+     * Inicializa el componente con datos mock de prueba
      *
-     * Carga los datos de ejemplo en la propiedad $logs. En una implementación
-     * futura, este método debería obtener los registros desde la base de datos.
-     *
+     * @todo Conectar con BD: AuditLog::orderBy('created_at', 'desc')->get()
      * @return void
      */
     public function mount()
     {
-        // Datos de ejemplo para la bitácora
         $this->logs = [
             [
                 'fecha' => '2023-10-26 10:00:00',
@@ -56,9 +49,9 @@ class BitacoraSistema extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
+     * Renderiza la vista del componente
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\View\View
      */
     public function render()
     {

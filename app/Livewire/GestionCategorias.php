@@ -5,37 +5,35 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class GestionCategorias
- * @package App\Livewire
- * @brief Componente para la gestión de categorías de productos.
+ * Componente GestionCategorias
  *
- * Este componente permite a los usuarios buscar, crear, editar y cambiar el
- * estado (activo/inactivo) de las categorías de productos. Las operaciones
- * de creación y edición se realizan a través de un modal.
+ * CRUD simple para gestionar categorías de productos. Permite crear, editar,
+ * buscar y activar/desactivar categorías.
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/gestion-categorias.blade.php
  */
 class GestionCategorias extends Component
 {
-    // --- PROPIEDADES PÚBLICAS ---
-
-    /** @var array Lista de todas las categorías. */
+    /** @var array Listado de categorías */
     public $categorias = [];
-    /** @var string Término de búsqueda para filtrar categorías. */
+
+    /** @var string Término de búsqueda */
     public $searchCategoria = '';
-    /** @var bool Controla la visibilidad del modal de creación/edición. */
+
+    /** @var bool Controla visibilidad del modal */
     public $showModal = false;
-    /** @var int|null ID de la categoría que se está editando. Null si se crea una nueva. */
+
+    /** @var int|null ID de categoría en edición */
     public $editingId = null;
 
-    // --- CAMPOS DEL FORMULARIO DEL MODAL ---
-
-    /** @var string Nombre de la categoría en el formulario. */
+    /** @var string Nombre de la categoría */
     public $nombre = '';
 
-    // --- MÉTODOS DE CICLO DE VIDA ---
-
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
-     * Carga datos de ejemplo para la lista de categorías.
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Categoria::all()
      * @return void
      */
     public function mount()
@@ -48,25 +46,27 @@ class GestionCategorias extends Component
         ];
     }
 
-    // --- PROPIEDADES COMPUTADAS ---
-
     /**
-     * @brief Filtra las categorías según el término de búsqueda.
-     * @return array
+     * Computed property: Retorna categorías filtradas por búsqueda
+     *
+     * @return array Categorías que coinciden con el término de búsqueda
      */
     public function getCategoriasFiltradasProperty()
     {
         if (empty($this->searchCategoria)) {
             return $this->categorias;
         }
+
         $search = strtolower(trim($this->searchCategoria));
-        return array_filter($this->categorias, fn($c) => str_contains(strtolower($c['nombre']), $search));
+
+        return array_filter($this->categorias, function($categoria) use ($search) {
+            return str_contains(strtolower($categoria['nombre']), $search);
+        });
     }
 
-    // --- MÉTODOS DE MANEJO DEL MODAL ---
-
     /**
-     * @brief Abre el modal en modo de creación.
+     * Abre el modal en modo creación
+     *
      * @return void
      */
     public function abrirModal()
@@ -76,13 +76,15 @@ class GestionCategorias extends Component
     }
 
     /**
-     * @brief Abre el modal en modo de edición con los datos de una categoría existente.
-     * @param int $id ID de la categoría a editar.
+     * Abre el modal en modo edición con datos de la categoría seleccionada
+     *
+     * @param int $id ID de la categoría a editar
      * @return void
      */
     public function editarCategoria($id)
     {
         $categoria = collect($this->categorias)->firstWhere('id', $id);
+
         if ($categoria) {
             $this->editingId = $id;
             $this->nombre = $categoria['nombre'];
@@ -91,28 +93,22 @@ class GestionCategorias extends Component
     }
 
     /**
-     * @brief Cierra el modal y reinicia el formulario.
-     * @return void
-     */
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    // --- MÉTODOS DE LÓGICA DE NEGOCIO ---
-
-    /**
-     * @brief Guarda una categoría nueva o actualiza una existente.
-     * Simula la lógica de validación y persistencia de datos.
+     * Guarda una categoría (crear o actualizar según editingId)
+     *
      * @return void
      */
     public function guardarCategoria()
     {
-        $this->validate(['nombre' => 'required|min:3|max:100']);
+        $this->validate([
+            'nombre' => 'required|min:3|max:100',
+        ], [
+            'nombre.required' => 'El nombre de la categoría es obligatorio.',
+            'nombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+            'nombre.max' => 'El nombre no puede exceder 100 caracteres.',
+        ]);
 
         if ($this->editingId) {
-            // Actualizar categoría
+            // Actualizar categoría existente
             $this->categorias = array_map(function($cat) {
                 if ($cat['id'] === $this->editingId) {
                     $cat['nombre'] = $this->nombre;
@@ -121,17 +117,22 @@ class GestionCategorias extends Component
             }, $this->categorias);
         } else {
             // Crear nueva categoría
-            $newId = count($this->categorias) > 0 ? max(array_column($this->categorias, 'id')) + 1 : 1;
-            $this->categorias[] = ['id' => $newId, 'nombre' => $this->nombre, 'activo' => true];
+            $newId = max(array_column($this->categorias, 'id')) + 1;
+            $this->categorias[] = [
+                'id' => $newId,
+                'nombre' => $this->nombre,
+                'activo' => true,
+            ];
         }
 
         $this->closeModal();
-        session()->flash('message', $this->editingId ? 'Categoría actualizada.' : 'Categoría creada.');
+        session()->flash('message', $this->editingId ? 'Categoría actualizada exitosamente.' : 'Categoría creada exitosamente.');
     }
 
     /**
-     * @brief Cambia el estado (activo/inactivo) de una categoría.
-     * @param int $id ID de la categoría a modificar.
+     * Activa/desactiva una categoría (soft delete)
+     *
+     * @param int $id ID de la categoría
      * @return void
      */
     public function toggleEstado($id)
@@ -142,11 +143,24 @@ class GestionCategorias extends Component
             }
             return $cat;
         }, $this->categorias);
+
         session()->flash('message', 'Estado de la categoría actualizado.');
     }
 
     /**
-     * @brief Reinicia las propiedades del formulario del modal.
+     * Cierra el modal
+     *
+     * @return void
+     */
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
+    /**
+     * Limpia el formulario y errores de validación
+     *
      * @return void
      */
     private function resetForm()
@@ -157,8 +171,9 @@ class GestionCategorias extends Component
     }
 
     /**
-     * @brief Renderiza la vista del componente.
-     * @return \Illuminate\Contracts\View\View
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
      */
     public function render()
     {

@@ -5,50 +5,57 @@ namespace App\Livewire;
 use Livewire\Component;
 
 /**
- * @class FormularioRequisicion
- * @package App\Livewire
- * @brief Componente para gestionar el formulario de requisición de productos.
+ * Componente FormularioRequisicion
  *
- * Este componente maneja la lógica para crear una requisición de salida de
- * productos desde una bodega hacia un empleado (tarjeta). Permite seleccionar
- * origen (bodega) y destino (empleado), así como buscar y agregar productos.
+ * Formulario para registrar requisiciones de productos desde bodega hacia
+ * tarjetas de responsabilidad (empleados).
+ * Flujo: Bodega → Tarjeta de Responsabilidad (Empleado)
+ *
+ * @package App\Livewire
+ * @see resources/views/livewire/formulario-requisicion.blade.php
  */
 class FormularioRequisicion extends Component
 {
-    // --- PROPIEDADES PÚBLICAS ---
-
-    /** @var array Datos de ejemplo para empleados, bodegas y productos. */
+    /** @var array Listado de empleados (tarjetas de responsabilidad) */
     public $empleados = [];
+
+    /** @var array Listado de bodegas */
     public $bodegas = [];
+
+    /** @var array Listado de productos */
     public $productos = [];
 
-    /** @var string Término de búsqueda para la bodega de origen. */
+    /** @var string Término de búsqueda para bodega origen */
     public $searchOrigen = '';
-    /** @var string Término de búsqueda para el empleado de destino. */
+
+    /** @var string Término de búsqueda para empleado destino */
     public $searchDestino = '';
-    /** @var string Término de búsqueda para los productos. */
+
+    /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
 
-    /** @var array|null Bodega de origen seleccionada. */
+    /** @var array|null Bodega origen seleccionada */
     public $selectedOrigen = null;
-    /** @var array|null Empleado de destino seleccionado. */
+
+    /** @var array|null Empleado destino seleccionado */
     public $selectedDestino = null;
 
-    /** @var bool Controla la visibilidad del dropdown de resultados para el origen. */
+    /** @var bool Controla dropdown de bodega origen */
     public $showOrigenDropdown = false;
-    /** @var bool Controla la visibilidad del dropdown de resultados para el destino. */
+
+    /** @var bool Controla dropdown de empleado destino */
     public $showDestinoDropdown = false;
-    /** @var bool Controla la visibilidad del dropdown de resultados para los productos. */
+
+    /** @var bool Controla dropdown de productos */
     public $showProductoDropdown = false;
 
-    /** @var array Lista de productos agregados a la requisición. */
+    /** @var array Productos agregados a la requisición */
     public $productosSeleccionados = [];
 
-    // --- MÉTODOS DE CICLO DE VIDA ---
-
     /**
-     * @brief Método que se ejecuta al inicializar el componente.
-     * Carga datos de ejemplo para bodegas, empleados y productos.
+     * Inicializa el componente con datos mock de prueba
+     *
+     * @todo Reemplazar con consultas a BD: Bodega::all(), User::all(), Producto::all()
      * @return void
      */
     public function mount()
@@ -75,135 +82,123 @@ class FormularioRequisicion extends Component
         $this->productosSeleccionados = [];
     }
 
-    /**
-     * @brief Hook que se ejecuta al actualizar propiedades de búsqueda.
-     * Muestra el dropdown de resultados correspondiente.
-     * @return void
-     */
-    public function updated($propertyName)
-    {
-        if (in_array($propertyName, ['searchOrigen', 'searchDestino', 'searchProducto'])) {
-            $dropdown = 'show' . ucfirst(str_replace('search', '', $propertyName)) . 'Dropdown';
-            $this->$dropdown = true;
-        }
-    }
-
-    // --- PROPIEDADES COMPUTADAS ---
-
-    /**
-     * @brief Filtra las bodegas para el campo "origen" según el término de búsqueda.
-     * @return array
-     */
     public function getOrigenResultsProperty()
     {
-        $search = strtolower($this->searchOrigen);
-        return collect($this->bodegas)
-            ->filter(fn($bodega) => empty($search) || str_contains(strtolower($bodega['nombre']), $search))
-            ->map(fn($bodega) => ['id' => 'B' . $bodega['id'], 'nombre' => $bodega['nombre'], 'tipo' => 'Bodega'])
-            ->all();
+        $results = [];
+
+        // Only show bodegas as origin (Bodega -> Tarjeta)
+        foreach ($this->bodegas as $bodega) {
+            if (empty($this->searchOrigen) ||
+                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
+                $results[] = [
+                    'id' => 'B' . $bodega['id'],
+                    'nombre' => $bodega['nombre'],
+                    'tipo' => 'Bodega'
+                ];
+            }
+        }
+
+        return $results;
     }
 
-    /**
-     * @brief Filtra los empleados para el campo "destino" según el término de búsqueda.
-     * @return array
-     */
     public function getDestinoResultsProperty()
     {
-        $search = strtolower($this->searchDestino);
-        return collect($this->empleados)
-            ->filter(fn($empleado) => empty($search) || str_contains(strtolower($empleado['nombre']), $search))
-            ->map(fn($empleado) => ['id' => 'E' . $empleado['id'], 'nombre' => $empleado['nombre'], 'tipo' => 'Tarjeta'])
-            ->all();
+        $results = [];
+
+        // Only show empleados/tarjetas as destination (Bodega -> Tarjeta)
+        foreach ($this->empleados as $empleado) {
+            if (empty($this->searchDestino) ||
+                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
+                $results[] = [
+                    'id' => 'E' . $empleado['id'],
+                    'nombre' => $empleado['nombre'],
+                    'tipo' => 'Tarjeta'
+                ];
+            }
+        }
+
+        return $results;
     }
 
-    /**
-     * @brief Filtra los productos basados en el término de búsqueda.
-     * @return array
-     */
-    public function getProductoResultsProperty()
-    {
-        if (empty($this->searchProducto)) return $this->productos;
-        $search = strtolower(trim($this->searchProducto));
-        return array_filter($this->productos, fn($p) =>
-            str_contains(strtolower($p['descripcion']), $search) ||
-            str_contains(strtolower(dechex($p['id'])), $search)
-        );
-    }
-
-    /**
-     * @brief Calcula el subtotal del valor de los productos en la requisición.
-     * @return float
-     */
-    public function getSubtotalProperty()
-    {
-        return collect($this->productosSeleccionados)->sum(fn($p) => $p['cantidad'] * $p['precio']);
-    }
-
-    // --- MÉTODOS DE MANEJO DE SELECCIÓN ---
-
-    /**
-     * @brief Establece la bodega de origen seleccionada.
-     * @param string $id ID de la bodega.
-     * @param string $nombre Nombre de la bodega.
-     * @param string $tipo Tipo ('Bodega').
-     * @return void
-     */
     public function selectOrigen($id, $nombre, $tipo)
     {
-        $this->selectedOrigen = ['id' => $id, 'nombre' => $nombre, 'tipo' => $tipo];
+        $this->selectedOrigen = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'tipo' => $tipo
+        ];
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
     }
 
-    /**
-     * @brief Establece el empleado de destino seleccionado.
-     * @param string $id ID del empleado.
-     * @param string $nombre Nombre del empleado.
-     * @param string $tipo Tipo ('Tarjeta').
-     * @return void
-     */
     public function selectDestino($id, $nombre, $tipo)
     {
-        $this->selectedDestino = ['id' => $id, 'nombre' => $nombre, 'tipo' => $tipo];
+        $this->selectedDestino = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'tipo' => $tipo
+        ];
         $this->searchDestino = '';
         $this->showDestinoDropdown = false;
     }
 
-    /**
-     * @brief Limpia la selección del origen.
-     * @return void
-     */
     public function clearOrigen()
     {
         $this->selectedOrigen = null;
+        $this->searchOrigen = '';
+        $this->showOrigenDropdown = false;
     }
 
-    /**
-     * @brief Limpia la selección del destino.
-     * @return void
-     */
     public function clearDestino()
     {
         $this->selectedDestino = null;
+        $this->searchDestino = '';
+        $this->showDestinoDropdown = false;
     }
 
-    /**
-     * @brief Selecciona el primer producto de la lista de resultados de búsqueda.
-     * @return void
-     */
+    public function updatedSearchOrigen()
+    {
+        $this->showOrigenDropdown = true;
+    }
+
+    public function updatedSearchDestino()
+    {
+        $this->showDestinoDropdown = true;
+    }
+
+    public function updatedSearchProducto()
+    {
+        $this->showProductoDropdown = true;
+    }
+
     public function seleccionarPrimerResultado()
     {
         $resultados = $this->productoResults;
         if (!empty($resultados)) {
-            $this->selectProducto(array_values($resultados)[0]['id']);
+            $primerProducto = array_values($resultados)[0];
+            $this->selectProducto($primerProducto['id']);
         }
     }
 
-    /**
-     * @brief Selecciona un producto y lo agrega a la lista de requisición.
-     * @param int $productoId ID del producto.
-     * @return void
-     */
+    public function getProductoResultsProperty()
+    {
+        if (empty($this->searchProducto)) {
+            return $this->productos;
+        }
+
+        $search = strtolower(trim($this->searchProducto));
+
+        return array_filter($this->productos, function($producto) use ($search) {
+            // Convertir el ID a hexadecimal para la comparación
+            $idHex = strtolower(dechex($producto['id']));
+
+            // Buscar tanto en el ID hexadecimal como en la descripción
+            return str_contains(strtolower($producto['descripcion']), $search) ||
+                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
+                   str_contains((string)$producto['id'], $search);
+        });
+    }
+
     public function selectProducto($productoId)
     {
         $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
@@ -219,25 +214,13 @@ class FormularioRequisicion extends Component
         $this->showProductoDropdown = false;
     }
 
-    /**
-     * @brief Elimina un producto de la lista de requisición.
-     * @param int $productoId ID del producto a eliminar.
-     * @return void
-     */
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_values(array_filter(
-            $this->productosSeleccionados,
-            fn($item) => $item['id'] !== (int)$productoId
-        ));
+        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
+            return $item['id'] !== (int)$productoId;
+        });
     }
 
-    /**
-     * @brief Actualiza la cantidad de un producto en la lista.
-     * @param int $productoId ID del producto a actualizar.
-     * @param int $cantidad Nueva cantidad (mínimo 1).
-     * @return void
-     */
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
@@ -248,9 +231,17 @@ class FormularioRequisicion extends Component
         }
     }
 
+    public function getSubtotalProperty()
+    {
+        return collect($this->productosSeleccionados)->sum(function($producto) {
+            return $producto['cantidad'] * $producto['precio'];
+        });
+    }
+
     /**
-     * @brief Renderiza la vista del componente.
-     * @return \Illuminate\Contracts\View\View
+     * Renderiza la vista del componente
+     *
+     * @return \Illuminate\View\View
      */
     public function render()
     {

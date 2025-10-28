@@ -1,4 +1,16 @@
+{{--
+    Vista: Gestión de Categorías
+    Descripción: Interfaz CRUD simple para categorías de productos con búsqueda en tiempo real
+--}}
 <div>
+    {{-- Breadcrumbs --}}
+    <x-breadcrumbs :items="[
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Productos', 'url' => '/productos'],
+        ['label' => 'Categorías'],
+    ]" />
+
+    {{-- Encabezado con título y botón para agregar categoría --}}
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Categorías</h1>
         <button
@@ -8,15 +20,16 @@
         </button>
     </div>
 
-    {{-- Flash Message --}}
+    {{-- Alerta de éxito para operaciones CRUD --}}
     @if (session()->has('message'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             {{ session('message') }}
         </div>
     @endif
 
+    {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
-        {{-- Buscador --}}
+        {{-- Campo de búsqueda con filtrado reactivo --}}
         <div class="mb-6">
             <input
                 type="text"
@@ -25,7 +38,7 @@
                 placeholder="Buscar categoría...">
         </div>
 
-        {{-- Tabla de Categorías --}}
+        {{-- Tabla de listado de categorías --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -50,6 +63,7 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center">
+                                    {{-- Editar --}}
                                     <button
                                         wire:click="editarCategoria({{ $categoria['id'] }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200 mr-2">
@@ -57,6 +71,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
                                         </svg>
                                     </button>
+                                    {{-- Toggle Estado --}}
                                     <button
                                         wire:click="toggleEstado({{ $categoria['id'] }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-full {{ $categoria['activo'] ? 'bg-red-100 hover:bg-red-200' : 'bg-green-100 hover:bg-green-200' }}">

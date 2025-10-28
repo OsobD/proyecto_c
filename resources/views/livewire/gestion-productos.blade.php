@@ -1,34 +1,47 @@
+{{--
+    Vista: Gestión de Productos
+    Descripción: Interfaz CRUD para productos del inventario con búsqueda en tiempo real,
+                 modal de edición y visualización de historial de compras
+--}}
 <div>
+    {{-- Breadcrumbs --}}
+    <x-breadcrumbs :items="[
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Productos'],
+    ]" />
+
+    {{-- Encabezado con título y botón para agregar producto --}}
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Productos</h1>
         <button
             wire:click="abrirModal"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+            class="bg-eemq-horizon hover:bg-eemq-horizon-600 text-white font-bold py-2 px-4 rounded-lg">
             + Nuevo Producto
         </button>
     </div>
 
-    {{-- Flash Message --}}
+    {{-- Alerta de éxito para operaciones CRUD --}}
     @if (session()->has('message'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             {{ session('message') }}
         </div>
     @endif
 
+    {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
-        {{-- Buscador --}}
+        {{-- Campo de búsqueda con filtrado reactivo --}}
         <div class="mb-6">
             <input
                 type="text"
                 wire:model.live.debounce.300ms="searchProducto"
-                class="w-full md:w-1/2 px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full md:w-1/2 px-4 py-2 border-2 border-eemq-heather-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-eemq-horizon focus:border-transparent"
                 placeholder="Buscar por código, descripción o categoría...">
         </div>
 
-        {{-- Tabla de Productos --}}
+        {{-- Tabla de listado de productos --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
-                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                <thead class="bg-eemq-heather-100 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
                         <th class="py-3 px-6 text-left">Código</th>
                         <th class="py-3 px-6 text-left">Descripción</th>
@@ -39,7 +52,7 @@
                 </thead>
                 <tbody class="text-gray-600 text-sm font-light">
                     @forelse ($this->productosFiltrados as $producto)
-                        <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <tr class="border-b border-eemq-heather-100 hover:bg-eemq-athens-100">
                             <td class="py-3 px-6 text-left whitespace-nowrap">
                                 <span class="font-medium font-mono">{{ $producto['codigo'] }}</span>
                             </td>
@@ -47,7 +60,7 @@
                                 {{ $producto['descripcion'] }}
                             </td>
                             <td class="py-3 px-6 text-left">
-                                <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-1 rounded">
+                                <span class="bg-eemq-horizon-100 text-eemq-chambray text-xs font-semibold px-2 py-1 rounded">
                                     {{ $this->getNombreCategoria($producto['categoria_id']) }}
                                 </span>
                             </td>
@@ -55,7 +68,7 @@
                                 @if($producto['activo'])
                                     <span class="bg-green-200 text-green-700 py-1 px-3 rounded-full text-xs font-semibold">Activo</span>
                                 @else
-                                    <span class="bg-red-200 text-red-700 py-1 px-3 rounded-full text-xs font-semibold">Inactivo</span>
+                                    <span class="bg-eemq-crimson-200 text-eemq-crimson-700 py-1 px-3 rounded-full text-xs font-semibold">Inactivo</span>
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -64,9 +77,9 @@
                                     @if(count($producto['historial']) > 0)
                                         <button
                                             wire:click="toggleHistorial({{ $producto['id'] }})"
-                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-purple-100 hover:bg-purple-200"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-eemq-heather-100 hover:bg-eemq-heather-200"
                                             title="Ver historial de precios">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-eemq-chambray" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </button>
@@ -74,17 +87,17 @@
                                     {{-- Editar --}}
                                     <button
                                         wire:click="editarProducto({{ $producto['id'] }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        class="w-8 h-8 flex items-center justify-center rounded-full bg-eemq-horizon-100 hover:bg-eemq-horizon-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-eemq-horizon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
                                         </svg>
                                     </button>
                                     {{-- Toggle Estado --}}
                                     <button
                                         wire:click="toggleEstado({{ $producto['id'] }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-full {{ $producto['activo'] ? 'bg-red-100 hover:bg-red-200' : 'bg-green-100 hover:bg-green-200' }}">
+                                        class="w-8 h-8 flex items-center justify-center rounded-full {{ $producto['activo'] ? 'bg-eemq-crimson-100 hover:bg-eemq-crimson-200' : 'bg-green-100 hover:bg-green-200' }}">
                                         @if($producto['activo'])
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-eemq-crimson" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                             </svg>
                                         @else
@@ -98,12 +111,12 @@
                         </tr>
                         {{-- Historial expandible --}}
                         @if($showHistorial === $producto['id'] && count($producto['historial']) > 0)
-                            <tr class="bg-gray-50">
+                            <tr class="bg-eemq-athens">
                                 <td colspan="5" class="py-4 px-6">
                                     <div class="ml-8">
                                         <h4 class="font-semibold text-gray-700 mb-2">Historial de Precios</h4>
-                                        <table class="min-w-full bg-white border border-gray-200 rounded">
-                                            <thead class="bg-gray-100">
+                                        <table class="min-w-full bg-white border border-eemq-heather-100 rounded">
+                                            <thead class="bg-eemq-athens-100">
                                                 <tr>
                                                     <th class="py-2 px-4 text-left text-xs font-semibold text-gray-600">Fecha</th>
                                                     <th class="py-2 px-4 text-left text-xs font-semibold text-gray-600">Proveedor</th>
@@ -113,7 +126,7 @@
                                             </thead>
                                             <tbody>
                                                 @foreach($producto['historial'] as $registro)
-                                                    <tr class="border-t border-gray-200">
+                                                    <tr class="border-t border-eemq-heather-100">
                                                         <td class="py-2 px-4 text-sm">{{ $registro['fecha'] }}</td>
                                                         <td class="py-2 px-4 text-sm">{{ $registro['proveedor'] }}</td>
                                                         <td class="py-2 px-4 text-sm text-right font-semibold">Q{{ number_format($registro['costo'], 2) }}</td>
@@ -173,10 +186,10 @@
                         type="text"
                         id="codigo"
                         wire:model="codigo"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('codigo') border-red-500 @enderror"
+                        class="w-full px-4 py-2 border-2 border-eemq-heather-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-eemq-horizon focus:border-transparent @error('codigo') border-eemq-crimson @enderror"
                         placeholder="Ej: PROD-001">
                     @error('codigo')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-eemq-crimson text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -189,10 +202,10 @@
                         type="text"
                         id="descripcion"
                         wire:model="descripcion"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('descripcion') border-red-500 @enderror"
+                        class="w-full px-4 py-2 border-2 border-eemq-heather-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-eemq-horizon focus:border-transparent @error('descripcion') border-eemq-crimson @enderror"
                         placeholder="Ej: Tornillos de acero inoxidable">
                     @error('descripcion')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-eemq-crimson text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -205,21 +218,21 @@
                         <button
                             type="button"
                             wire:click="abrirSubModalCategoria"
-                            class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                            class="text-eemq-horizon hover:text-eemq-horizon-700 text-sm font-semibold">
                             + Crear Categoría
                         </button>
                     </div>
                     <select
                         id="categoriaId"
                         wire:model="categoriaId"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('categoriaId') border-red-500 @enderror">
+                        class="w-full px-4 py-2 border-2 border-eemq-heather-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-eemq-horizon focus:border-transparent @error('categoriaId') border-eemq-crimson @enderror">
                         <option value="">Seleccione una categoría</option>
                         @foreach($this->categoriasActivas as $categoria)
                             <option value="{{ $categoria['id'] }}">{{ $categoria['nombre'] }}</option>
                         @endforeach
                     </select>
                     @error('categoriaId')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-eemq-crimson text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -227,12 +240,12 @@
                     <button
                         type="button"
                         wire:click="closeModal"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
+                        class="bg-eemq-heather-200 hover:bg-eemq-heather-300 text-gray-800 font-semibold py-2 px-4 rounded">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                        class="bg-eemq-horizon hover:bg-eemq-horizon-600 text-white font-semibold py-2 px-4 rounded">
                         {{ $editingId ? 'Actualizar' : 'Crear' }}
                     </button>
                 </div>
@@ -273,10 +286,10 @@
                         type="text"
                         id="nuevaCategoriaNombre"
                         wire:model="nuevaCategoriaNombre"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nuevaCategoriaNombre') border-red-500 @enderror"
+                        class="w-full px-4 py-2 border-2 border-eemq-heather-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-eemq-horizon focus:border-transparent @error('nuevaCategoriaNombre') border-eemq-crimson @enderror"
                         placeholder="Ej: Equipos de Protección">
                     @error('nuevaCategoriaNombre')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-eemq-crimson text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -284,12 +297,12 @@
                     <button
                         type="button"
                         wire:click="closeSubModalCategoria"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
+                        class="bg-eemq-heather-200 hover:bg-eemq-heather-300 text-gray-800 font-semibold py-2 px-4 rounded">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                        class="bg-eemq-horizon hover:bg-eemq-horizon-600 text-white font-semibold py-2 px-4 rounded">
                         Crear
                     </button>
                 </div>
