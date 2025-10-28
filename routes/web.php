@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Livewire\HubPrincipal;
+
+Route::get('/', HubPrincipal::class)->name('hub.principal');
 
 // Rutas de Compras
 Route::get('/compras', \App\Livewire\ComprasHub::class)->name('compras');
