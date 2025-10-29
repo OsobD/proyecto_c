@@ -15,11 +15,33 @@ npm run dev              # Mantener corriendo durante desarrollo
 
 ```
 
-** Credenciales **
-Usuario Admin:
-Email: admin@eemq.com
-Contraseña: admin123 (hasheada con Argon2id)
-Con persona y rol asignados
+**Credenciales de Acceso:**
+- Email: `admin@eemq.com`
+- Contraseña: `admin123`
+- **IMPORTANTE:** Cambia esta contraseña en producción
+
+## Sistema de Autenticación
+
+El sistema cuenta con **autenticación completa** implementada con Livewire y Argon2id:
+
+### Características:
+- ✅ **Login** - Pantalla de inicio de sesión con validación
+- ✅ **Register** - Registro de nuevos usuarios (rol Operador por defecto)
+- ✅ **Dashboard** - Panel principal con estadísticas del sistema
+- ✅ **Logout** - Cierre de sesión seguro
+- ✅ **Middleware Auth** - Todas las rutas protegidas automáticamente
+- ✅ **Guest Middleware** - Login/Register solo accesibles sin autenticación
+
+### Rutas de Autenticación:
+- `/login` - Iniciar sesión
+- `/register` - Crear cuenta nueva
+- `/dashboard` - Panel principal (requiere autenticación)
+- `/` - Redirige a `/dashboard` si está autenticado, o `/login` si no lo está
+
+### Protección de Rutas:
+**Todas las rutas del sistema están protegidas**:
+- Si intentas acceder sin login → redirige a `/login`
+- Las rutas de login/register solo son accesibles si NO estás autenticado
 
 **⚠️ IMPORTANTE - Alpine.js:**
 - Alpine.js NO está en `package.json` porque Livewire 3 lo incluye automáticamente
