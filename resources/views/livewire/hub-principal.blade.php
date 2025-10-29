@@ -1,11 +1,12 @@
 <div>
-    {{-- Foto Principal --}}
+    {{-- Foto Menú Principal --}}
     <div class="flex justify-center my-8">
         <img src="C:\Users\julio\Documents\Proyectos\eemq\eemq_preliminar\public\images\#EstamosTrabajando@3x.png" alt="Fotografía de la EEMQ" class="rounded-lg shadow-md">
     </div>
 
     {{-- Menu de navegación principal --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {{-- Botones de navegación hacia los módulos --}}
         <a href="{{ route('compras') }}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon">
             <h3 class="text-lg font-semibold text-gray-800">Compras</h3>
             <p class="text-sm text-gray-600 mt-1">Gestionar compras y proveedores</p>

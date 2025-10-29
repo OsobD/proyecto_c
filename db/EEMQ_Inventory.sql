@@ -5,7 +5,8 @@ CREATE TABLE `persona` (
   `telefono` varchar(255),
   `correo` varchar(255),
   `fecha_nacimiento` date,
-  `genero` varchar(255)
+  `genero` varchar(255),
+  `estado` bool
 );
 
 CREATE TABLE `usuario` (
@@ -13,7 +14,8 @@ CREATE TABLE `usuario` (
   `nombre_usuario` varchar(255),
   `contrasena` varchar(255),
   `id_persona` int,
-  `id_rol` int
+  `id_rol` int,
+  `estado` bool
 );
 
 CREATE TABLE `rol` (
@@ -47,14 +49,14 @@ CREATE TABLE `tarjeta_responsabilidad` (
 
 CREATE TABLE `tarjeta_producto` (
   `id` int PRIMARY KEY,
-  `costo_asignacion` double,
+  `precio_asignacion` double,
   `id_tarjeta` int,
-  `id_producto` int
+  `id_producto` varchar(255),
+  `id_lote` int
 );
 
 CREATE TABLE `producto` (
   `id` varchar(255) PRIMARY KEY,
-  `nombre` varchar(255),
   `descripcion` varchar(255),
   `id_categoria` int
 );
@@ -67,12 +69,29 @@ CREATE TABLE `categoria` (
 CREATE TABLE `lote` (
   `id` int PRIMARY KEY,
   `cantidad` int,
+  `cantidad_inicial` int,
   `fecha_ingreso` datetime,
   `precio_ingreso` double,
   `observaciones` varchar(255),
-  `id_producto` int,
+  `id_producto` varchar(255),
   `id_bodega` int,
-  `estado` bool
+  `estado` bool,
+  `id_transaccion` int
+);
+
+CREATE TABLE `transaccion` (
+  `id` int PRIMARY KEY,
+  `id_tipo` int,
+  `id_compra` int,
+  `id_entrada` int,
+  `id_devolucion` int,
+  `id_traslaado` int,
+  `id_salida` int
+);
+
+CREATE TABLE `tipo_transacion` (
+  `id_tipo` int PRIMARY KEY,
+  `nombre` varchar(255)
 );
 
 CREATE TABLE `bodega` (
@@ -80,12 +99,17 @@ CREATE TABLE `bodega` (
   `nombre` varchar(255)
 );
 
+CREATE TABLE `regimen_tributario` (
+  `id` int PRIMARY KEY,
+  `nombre` varchar(255)
+);
+
 CREATE TABLE `proveedor` (
   `id` int PRIMARY KEY,
   `nit` varchar(255),
-  `situacion_tributaria` int,
+  `id_regimen` varchar(255),
   `nombre` varchar(255),
-  `id_usuario` int
+  `estado` bool
 );
 
 CREATE TABLE `compra` (
@@ -93,15 +117,18 @@ CREATE TABLE `compra` (
   `fecha` datetime,
   `no_serie` varchar(255),
   `no_factura` varchar(255),
+  `correltivo` int,
   `total` double,
-  `id_proveedor` int
+  `id_proveedor` int,
+  `id_bodega` int,
+  `id_usuario` int
 );
 
 CREATE TABLE `detalle_compra` (
   `id` int PRIMARY KEY,
   `id_compra` int,
-  `id_producto` int,
-  `id_lote` int,
+  `id_producto` varchar(255),
+  `precio_ingreso` double,
   `cantidad` int
 );
 
@@ -110,15 +137,17 @@ CREATE TABLE `entrada` (
   `fecha` datetime,
   `total` double,
   `descripcion` varchar(255),
-  `id_usuario` int
+  `id_usuario` int,
+  `id_tarjeta` int,
+  `id_bodega` int
 );
 
 CREATE TABLE `detalle_entrada` (
   `id` int PRIMARY KEY,
   `id_entrada` int,
-  `id_producto` int,
-  `id_lote` int,
-  `cantidad` int
+  `id_producto` varchar(255),
+  `cantidad` int,
+  `precio_ingreso` decimal
 );
 
 CREATE TABLE `devolucion` (
@@ -127,13 +156,16 @@ CREATE TABLE `devolucion` (
   `no_formulario` varchar(255),
   `foto` blob,
   `total` double,
-  `id_usuario` int
+  `id_usuario` int,
+  `id_tarjeta` int,
+  `id_bodega` int,
+  `id_traslado` int
 );
 
 CREATE TABLE `detalle_devolucion` (
   `id` int PRIMARY KEY,
   `id_devolucion` int,
-  `id_producto` int,
+  `id_producto` varchar(255),
   `id_lote` int,
   `cantidad` int
 );
@@ -144,16 +176,18 @@ CREATE TABLE `traslado` (
   `no_requisicion` varchar(255),
   `total` double,
   `descripcion` varchar(255),
-  `id_usuario` int
+  `id_usuario` int,
+  `id_bodega` int,
+  `id_tarjeta` int
 );
 
 CREATE TABLE `detalle_traslado` (
   `id` int PRIMARY KEY,
   `id_traslado` int,
-  `id_producto` int,
+  `id_producto` varchar(255),
+  `cantidad` int,
   `id_lote` int,
-  `id_tarjeta` int,
-  `cantidad` int
+  `precio_traslado` double
 );
 
 CREATE TABLE `salida` (
@@ -161,23 +195,42 @@ CREATE TABLE `salida` (
   `fecha` datetime,
   `total` double,
   `descripcion` varchar(255),
-  `id_usuario` int
+  `ubicacion` varchar(255),
+  `id_usuario` int,
+  `id_tarjeta` int,
+  `id_bodega` int
+);
+
+CREATE TABLE `tipo_salida` (
+  `id` int PRIMARY KEY,
+  `nombre` varchar(255),
+  `id_salida` int
 );
 
 CREATE TABLE `detalle_salida` (
   `id` int PRIMARY KEY,
   `id_salida` int,
-  `id_producto` int,
+  `id_producto` varchar(255),
   `id_lote` int,
-  `id_tarjeta` int,
-  `cantidad` int
+  `cantidad` int,
+  `precio_salida` decimal
 );
 
 CREATE TABLE `kardex` (
   `id` int PRIMARY KEY,
   `timestamp` datetime,
   `tipo_movimiento` varchar(255),
-  `id_referencia` int
+  `id_detalle` int
+);
+
+CREATE TABLE `detalle` (
+  `id` int PRIMARY KEY,
+  `id_tipo` int,
+  `id_det_compra` null,
+  `id_det_entrada` null,
+  `id_det_devolucion` null,
+  `id_det_traslado` null,
+  `id_det_salida` null
 );
 
 ALTER TABLE `usuario` ADD FOREIGN KEY (`id_persona`) REFERENCES `persona` (`id`);
@@ -208,9 +261,7 @@ ALTER TABLE `detalle_traslado` ADD FOREIGN KEY (`id_traslado`) REFERENCES `trasl
 
 ALTER TABLE `detalle_traslado` ADD FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id`);
 
-ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_salida`) REFERENCES `salida` (`id`);
-
-ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_producto`) REFERENCES `producto` (`nombre`);
+ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id`);
 
 ALTER TABLE `entrada` ADD FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
 
@@ -220,25 +271,13 @@ ALTER TABLE `traslado` ADD FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`
 
 ALTER TABLE `salida` ADD FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
 
-ALTER TABLE `detalle_compra` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
-
-ALTER TABLE `detalle_entrada` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
-
 ALTER TABLE `detalle_devolucion` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
-
-ALTER TABLE `detalle_traslado` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
 
 ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
 
 ALTER TABLE `permiso` ADD FOREIGN KEY (`id_configuracion`) REFERENCES `configuracion` (`id`);
 
 ALTER TABLE `permiso` ADD FOREIGN KEY (`id_bitacora`) REFERENCES `bitacora` (`id`);
-
-ALTER TABLE `detalle_traslado` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_responsabilidad` (`id`);
-
-ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_responsabilidad` (`id`);
-
-ALTER TABLE `proveedor` ADD FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
 
 ALTER TABLE `producto` ADD FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id`);
 
@@ -248,12 +287,62 @@ ALTER TABLE `usuario` ADD FOREIGN KEY (`id_rol`) REFERENCES `rol` (`id`);
 
 ALTER TABLE `rol` ADD FOREIGN KEY (`id_permiso`) REFERENCES `permiso` (`id`);
 
-ALTER TABLE `kardex` ADD FOREIGN KEY (`id_referencia`) REFERENCES `detalle_compra` (`id`);
+ALTER TABLE `proveedor` ADD FOREIGN KEY (`id_regimen`) REFERENCES `regimen_tributario` (`id`);
 
-ALTER TABLE `kardex` ADD FOREIGN KEY (`id_referencia`) REFERENCES `detalle_entrada` (`id`);
+ALTER TABLE `compra` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
 
-ALTER TABLE `kardex` ADD FOREIGN KEY (`id_referencia`) REFERENCES `detalle_devolucion` (`id`);
+ALTER TABLE `compra` ADD FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
 
-ALTER TABLE `kardex` ADD FOREIGN KEY (`id_referencia`) REFERENCES `detalle_traslado` (`id`);
+ALTER TABLE `tarjeta_producto` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
 
-ALTER TABLE `kardex` ADD FOREIGN KEY (`id_referencia`) REFERENCES `detalle_salida` (`id`);
+ALTER TABLE `entrada` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_responsabilidad` (`id`);
+
+ALTER TABLE `entrada` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
+
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_compra`) REFERENCES `compra` (`id`);
+
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_entrada`) REFERENCES `entrada` (`id`);
+
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_devolucion`) REFERENCES `devolucion` (`id`);
+
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_traslaado`) REFERENCES `traslado` (`id`);
+
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_tipo`) REFERENCES `tipo_transacion` (`id_tipo`);
+
+ALTER TABLE `lote` ADD FOREIGN KEY (`id_transaccion`) REFERENCES `transaccion` (`id`);
+
+ALTER TABLE `salida` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_producto` (`id`);
+
+ALTER TABLE `traslado` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
+
+ALTER TABLE `traslado` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_producto` (`id`);
+
+ALTER TABLE `detalle` ADD FOREIGN KEY (`id_tipo`) REFERENCES `tipo_transacion` (`id_tipo`);
+
+ALTER TABLE `detalle` ADD FOREIGN KEY (`id_det_compra`) REFERENCES `detalle_compra` (`id`);
+
+ALTER TABLE `detalle` ADD FOREIGN KEY (`id_det_entrada`) REFERENCES `detalle_entrada` (`id`);
+
+ALTER TABLE `detalle` ADD FOREIGN KEY (`id_det_devolucion`) REFERENCES `detalle_devolucion` (`id`);
+
+ALTER TABLE `detalle` ADD FOREIGN KEY (`id_det_traslado`) REFERENCES `detalle_traslado` (`id`);
+
+ALTER TABLE `detalle` ADD FOREIGN KEY (`id_det_salida`) REFERENCES `detalle_salida` (`id`);
+
+ALTER TABLE `kardex` ADD FOREIGN KEY (`id_detalle`) REFERENCES `detalle` (`id`);
+
+ALTER TABLE `devolucion` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_producto` (`id`);
+
+ALTER TABLE `devolucion` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
+
+ALTER TABLE `detalle_traslado` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
+
+ALTER TABLE `devolucion` ADD FOREIGN KEY (`id_traslado`) REFERENCES `traslado` (`id`);
+
+ALTER TABLE `salida` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
+
+ALTER TABLE `tipo_salida` ADD FOREIGN KEY (`id_salida`) REFERENCES `salida` (`id`);
+
+ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_salida`) REFERENCES `tipo_salida` (`id`);
+
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_salida`) REFERENCES `tipo_salida` (`id`);
