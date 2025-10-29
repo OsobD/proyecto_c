@@ -16,7 +16,7 @@ class Transaccion extends Model
         'id_compra',
         'id_entrada',
         'id_devolucion',
-        'id_traslaado',
+        'id_traslado',
         'id_salida',
     ];
 
@@ -45,7 +45,7 @@ class Transaccion extends Model
 
     public function traslado()
     {
-        return $this->belongsTo(Traslado::class, 'id_traslaado');
+        return $this->belongsTo(Traslado::class, 'id_traslado');
     }
 
     public function tipoSalida()

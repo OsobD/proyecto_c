@@ -56,6 +56,6 @@ class Traslado extends Model
 
     public function transacciones()
     {
-        return $this->hasMany(Transaccion::class, 'id_traslaado');
+        return $this->hasMany(Transaccion::class, 'id_traslado');
     }
 }

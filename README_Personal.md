@@ -9,11 +9,17 @@ cp .env.docker .env
 docker-compose build --no-cache
 docker-compose up -d
 
-# Esperar 10 segundos a que la DB esté lista, luego ejecutar migraciones
-docker-compose exec app php artisan migrate
-
+# Esperar 20 segundos a que la DB esté lista, luego ejecutar migraciones
+docker-compose exec app php artisan migrate:fresh --seed
 npm run dev              # Mantener corriendo durante desarrollo
+
 ```
+
+** Credenciales **
+Usuario Admin:
+Email: admin@eemq.com
+Contraseña: admin123 (hasheada con Argon2id)
+Con persona y rol asignados
 
 **⚠️ IMPORTANTE - Alpine.js:**
 - Alpine.js NO está en `package.json` porque Livewire 3 lo incluye automáticamente

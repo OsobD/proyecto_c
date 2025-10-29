@@ -17,8 +17,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('id_persona')->nullable();
+            $table->unsignedBigInteger('id_rol')->nullable();
+            $table->boolean('estado')->default(true);
             $table->rememberToken();
             $table->timestamps();
+
+            // Foreign keys se agregarán después de crear las tablas correspondientes
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

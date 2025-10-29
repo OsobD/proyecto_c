@@ -5,7 +5,9 @@
       "Bash(docker-compose logs:*)",
       "Bash(cat \"c:\\Users\\julio\\Documents\\Proyectos\\eemq\\Inventario_Eemq\\resources\\views\\livewire\\formulario-compra.blade.php\")",
       "Bash(netstat -ano)",
-      "Bash(findstr :5173)"
+      "Bash(findstr :5173)",
+      "Bash(php artisan:*)",
+      "Bash(docker-compose exec:*)"
     ],
     "deny": [],
     "ask": []
