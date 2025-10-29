@@ -7,7 +7,8 @@
 <div>
     {{-- Breadcrumbs --}}
     <x-breadcrumbs :items="[
-        ['label' => 'Compras', 'url' => '/compras', 'icon' => true],
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Compras', 'url' => '/compras'],
         ['label' => 'Nueva Compra'],
     ]" />
 
