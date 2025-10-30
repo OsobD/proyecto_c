@@ -16,6 +16,7 @@ class TarjetaResponsabilidad extends Model
         'fecha_creacion',
         'total',
         'id_persona',
+        'activo',
     ];
 
     protected $casts = [

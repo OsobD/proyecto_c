@@ -57,14 +57,19 @@
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center">
                                     {{-- Editar --}}
-                                    <button wire:click="openModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 mr-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <button wire:click="editBodega('{{ $bodega['id'] }}', '{{ $bodega['tipo'] }}', {{ $bodega['entidad_id'] }}, '{{ $bodega['entidad'] }}')"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200 mr-2"
+                                            title="Editar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
                                         </svg>
                                     </button>
-                                    {{-- Eliminar --}}
-                                    <button class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {{-- Desactivar/Eliminar --}}
+                                    <button wire:click="toggleEstado({{ $bodega['entidad_id'] }}, '{{ $bodega['entidad'] }}')"
+                                            onclick="return confirm('¿Está seguro de desactivar este registro? No se podrá usar en nuevos movimientos.')"
+                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
+                                            title="Desactivar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
@@ -92,7 +97,9 @@
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-xl font-semibold text-gray-800">Crear/Editar Bodega</h3>
+                <h3 class="text-xl font-semibold text-gray-800">
+                    {{ $bodegaId ? 'Editar' : 'Crear' }} Bodega
+                </h3>
                 <button wire:click="closeModal()" class="text-gray-500 hover:text-gray-800">&times;</button>
             </div>
             <form wire:submit.prevent="saveBodega" class="mt-4">
@@ -102,11 +109,13 @@
                         <label class="block text-sm font-medium text-gray-700">Tipo</label>
                         <div class="relative">
                             @if($tipo)
-                                <div class="flex items-center justify-between mt-1 w-full px-4 pr-4 py-3 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                                <div class="flex items-center justify-between mt-1 w-full px-4 pr-4 py-3 text-base border-2 {{ $bodegaId ? 'bg-gray-100' : '' }} border-gray-300 rounded-md shadow-sm">
                                     <span>{{ $tipo }}</span>
-                                    <button type="button" wire:click.prevent="clearTipo" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">
-                                        ×
-                                    </button>
+                                    @if(!$bodegaId)
+                                        <button type="button" wire:click.prevent="clearTipo" class="text-gray-400 hover:text-gray-600 text-2xl ml-2">
+                                            ×
+                                        </button>
+                                    @endif
                                 </div>
                             @else
                                 <div class="relative" x-data="{ open: @entangle('showTipoDropdown') }">

@@ -14,6 +14,7 @@ class Bodega extends Model
 
     protected $fillable = [
         'nombre',
+        'activo',
     ];
 
     public $timestamps = true;
