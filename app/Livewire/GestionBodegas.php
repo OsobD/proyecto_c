@@ -2,6 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\Bodega;
+use App\Models\Persona;
+use App\Models\TarjetaResponsabilidad;
 use Livewire\Component;
 
 /**
@@ -25,8 +28,14 @@ class GestionBodegas extends Component
     /** @var bool Controla visibilidad del modal */
     public $isModalOpen = false;
 
-    /** @var string|null Nombre de la bodega */
+    /** @var string|null Nombre de la bodega (solo para tipo Física) */
     public $nombre;
+
+    /** @var string|null Nombres de la persona (solo para tipo Responsabilidad) */
+    public $nombres;
+
+    /** @var string|null Apellidos de la persona (solo para tipo Responsabilidad) */
+    public $apellidos;
 
     /** @var string|null Tipo de bodega seleccionado */
     public $tipo = null;
@@ -41,20 +50,50 @@ class GestionBodegas extends Component
     ];
 
     /**
-     * Inicializa el componente con datos mock de prueba
+     * Inicializa el componente cargando bodegas físicas y tarjetas de responsabilidad
      *
-     * @todo Reemplazar con consultas a BD: Bodega::all()
      * @return void
      */
     public function mount()
     {
-        $this->bodegas = [
-            ['id' => 1, 'nombre' => 'Bodega Central', 'tipo' => 'Física'],
-            ['id' => 2, 'nombre' => 'Juan Pérez (Tarjeta de Responsabilidad)', 'tipo' => 'Responsabilidad'],
-            ['id' => 3, 'nombre' => 'Almacén de Suministros', 'tipo' => 'Física'],
-            ['id' => 4, 'nombre' => 'María García (Tarjeta de Responsabilidad)', 'tipo' => 'Responsabilidad'],
-            ['id' => 5, 'nombre' => 'Bodega Secundaria', 'tipo' => 'Física'],
-        ];
+        $this->cargarBodegas();
+    }
+
+    /**
+     * Carga todas las bodegas (físicas y tarjetas de responsabilidad)
+     *
+     * @return void
+     */
+    private function cargarBodegas()
+    {
+        $this->bodegas = [];
+
+        // Cargar bodegas físicas
+        $bodegasFisicas = Bodega::all();
+        foreach ($bodegasFisicas as $bodega) {
+            $this->bodegas[] = [
+                'id' => 'B-' . $bodega->id,
+                'nombre' => $bodega->nombre,
+                'tipo' => 'Física',
+                'entidad' => 'bodega',
+                'entidad_id' => $bodega->id,
+            ];
+        }
+
+        // Cargar tarjetas de responsabilidad con sus personas
+        $tarjetas = TarjetaResponsabilidad::with('persona')->get();
+        foreach ($tarjetas as $tarjeta) {
+            if ($tarjeta->persona) {
+                $nombreCompleto = trim($tarjeta->persona->nombres . ' ' . $tarjeta->persona->apellidos);
+                $this->bodegas[] = [
+                    'id' => 'T-' . $tarjeta->id,
+                    'nombre' => $nombreCompleto,
+                    'tipo' => 'Responsabilidad',
+                    'entidad' => 'tarjeta',
+                    'entidad_id' => $tarjeta->id,
+                ];
+            }
+        }
     }
 
     /**
@@ -87,7 +126,10 @@ class GestionBodegas extends Component
     {
         $this->isModalOpen = false;
         $this->nombre = null;
+        $this->nombres = null;
+        $this->apellidos = null;
         $this->tipo = null;
+        $this->reset(['nombre', 'nombres', 'apellidos', 'tipo']);
     }
 
     /**
@@ -115,11 +157,55 @@ class GestionBodegas extends Component
     /**
      * Guarda la bodega (crear o actualizar)
      *
-     * @todo Implementar validación y persistencia en BD
      * @return void
      */
     public function saveBodega()
     {
-        $this->closeModal();
+        try {
+            if ($this->tipo === 'Física') {
+                // Validar campos para bodega física
+                $this->validate([
+                    'nombre' => 'required|string|max:255',
+                ]);
+
+                // Crear bodega física
+                Bodega::create([
+                    'nombre' => $this->nombre,
+                ]);
+
+                session()->flash('message', 'Bodega física creada exitosamente.');
+            } elseif ($this->tipo === 'Responsabilidad') {
+                // Validar campos para tarjeta de responsabilidad
+                $this->validate([
+                    'nombres' => 'required|string|max:255',
+                    'apellidos' => 'required|string|max:255',
+                ]);
+
+                // Crear persona con solo nombres y apellidos
+                $persona = Persona::create([
+                    'nombres' => $this->nombres,
+                    'apellidos' => $this->apellidos,
+                    'estado' => true,
+                ]);
+
+                // Crear tarjeta de responsabilidad asociada a la persona
+                TarjetaResponsabilidad::create([
+                    'id_persona' => $persona->id,
+                    'fecha_creacion' => now(),
+                    'total' => 0,
+                ]);
+
+                session()->flash('message', 'Tarjeta de responsabilidad creada exitosamente.');
+            } else {
+                session()->flash('error', 'Debe seleccionar un tipo de bodega.');
+                return;
+            }
+
+            // Recargar bodegas y cerrar modal
+            $this->cargarBodegas();
+            $this->closeModal();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al crear: ' . $e->getMessage());
+        }
     }
 }

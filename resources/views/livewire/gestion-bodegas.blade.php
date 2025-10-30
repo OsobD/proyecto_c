@@ -17,6 +17,18 @@
         </button>
     </div>
 
+    {{-- Mensajes flash --}}
+    @if (session()->has('message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
+    @endif
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
     {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
         {{-- Tabla de listado de bodegas --}}
@@ -85,10 +97,7 @@
             </div>
             <form wire:submit.prevent="saveBodega" class="mt-4">
                 <div class="space-y-6">
-                    <div>
-                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre de la Bodega</label>
-                        <input type="text" id="nombre" wire:model="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base">
-                    </div>
+                    {{-- Tipo - Siempre visible primero --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Tipo</label>
                         <div class="relative">
@@ -125,7 +134,32 @@
                                 </div>
                             @endif
                         </div>
+                        @error('tipo') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                     </div>
+
+                    {{-- Campo NOMBRE - Solo visible si tipo es "Física" --}}
+                    @if($tipo === 'Física')
+                        <div>
+                            <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre de la Bodega</label>
+                            <input type="text" id="nombre" wire:model="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base focus:ring-blue-500 focus:border-blue-500">
+                            @error('nombre') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
+
+                    {{-- Campos NOMBRES y APELLIDOS - Solo visibles si tipo es "Responsabilidad" --}}
+                    @if($tipo === 'Responsabilidad')
+                        <div>
+                            <label for="nombres" class="block text-sm font-medium text-gray-700">Nombres</label>
+                            <input type="text" id="nombres" wire:model="nombres" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base focus:ring-blue-500 focus:border-blue-500">
+                            @error('nombres') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label for="apellidos" class="block text-sm font-medium text-gray-700">Apellidos</label>
+                            <input type="text" id="apellidos" wire:model="apellidos" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-3 px-4 text-base focus:ring-blue-500 focus:border-blue-500">
+                            @error('apellidos') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
                 </div>
                 <div class="mt-8 flex justify-end">
                     <button type="button" wire:click="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg mr-2">
