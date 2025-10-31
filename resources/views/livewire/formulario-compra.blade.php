@@ -19,6 +19,46 @@
     {{-- Contenedor principal del formulario --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
         <form>
+            {{-- Selección de bodega destino --}}
+            <div class="mb-6">
+                <label for="bodega" class="block text-sm font-medium text-gray-700">Bodega Destino</label>
+                <div class="relative">
+                    @if($selectedBodega)
+                        <div class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                            <span class="font-medium">{{ $selectedBodega['nombre'] }}</span>
+                            <button type="button" wire:click.prevent="clearBodega" class="text-gray-400 hover:text-gray-600 text-xl">
+                                ×
+                            </button>
+                        </div>
+                    @else
+                        <div class="relative" x-data="{ open: @entangle('showBodegaDropdown') }" @click.outside="open = false">
+                            <input
+                                type="text"
+                                wire:model.live.debounce.300ms="searchBodega"
+                                @click="open = true"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
+                                placeholder="Buscar bodega..."
+                            >
+                            <div x-show="open"
+                                 x-transition
+                                 class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                <ul>
+                                    @foreach (array_slice($this->bodegaResults, 0, 6) as $bodega)
+                                        <li wire:click.prevent="selectBodega({{ $bodega['id'] }})"
+                                            class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                            {{ $bodega['nombre'] }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                @error('selectedBodega')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
             {{-- Selección de proveedor con autocompletado --}}
             <div class="mb-6">
                 <label for="proveedor" class="block text-sm font-medium text-gray-700">Proveedor</label>
@@ -141,6 +181,7 @@
                                 <th class="py-3 px-6 text-right">Costo Unitario</th>
                                 <th class="py-3 px-6 text-right">Precio sin IVA</th>
                                 <th class="py-3 px-6 text-right">Subtotal</th>
+                                <th class="py-3 px-6 text-left">Observaciones</th>
                                 <th class="py-3 px-6 text-center">Acción</th>
                             </tr>
                         </thead>
@@ -175,6 +216,14 @@
                                         <span class="text-gray-700 font-medium">Q{{ number_format((float)$producto['costo'] * 0.88, 2) }}</span>
                                     </td>
                                     <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] * 0.88), 2) }}</td>
+                                    <td class="py-3 px-6 text-left">
+                                        <textarea
+                                            wire:model.blur="productosSeleccionados.{{ $loop->index }}.observaciones"
+                                            rows="2"
+                                            placeholder="Observaciones del lote..."
+                                            class="w-full text-sm border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        ></textarea>
+                                    </td>
                                     <td class="py-3 px-6 text-center">
                                         <button
                                             type="button"
@@ -201,11 +250,115 @@
             </div>
 
             <div class="mt-8 flex justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                <button type="button" wire:click="abrirModalConfirmacion" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                     Registrar Compra
                 </button>
             </div>
         </form>
+    </div>
+
+    {{-- Modal de Confirmación de Compra --}}
+    <div x-data="{
+            show: @entangle('showModalConfirmacion'),
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModalConfirmacion">
+        <div class="relative p-6 border w-full max-w-3xl shadow-xl rounded-lg bg-white"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Confirmar Compra</h3>
+                <button wire:click="closeModalConfirmacion" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                {{-- Información de la compra --}}
+                <div class="bg-gray-50 p-4 rounded-md">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Bodega Destino:</p>
+                            <p class="font-semibold">{{ $selectedBodega['nombre'] ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Proveedor:</p>
+                            <p class="font-semibold">{{ $selectedProveedor['nombre'] ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Factura:</p>
+                            <p class="font-semibold">{{ $numeroFactura }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Serie:</p>
+                            <p class="font-semibold">{{ $numeroSerie }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Resumen de productos --}}
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Productos a Ingresar:</h4>
+                    <div class="overflow-x-auto max-h-64 overflow-y-auto border rounded-md">
+                        <table class="min-w-full bg-white text-sm">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-3 text-left">Código</th>
+                                    <th class="py-2 px-3 text-left">Descripción</th>
+                                    <th class="py-2 px-3 text-center">Cant.</th>
+                                    <th class="py-2 px-3 text-right">Costo Unit.</th>
+                                    <th class="py-2 px-3 text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($productosSeleccionados as $producto)
+                                    <tr class="border-t">
+                                        <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
+                                        <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
+                                        <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
+                                        <td class="py-2 px-3 text-right">Q{{ number_format((float)$producto['costo'] * 0.88, 2) }}</td>
+                                        <td class="py-2 px-3 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] * 0.88), 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Total --}}
+                <div class="bg-blue-50 p-4 rounded-md">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-semibold text-gray-800">Total de la Compra:</span>
+                        <span class="text-2xl font-bold text-blue-600">Q{{ number_format($this->total, 2) }}</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Se crearán {{ count($productosSeleccionados) }} lote(s) en la bodega seleccionada.</p>
+                </div>
+
+                {{-- Botones de acción --}}
+                <div class="flex justify-end gap-3 mt-6">
+                    <button
+                        type="button"
+                        wire:click="closeModalConfirmacion"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="guardarCompra"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        ✓ Confirmar y Registrar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Mensaje de éxito al crear producto o proveedor --}}

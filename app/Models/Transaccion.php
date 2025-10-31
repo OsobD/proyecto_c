@@ -48,9 +48,9 @@ class Transaccion extends Model
         return $this->belongsTo(Traslado::class, 'id_traslado');
     }
 
-    public function tipoSalida()
+    public function salida()
     {
-        return $this->belongsTo(TipoSalida::class, 'id_salida');
+        return $this->belongsTo(Salida::class, 'id_salida');
     }
 
     public function lotes()

@@ -18,6 +18,7 @@ class Entrada extends Model
         'id_usuario',
         'id_tarjeta',
         'id_bodega',
+        'id_tipo',
     ];
 
     protected $casts = [
@@ -41,6 +42,11 @@ class Entrada extends Model
     public function bodega()
     {
         return $this->belongsTo(Bodega::class, 'id_bodega');
+    }
+
+    public function tipoEntrada()
+    {
+        return $this->belongsTo(TipoEntrada::class, 'id_tipo');
     }
 
     public function detalles()

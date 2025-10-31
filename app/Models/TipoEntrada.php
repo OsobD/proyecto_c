@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TipoSalida extends Model
+class TipoEntrada extends Model
 {
     use HasFactory;
 
-    protected $table = 'tipo_salida';
+    protected $table = 'tipo_entrada';
 
     protected $fillable = [
         'nombre',
@@ -18,8 +18,8 @@ class TipoSalida extends Model
     public $timestamps = false;
 
     // Relaciones
-    public function salidas()
+    public function entradas()
     {
-        return $this->hasMany(Salida::class, 'id_tipo');
+        return $this->hasMany(Entrada::class, 'id_tipo');
     }
 }

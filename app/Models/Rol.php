@@ -13,15 +13,14 @@ class Rol extends Model
 
     protected $fillable = [
         'nombre',
-        'id_permiso',
     ];
 
     public $timestamps = false;
 
     // Relaciones
-    public function permiso()
+    public function permisos()
     {
-        return $this->belongsTo(Permiso::class, 'id_permiso');
+        return $this->belongsToMany(Permiso::class, 'rol_permiso', 'id_rol', 'id_permiso');
     }
 
     public function usuarios()

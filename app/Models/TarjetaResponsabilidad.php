@@ -53,6 +53,21 @@ class TarjetaResponsabilidad extends Model
         return $this->hasMany(Entrada::class, 'id_tarjeta');
     }
 
+    public function salidas()
+    {
+        return $this->hasMany(Salida::class, 'id_tarjeta');
+    }
+
+    public function traslados()
+    {
+        return $this->hasMany(Traslado::class, 'id_tarjeta');
+    }
+
+    public function devoluciones()
+    {
+        return $this->hasMany(Devolucion::class, 'id_tarjeta');
+    }
+
     // Boot method para auto-asignar usuario
     protected static function boot()
     {

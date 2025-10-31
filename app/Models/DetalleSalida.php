@@ -26,9 +26,9 @@ class DetalleSalida extends Model
     public $timestamps = false;
 
     // Relaciones
-    public function tipoSalida()
+    public function salida()
     {
-        return $this->belongsTo(TipoSalida::class, 'id_salida');
+        return $this->belongsTo(Salida::class, 'id_salida');
     }
 
     public function producto()

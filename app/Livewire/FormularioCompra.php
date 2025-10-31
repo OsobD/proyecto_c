@@ -2,22 +2,39 @@
 
 namespace App\Livewire;
 
+use App\Models\Bodega;
+use App\Models\Categoria;
+use App\Models\Compra;
+use App\Models\DetalleCompra;
+use App\Models\Lote;
+use App\Models\Producto;
+use App\Models\Proveedor;
+use App\Models\RegimenTributario;
+use App\Models\Transaccion;
+use App\Models\TipoTransaccion;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 /**
  * Componente FormularioCompra
  *
- * Formulario completo para registrar compras al sistema. Permite seleccionar proveedor,
- * agregar múltiples productos con cantidades y costos, y crear proveedores/productos
- * sobre la marcha mediante modales auxiliares.
+ * Formulario completo para registrar compras con sistema de lotes.
+ * Permite seleccionar bodega destino, proveedor, agregar múltiples productos
+ * con cantidades, costos y observaciones. Crea automáticamente lotes por cada
+ * producto comprado.
  *
  * **Funcionalidades:**
+ * - Selección de bodega destino (warehouse)
  * - Búsqueda autocompletable de proveedores y productos
  * - Tabla dinámica de productos seleccionados con cálculo automático de totales
+ * - Campo de observaciones por producto para información del lote
+ * - Modal de confirmación pre-guardado con resumen
  * - Modal para crear nuevo proveedor durante el registro
  * - Modal para crear nuevo producto durante el registro
  * - Sub-modal para crear categoría al crear producto
  * - Validación de factura y datos de compra
+ * - Transacción DB completa: Compra → DetalleCompra → Lote → Transaccion
  *
  * @package App\Livewire
  * @see resources/views/livewire/formulario-compra.blade.php
@@ -25,6 +42,9 @@ use Livewire\Component;
 class FormularioCompra extends Component
 {
     // Catálogos de datos
+    /** @var array Listado de bodegas disponibles */
+    public $bodegas = [];
+
     /** @var array Listado de proveedores disponibles */
     public $proveedores = [];
 
@@ -36,6 +56,16 @@ class FormularioCompra extends Component
 
     /** @var array Tipos de régimen tributario */
     public $regimenes = [];
+
+    // Propiedades de selección de bodega
+    /** @var string Término de búsqueda de bodega */
+    public $searchBodega = '';
+
+    /** @var bool Controla visibilidad del dropdown de bodegas */
+    public $showBodegaDropdown = false;
+
+    /** @var array|null Bodega seleccionada actual */
+    public $selectedBodega = null;
 
     // Propiedades de selección de proveedor
     /** @var string Término de búsqueda de proveedor */
@@ -54,7 +84,7 @@ class FormularioCompra extends Component
     /** @var bool Controla visibilidad del dropdown de productos */
     public $showProductoDropdown = false;
 
-    /** @var array Productos agregados a la compra con cantidad y costo */
+    /** @var array Productos agregados a la compra con cantidad, costo y observaciones */
     public $productosSeleccionados = [];
 
     // Propiedades de búsqueda de categoría (para modal de producto)
@@ -113,57 +143,70 @@ class FormularioCompra extends Component
     /** @var string|null Régimen seleccionado */
     public $selectedRegimen = null;
 
+    // Modal de confirmación
+    /** @var bool Controla visibilidad del modal de confirmación */
+    public $showModalConfirmacion = false;
+
     /**
-     * Inicializa el componente con datos mock de prueba
+     * Inicializa el componente cargando datos reales de la BD
      *
-     * @todo Reemplazar con consultas a BD: Proveedor::all(), Producto::all(), Categoria::all()
      * @return void
      */
     public function mount()
     {
-        $this->regimenes = [
-            'Pequeño Contribuyente',
-            'Régimen General',
-            'Régimen Especial',
-            'Exento',
-        ];
+        // Cargar regímenes tributarios
+        $this->regimenes = RegimenTributario::all()->pluck('nombre')->toArray();
 
-        $this->proveedores = [
-            ['id' => 1, 'nit' => '12345678-9', 'regimen' => 'Régimen General', 'nombre' => 'Ferretería El Martillo Feliz', 'activo' => true],
-            ['id' => 2, 'nit' => '98765432-1', 'regimen' => 'Pequeño Contribuyente', 'nombre' => 'Suministros Industriales S.A.', 'activo' => true],
-        ];
+        // Cargar bodegas activas
+        $this->bodegas = Bodega::where('activo', true)
+            ->get()
+            ->map(fn($bodega) => [
+                'id' => $bodega->id,
+                'nombre' => $bodega->nombre,
+            ])
+            ->toArray();
 
-        $this->categorias = [
-            ['id' => 1, 'nombre' => 'Herramientas', 'activo' => true],
-            ['id' => 2, 'nombre' => 'Materiales Eléctricos', 'activo' => true],
-            ['id' => 3, 'nombre' => 'Equipos de Seguridad', 'activo' => true],
-            ['id' => 4, 'nombre' => 'Suministros de Oficina', 'activo' => true],
-        ];
+        // Cargar proveedores activos
+        $this->proveedores = Proveedor::with('regimenTributario')
+            ->where('activo', true)
+            ->get()
+            ->map(fn($proveedor) => [
+                'id' => $proveedor->id,
+                'nit' => $proveedor->nit,
+                'regimen' => $proveedor->regimenTributario->nombre ?? 'N/A',
+                'nombre' => $proveedor->nombre,
+                'activo' => $proveedor->activo,
+            ])
+            ->toArray();
 
-        $this->productos = [
-            ['id' => 1, 'codigo' => 'PROD-001', 'descripcion' => 'Tornillos de acero inoxidable'],
-            ['id' => 2, 'codigo' => 'PROD-002', 'descripcion' => 'Abrazaderas de metal'],
-            ['id' => 3, 'codigo' => 'PROD-003', 'descripcion' => 'Cinta aislante'],
-            ['id' => 4, 'codigo' => 'PROD-004', 'descripcion' => 'Guantes de seguridad'],
-            ['id' => 5, 'codigo' => 'PROD-005', 'descripcion' => 'Fusibles de 15A'],
-            ['id' => 1, 'codigo' => 'PROD-001', 'descripcion' => 'Tornillos de acero inoxidable'],
-            ['id' => 2, 'codigo' => 'PROD-002', 'descripcion' => 'Abrazaderas de metal'],
-            ['id' => 3, 'codigo' => 'PROD-003', 'descripcion' => 'Cinta aislante'],
-            ['id' => 4, 'codigo' => 'PROD-004', 'descripcion' => 'Guantes de seguridad'],
-            ['id' => 5, 'codigo' => 'PROD-005', 'descripcion' => 'Fusibles de 15A'],
-            ['id' => 1, 'codigo' => 'PROD-001', 'descripcion' => 'Tornillos de acero inoxidable'],
-            ['id' => 2, 'codigo' => 'PROD-002', 'descripcion' => 'Abrazaderas de metal'],
-            ['id' => 3, 'codigo' => 'PROD-003', 'descripcion' => 'Cinta aislante'],
-            ['id' => 4, 'codigo' => 'PROD-004', 'descripcion' => 'Guantes de seguridad'],
-            ['id' => 5, 'codigo' => 'PROD-005', 'descripcion' => 'Fusibles de 15A'],
-            ['id' => 1, 'codigo' => 'PROD-001', 'descripcion' => 'Tornillos de acero inoxidable'],
-            ['id' => 2, 'codigo' => 'PROD-002', 'descripcion' => 'Abrazaderas de metal'],
-            ['id' => 3, 'codigo' => 'PROD-003', 'descripcion' => 'Cinta aislante'],
-            ['id' => 4, 'codigo' => 'PROD-004', 'descripcion' => 'Guantes de seguridad'],
-            ['id' => 5, 'codigo' => 'PROD-005', 'descripcion' => 'Fusibles de 15A'],
-        ];
+        // Cargar categorías activas
+        $this->categorias = Categoria::where('activo', true)
+            ->get()
+            ->map(fn($categoria) => [
+                'id' => $categoria->id,
+                'nombre' => $categoria->nombre,
+                'activo' => $categoria->activo,
+            ])
+            ->toArray();
+
+        // Cargar productos activos
+        $this->productos = Producto::with('categoria')
+            ->where('activo', true)
+            ->get()
+            ->map(fn($producto) => [
+                'id' => $producto->id,
+                'codigo' => $producto->id, // El ID es el código
+                'descripcion' => $producto->descripcion,
+                'categoria_id' => $producto->id_categoria,
+            ])
+            ->toArray();
 
         $this->productosSeleccionados = [];
+    }
+
+    public function updatedSearchBodega()
+    {
+        $this->showBodegaDropdown = true;
     }
 
     public function updatedSearchProveedor()
@@ -179,6 +222,19 @@ class FormularioCompra extends Component
     public function updatedSearchCategoria()
     {
         $this->showCategoriaDropdown = true;
+    }
+
+    public function getBodegaResultsProperty()
+    {
+        if (empty($this->searchBodega)) {
+            return $this->bodegas;
+        }
+
+        $search = strtolower(trim($this->searchBodega));
+
+        return array_filter($this->bodegas, function($bodega) use ($search) {
+            return str_contains(strtolower($bodega['nombre']), $search);
+        });
     }
 
     public function getProveedorResultsProperty()
@@ -223,6 +279,18 @@ class FormularioCompra extends Component
         });
     }
 
+    public function selectBodega($id)
+    {
+        $this->selectedBodega = collect($this->bodegas)->firstWhere('id', $id);
+        $this->showBodegaDropdown = false;
+        $this->searchBodega = '';
+    }
+
+    public function clearBodega()
+    {
+        $this->selectedBodega = null;
+    }
+
     public function selectProveedor($id)
     {
         $this->selectedProveedor = collect($this->proveedores)->firstWhere('id', $id);
@@ -260,14 +328,15 @@ class FormularioCompra extends Component
 
     public function selectProducto($productoId)
     {
-        $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
+        $producto = collect($this->productos)->firstWhere('id', $productoId);
         if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
             $this->productosSeleccionados[] = [
                 'id' => $producto['id'],
                 'codigo' => $producto['codigo'],
                 'descripcion' => $producto['descripcion'],
                 'cantidad' => '',
-                'costo' => ''
+                'costo' => '',
+                'observaciones' => ''
             ];
         }
         $this->searchProducto = '';
@@ -277,7 +346,7 @@ class FormularioCompra extends Component
     public function eliminarProducto($productoId)
     {
         $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
-            return $item['id'] !== (int)$productoId;
+            return $item['id'] !== $productoId;
         });
         // Re-index the array
         $this->productosSeleccionados = array_values($this->productosSeleccionados);
@@ -320,6 +389,145 @@ class FormularioCompra extends Component
         }
     }
 
+    /**
+     * Abre el modal de confirmación pre-guardado
+     */
+    public function abrirModalConfirmacion()
+    {
+        $this->validate([
+            'selectedBodega' => 'required',
+            'selectedProveedor' => 'required',
+            'numeroFactura' => 'required|min:3',
+            'numeroSerie' => 'required|min:3',
+            'productosSeleccionados' => 'required|array|min:1',
+        ], [
+            'selectedBodega.required' => 'Debe seleccionar una bodega destino.',
+            'selectedProveedor.required' => 'Debe seleccionar un proveedor.',
+            'numeroFactura.required' => 'El número de factura es obligatorio.',
+            'numeroSerie.required' => 'El número de serie es obligatorio.',
+            'productosSeleccionados.required' => 'Debe agregar al menos un producto a la compra.',
+            'productosSeleccionados.min' => 'Debe agregar al menos un producto a la compra.',
+        ]);
+
+        // Validar que todos los productos tengan cantidad y costo
+        foreach ($this->productosSeleccionados as $index => $producto) {
+            $this->validate([
+                "productosSeleccionados.{$index}.cantidad" => 'required|integer|min:1',
+                "productosSeleccionados.{$index}.costo" => 'required|numeric|min:0',
+            ], [
+                "productosSeleccionados.{$index}.cantidad.required" => "Debe ingresar la cantidad para el producto {$producto['codigo']}.",
+                "productosSeleccionados.{$index}.costo.required" => "Debe ingresar el costo para el producto {$producto['codigo']}.",
+            ]);
+        }
+
+        $this->showModalConfirmacion = true;
+    }
+
+    public function closeModalConfirmacion()
+    {
+        $this->showModalConfirmacion = false;
+    }
+
+    /**
+     * Guarda la compra en la base de datos con sistema de lotes
+     *
+     * Flujo completo:
+     * 1. Crea registro Compra
+     * 2. Crea registro Transaccion
+     * 3. Para cada producto:
+     *    - Crea Producto si es nuevo
+     *    - Crea DetalleCompra
+     *    - Crea Lote con toda la información
+     *
+     * @return void
+     */
+    public function guardarCompra()
+    {
+        try {
+            DB::beginTransaction();
+
+            // 1. Obtener o crear tipo de transacción "Compra"
+            $tipoTransaccion = TipoTransaccion::firstOrCreate(
+                ['nombre' => 'Compra'],
+                ['nombre' => 'Compra']
+            );
+
+            // 2. Crear registro de Compra
+            $compra = Compra::create([
+                'fecha' => now(),
+                'no_serie' => $this->numeroSerie,
+                'no_factura' => $this->numeroFactura,
+                'correltivo' => null, // Se puede auto-incrementar con trigger o lógica adicional
+                'total' => $this->total,
+                'id_proveedor' => $this->selectedProveedor['id'],
+                'id_bodega' => $this->selectedBodega['id'],
+                'id_usuario' => auth()->id() ?? 1, // Usuario autenticado o default
+            ]);
+
+            // 3. Crear registro de Transacción
+            $transaccion = Transaccion::create([
+                'id_tipo' => $tipoTransaccion->id,
+                'id_compra' => $compra->id,
+                'id_entrada' => null,
+                'id_devolucion' => null,
+                'id_traslado' => null,
+                'id_salida' => null,
+            ]);
+
+            // 4. Procesar cada producto
+            foreach ($this->productosSeleccionados as $productoData) {
+                $cantidad = (int)$productoData['cantidad'];
+                $costoConIva = (float)$productoData['costo'];
+                $costoSinIva = $costoConIva * 0.88; // Precio sin IVA
+                $observaciones = $productoData['observaciones'] ?? '';
+
+                // 5. Crear DetalleCompra
+                $detalleCompra = DetalleCompra::create([
+                    'id_compra' => $compra->id,
+                    'id_producto' => $productoData['id'],
+                    'precio_ingreso' => $costoSinIva,
+                    'cantidad' => $cantidad,
+                ]);
+
+                // 6. Crear Lote (KEY PART!)
+                Lote::create([
+                    'cantidad' => $cantidad,
+                    'cantidad_inicial' => $cantidad,
+                    'fecha_ingreso' => now(),
+                    'precio_ingreso' => $costoSinIva,
+                    'observaciones' => $observaciones,
+                    'id_producto' => $productoData['id'],
+                    'id_bodega' => $this->selectedBodega['id'], // Hereda de compra
+                    'estado' => true, // Activo
+                    'id_transaccion' => $transaccion->id,
+                ]);
+            }
+
+            DB::commit();
+
+            // Limpiar formulario
+            $this->reset([
+                'selectedBodega',
+                'selectedProveedor',
+                'numeroFactura',
+                'numeroSerie',
+                'productosSeleccionados',
+            ]);
+
+            $this->closeModalConfirmacion();
+
+            session()->flash('message', 'Compra registrada exitosamente con ' . count($this->productosSeleccionados) . ' lote(s) creado(s).');
+
+            // Redireccionar a lista de compras
+            return redirect()->route('compras.index');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al guardar compra: ' . $e->getMessage());
+            session()->flash('error', 'Error al registrar la compra: ' . $e->getMessage());
+        }
+    }
+
     // Modal de creación de producto
     public function abrirModalProducto()
     {
@@ -335,30 +543,35 @@ class FormularioCompra extends Component
     public function guardarNuevoProducto()
     {
         $this->validate([
-            'codigo' => 'required|min:3|max:50',
+            'codigo' => 'required|min:3|max:255|unique:producto,id',
             'descripcion' => 'required|min:3|max:255',
-            'categoriaId' => 'required',
+            'categoriaId' => 'required|exists:categoria,id',
         ], [
             'codigo.required' => 'El código del producto es obligatorio.',
             'codigo.min' => 'El código debe tener al menos 3 caracteres.',
+            'codigo.unique' => 'Este código de producto ya existe.',
             'descripcion.required' => 'La descripción es obligatoria.',
             'descripcion.min' => 'La descripción debe tener al menos 3 caracteres.',
             'categoriaId.required' => 'Debe seleccionar una categoría.',
         ]);
 
         // Crear nuevo producto
-        $newId = max(array_column($this->productos, 'id')) + 1;
-        $nuevoProducto = [
-            'id' => $newId,
-            'codigo' => $this->codigo,
+        $nuevoProducto = Producto::create([
+            'id' => $this->codigo, // El código ES el ID
             'descripcion' => $this->descripcion,
-            'categoria_id' => (int)$this->categoriaId,
+            'id_categoria' => (int)$this->categoriaId,
+        ]);
+
+        // Agregar a la lista local
+        $this->productos[] = [
+            'id' => $nuevoProducto->id,
+            'codigo' => $nuevoProducto->id,
+            'descripcion' => $nuevoProducto->descripcion,
+            'categoria_id' => $nuevoProducto->id_categoria,
         ];
 
-        $this->productos[] = $nuevoProducto;
-
         // Automáticamente agregar a la compra
-        $this->selectProducto($newId);
+        $this->selectProducto($nuevoProducto->id);
 
         $this->closeModalProducto();
         session()->flash('message', 'Producto creado y agregado a la compra exitosamente.');
@@ -375,6 +588,7 @@ class FormularioCompra extends Component
         $this->codigo = '';
         $this->descripcion = '';
         $this->categoriaId = '';
+        $this->selectedCategoria = null;
         $this->resetErrorBag();
     }
 
@@ -394,14 +608,24 @@ class FormularioCompra extends Component
             'nuevaCategoriaNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
         ]);
 
-        $newId = max(array_column($this->categorias, 'id')) + 1;
-        $this->categorias[] = [
-            'id' => $newId,
+        $nuevaCategoria = Categoria::create([
             'nombre' => $this->nuevaCategoriaNombre,
+            'activo' => true,
+        ]);
+
+        // Agregar a la lista local
+        $this->categorias[] = [
+            'id' => $nuevaCategoria->id,
+            'nombre' => $nuevaCategoria->nombre,
             'activo' => true,
         ];
 
-        $this->categoriaId = $newId;
+        $this->categoriaId = $nuevaCategoria->id;
+        $this->selectedCategoria = [
+            'id' => $nuevaCategoria->id,
+            'nombre' => $nuevaCategoria->nombre,
+        ];
+
         $this->showSubModalCategoria = false;
         $this->nuevaCategoriaNombre = '';
     }
@@ -451,19 +675,34 @@ class FormularioCompra extends Component
             'nuevoProveedorNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
         ]);
 
-        $newId = max(array_column($this->proveedores, 'id')) + 1;
-        $nuevoProveedor = [
-            'id' => $newId,
+        // Buscar régimen tributario
+        $regimen = RegimenTributario::where('nombre', $this->nuevoProveedorRegimen)->first();
+
+        if (!$regimen) {
+            session()->flash('error', 'Régimen tributario no encontrado.');
+            return;
+        }
+
+        $nuevoProveedor = Proveedor::create([
             'nit' => $this->nuevoProveedorNit,
-            'regimen' => $this->nuevoProveedorRegimen,
+            'id_regimen' => $regimen->id,
             'nombre' => $this->nuevoProveedorNombre,
+            'activo' => true,
+        ]);
+
+        // Agregar a lista local
+        $proveedorData = [
+            'id' => $nuevoProveedor->id,
+            'nit' => $nuevoProveedor->nit,
+            'regimen' => $this->nuevoProveedorRegimen,
+            'nombre' => $nuevoProveedor->nombre,
             'activo' => true,
         ];
 
-        $this->proveedores[] = $nuevoProveedor;
+        $this->proveedores[] = $proveedorData;
 
         // Seleccionar automáticamente el nuevo proveedor
-        $this->selectedProveedor = $nuevoProveedor;
+        $this->selectedProveedor = $proveedorData;
 
         $this->closeModalProveedor();
         session()->flash('message', 'Proveedor creado y seleccionado exitosamente.');

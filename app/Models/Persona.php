@@ -40,6 +40,11 @@ class Persona extends Model
         return $this->hasMany(TarjetaResponsabilidad::class, 'id_persona');
     }
 
+    public function salidas()
+    {
+        return $this->hasMany(Salida::class, 'id_persona');
+    }
+
     // Reglas de validación
     public static function rules($id = null)
     {

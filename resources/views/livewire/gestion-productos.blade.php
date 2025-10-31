@@ -10,14 +10,14 @@
         ['label' => 'Productos'],
     ]" />
 
-    {{-- Encabezado con título y botón para agregar producto --}}
+    {{-- Encabezado con título e información sobre creación de productos --}}
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Gestión de Productos</h1>
-        <button
-            wire:click="abrirModal"
-            class="bg-eemq-horizon hover:bg-eemq-horizon-600 text-white font-bold py-2 px-4 rounded-lg">
-            + Nuevo Producto
-        </button>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Gestión de Productos</h1>
+            <p class="text-sm text-gray-600 mt-1">
+                Los productos se crean automáticamente al registrar compras o ingresos al inventario
+            </p>
+        </div>
     </div>
 
     {{-- Alerta de éxito para operaciones CRUD --}}
@@ -167,7 +167,7 @@
              @click.stop>
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-900">
-                    {{ $editingId ? 'Editar Producto' : 'Nuevo Producto' }}
+                    Editar Producto
                 </h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +246,7 @@
                     <button
                         type="submit"
                         class="bg-eemq-horizon hover:bg-eemq-horizon-600 text-white font-semibold py-2 px-4 rounded">
-                        {{ $editingId ? 'Actualizar' : 'Crear' }}
+                        Actualizar
                     </button>
                 </div>
             </form>

@@ -19,6 +19,8 @@ class Salida extends Model
         'id_usuario',
         'id_tarjeta',
         'id_bodega',
+        'id_tipo',
+        'id_persona',
     ];
 
     protected $casts = [
@@ -44,8 +46,23 @@ class Salida extends Model
         return $this->belongsTo(Bodega::class, 'id_bodega');
     }
 
-    public function tiposSalida()
+    public function tipoSalida()
     {
-        return $this->hasMany(TipoSalida::class, 'id_salida');
+        return $this->belongsTo(TipoSalida::class, 'id_tipo');
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona');
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(DetalleSalida::class, 'id_salida');
+    }
+
+    public function transacciones()
+    {
+        return $this->hasMany(Transaccion::class, 'id_salida');
     }
 }
