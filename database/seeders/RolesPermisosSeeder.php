@@ -20,43 +20,39 @@ class RolesPermisosSeeder extends Seeder
         $configGeneral = Configuracion::create(['nombre' => 'Configuración General']);
         $configInventario = Configuracion::create(['nombre' => 'Configuración Inventario']);
 
-        // Crear bitácoras básicas
-        $bitacoraGeneral = Bitacora::create();
-        $bitacoraInventario = Bitacora::create();
+        // NOTA: Bitácoras comentadas porque el modelo extendido requiere campos adicionales
+        // que no están en el schema base SQL. Se implementarán cuando se defina
+        // la funcionalidad completa de auditoría.
+        // $bitacoraGeneral = Bitacora::create();
+        // $bitacoraInventario = Bitacora::create();
 
-        // Crear permisos básicos
+        // Crear permisos básicos (sin bitácoras por ahora)
         $permisoAdmin = Permiso::create([
             'nombre' => 'Administrador Total',
             'id_configuracion' => $configGeneral->id,
-            'id_bitacora' => $bitacoraGeneral->id,
+            'id_bitacora' => null, // Será implementado cuando se active auditoría
         ]);
 
         $permisoInventario = Permiso::create([
             'nombre' => 'Gestión de Inventario',
             'id_configuracion' => $configInventario->id,
-            'id_bitacora' => $bitacoraInventario->id,
+            'id_bitacora' => null, // Será implementado cuando se active auditoría
         ]);
 
         $permisoOperador = Permiso::create([
             'nombre' => 'Operador Básico',
             'id_configuracion' => $configGeneral->id,
-            'id_bitacora' => $bitacoraGeneral->id,
+            'id_bitacora' => null, // Será implementado cuando se active auditoría
         ]);
 
-        // Crear roles básicos
-        Rol::create([
-            'nombre' => 'Administrador',
-            'id_permiso' => $permisoAdmin->id,
-        ]);
+        // Crear roles básicos usando relación many-to-many correcta
+        $rolAdmin = Rol::create(['nombre' => 'Administrador']);
+        $rolAdmin->permisos()->attach($permisoAdmin->id);
 
-        Rol::create([
-            'nombre' => 'Gestor de Inventario',
-            'id_permiso' => $permisoInventario->id,
-        ]);
+        $rolInventario = Rol::create(['nombre' => 'Gestor de Inventario']);
+        $rolInventario->permisos()->attach($permisoInventario->id);
 
-        Rol::create([
-            'nombre' => 'Operador',
-            'id_permiso' => $permisoOperador->id,
-        ]);
+        $rolOperador = Rol::create(['nombre' => 'Operador']);
+        $rolOperador->permisos()->attach($permisoOperador->id);
     }
 }

@@ -15,11 +15,11 @@ class Proveedor extends Model
         'nit',
         'id_regimen',
         'nombre',
-        'estado',
+        'activo',
     ];
 
     protected $casts = [
-        'estado' => 'boolean',
+        'activo' => 'boolean',
     ];
 
     public $timestamps = false;

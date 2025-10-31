@@ -20,6 +20,16 @@ return new class extends Migration
         Schema::table('tarjeta_responsabilidad', function (Blueprint $table) {
             $table->boolean('activo')->default(true)->after('id_persona');
         });
+
+        // Agregar campo activo a tabla categoria
+        Schema::table('categoria', function (Blueprint $table) {
+            $table->boolean('activo')->default(true)->after('nombre');
+        });
+
+        // Agregar campo activo a tabla proveedor
+        Schema::table('proveedor', function (Blueprint $table) {
+            $table->boolean('activo')->default(true)->after('nombre');
+        });
     }
 
     /**
@@ -32,6 +42,14 @@ return new class extends Migration
         });
 
         Schema::table('tarjeta_responsabilidad', function (Blueprint $table) {
+            $table->dropColumn('activo');
+        });
+
+        Schema::table('categoria', function (Blueprint $table) {
+            $table->dropColumn('activo');
+        });
+
+        Schema::table('proveedor', function (Blueprint $table) {
             $table->dropColumn('activo');
         });
     }

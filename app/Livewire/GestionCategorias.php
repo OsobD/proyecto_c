@@ -2,22 +2,20 @@
 
 namespace App\Livewire;
 
+use App\Models\Categoria;
 use Livewire\Component;
 
 /**
  * Componente GestionCategorias
  *
- * CRUD simple para gestionar categorías de productos. Permite crear, editar,
- * buscar y activar/desactivar categorías.
+ * CRUD completo para gestionar categorías de productos. Permite crear, editar,
+ * buscar y activar/desactivar categorías con conexión a base de datos real.
  *
  * @package App\Livewire
  * @see resources/views/livewire/gestion-categorias.blade.php
  */
 class GestionCategorias extends Component
 {
-    /** @var array Listado de categorías */
-    public $categorias = [];
-
     /** @var string Término de búsqueda */
     public $searchCategoria = '';
 
@@ -31,37 +29,24 @@ class GestionCategorias extends Component
     public $nombre = '';
 
     /**
-     * Inicializa el componente con datos mock de prueba
+     * Computed property: Retorna categorías desde BD filtradas por búsqueda
      *
-     * @todo Reemplazar con consultas a BD: Categoria::all()
-     * @return void
-     */
-    public function mount()
-    {
-        $this->categorias = [
-            ['id' => 1, 'nombre' => 'Herramientas', 'activo' => true],
-            ['id' => 2, 'nombre' => 'Materiales Eléctricos', 'activo' => true],
-            ['id' => 3, 'nombre' => 'Equipos de Seguridad', 'activo' => true],
-            ['id' => 4, 'nombre' => 'Suministros de Oficina', 'activo' => true],
-        ];
-    }
-
-    /**
-     * Computed property: Retorna categorías filtradas por búsqueda
-     *
-     * @return array Categorías que coinciden con el término de búsqueda
+     * @return \Illuminate\Database\Eloquent\Collection Categorías que coinciden con el término de búsqueda
      */
     public function getCategoriasFiltradasProperty()
     {
-        if (empty($this->searchCategoria)) {
-            return $this->categorias;
+        $query = Categoria::query();
+
+        if (!empty($this->searchCategoria)) {
+            $search = trim($this->searchCategoria);
+            $query->where('nombre', 'like', "%{$search}%");
         }
 
-        $search = strtolower(trim($this->searchCategoria));
-
-        return array_filter($this->categorias, function($categoria) use ($search) {
-            return str_contains(strtolower($categoria['nombre']), $search);
-        });
+        return $query->orderBy('nombre')->get()->map(fn($cat) => [
+            'id' => $cat->id,
+            'nombre' => $cat->nombre,
+            'activo' => $cat->activo,
+        ])->toArray();
     }
 
     /**
@@ -83,11 +68,11 @@ class GestionCategorias extends Component
      */
     public function editarCategoria($id)
     {
-        $categoria = collect($this->categorias)->firstWhere('id', $id);
+        $categoria = Categoria::find($id);
 
         if ($categoria) {
             $this->editingId = $id;
-            $this->nombre = $categoria['nombre'];
+            $this->nombre = $categoria->nombre;
             $this->showModal = true;
         }
     }
@@ -109,24 +94,24 @@ class GestionCategorias extends Component
 
         if ($this->editingId) {
             // Actualizar categoría existente
-            $this->categorias = array_map(function($cat) {
-                if ($cat['id'] === $this->editingId) {
-                    $cat['nombre'] = $this->nombre;
-                }
-                return $cat;
-            }, $this->categorias);
+            $categoria = Categoria::find($this->editingId);
+            if ($categoria) {
+                $categoria->update([
+                    'nombre' => $this->nombre,
+                ]);
+                $mensaje = 'Categoría actualizada exitosamente.';
+            }
         } else {
             // Crear nueva categoría
-            $newId = max(array_column($this->categorias, 'id')) + 1;
-            $this->categorias[] = [
-                'id' => $newId,
+            Categoria::create([
                 'nombre' => $this->nombre,
                 'activo' => true,
-            ];
+            ]);
+            $mensaje = 'Categoría creada exitosamente.';
         }
 
         $this->closeModal();
-        session()->flash('message', $this->editingId ? 'Categoría actualizada exitosamente.' : 'Categoría creada exitosamente.');
+        session()->flash('message', $mensaje ?? 'Operación completada.');
     }
 
     /**
@@ -137,14 +122,14 @@ class GestionCategorias extends Component
      */
     public function toggleEstado($id)
     {
-        $this->categorias = array_map(function($cat) use ($id) {
-            if ($cat['id'] === $id) {
-                $cat['activo'] = !$cat['activo'];
-            }
-            return $cat;
-        }, $this->categorias);
+        $categoria = Categoria::find($id);
 
-        session()->flash('message', 'Estado de la categoría actualizado.');
+        if ($categoria) {
+            $categoria->update([
+                'activo' => !$categoria->activo,
+            ]);
+            session()->flash('message', 'Estado de la categoría actualizado.');
+        }
     }
 
     /**

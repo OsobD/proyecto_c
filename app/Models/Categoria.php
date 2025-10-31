@@ -13,6 +13,11 @@ class Categoria extends Model
 
     protected $fillable = [
         'nombre',
+        'activo',
+    ];
+
+    protected $casts = [
+        'activo' => 'boolean',
     ];
 
     public $timestamps = false;
