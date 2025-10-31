@@ -18,6 +18,7 @@ class Producto extends Model
         'id',
         'descripcion',
         'id_categoria',
+        'activo'
     ];
 
     public $timestamps = false;

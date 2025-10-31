@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             RegimenTributarioSeeder::class, // Requerido para crear proveedores
         ]);
 
-        // 3. Tipos de Transacción (CRÍTICO)
+        // 3. Tipos de Transacción
         $this->call([
             TipoTransaccionSeeder::class,  // Compra, Entrada, Devolución, Traslado, Salida
         ]);
