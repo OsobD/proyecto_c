@@ -24,6 +24,12 @@ CREATE TABLE `rol` (
   `id_permiso` int
 );
 
+CREATE TABLE `rol_permiso` (
+  `id` int PRIMARY KEY,
+  `id_rol` int,
+  `id_permiso` int
+);
+
 CREATE TABLE `permiso` (
   `id` int PRIMARY KEY,
   `nombre` varchar(255),
@@ -44,7 +50,8 @@ CREATE TABLE `tarjeta_responsabilidad` (
   `id` int PRIMARY KEY,
   `fecha_creacion` datetime,
   `total` double,
-  `id_persona` int
+  `id_persona` int,
+  `estado` bool
 );
 
 CREATE TABLE `tarjeta_producto` (
@@ -85,7 +92,7 @@ CREATE TABLE `transaccion` (
   `id_compra` int,
   `id_entrada` int,
   `id_devolucion` int,
-  `id_traslaado` int,
+  `id_traslado` int,
   `id_salida` int
 );
 
@@ -107,7 +114,7 @@ CREATE TABLE `regimen_tributario` (
 CREATE TABLE `proveedor` (
   `id` int PRIMARY KEY,
   `nit` varchar(255),
-  `id_regimen` varchar(255),
+  `id_regimen` int,
   `nombre` varchar(255),
   `estado` bool
 );
@@ -138,6 +145,7 @@ CREATE TABLE `entrada` (
   `total` double,
   `descripcion` varchar(255),
   `id_usuario` int,
+  `id_tipo` int,
   `id_tarjeta` int,
   `id_bodega` int
 );
@@ -148,6 +156,11 @@ CREATE TABLE `detalle_entrada` (
   `id_producto` varchar(255),
   `cantidad` int,
   `precio_ingreso` decimal
+);
+
+CREATE TABLE `tipo_entrada` (
+  `id` int PRIMARY KEY,
+  `nombre` varchar(255)
 );
 
 CREATE TABLE `devolucion` (
@@ -196,15 +209,16 @@ CREATE TABLE `salida` (
   `total` double,
   `descripcion` varchar(255),
   `ubicacion` varchar(255),
+  `id_tipo` int,
   `id_usuario` int,
+  `id_persona` int,
   `id_tarjeta` int,
   `id_bodega` int
 );
 
 CREATE TABLE `tipo_salida` (
   `id` int PRIMARY KEY,
-  `nombre` varchar(255),
-  `id_salida` int
+  `nombre` varchar(255)
 );
 
 CREATE TABLE `detalle_salida` (
@@ -285,8 +299,6 @@ ALTER TABLE `lote` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
 
 ALTER TABLE `usuario` ADD FOREIGN KEY (`id_rol`) REFERENCES `rol` (`id`);
 
-ALTER TABLE `rol` ADD FOREIGN KEY (`id_permiso`) REFERENCES `permiso` (`id`);
-
 ALTER TABLE `proveedor` ADD FOREIGN KEY (`id_regimen`) REFERENCES `regimen_tributario` (`id`);
 
 ALTER TABLE `compra` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
@@ -294,8 +306,6 @@ ALTER TABLE `compra` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
 ALTER TABLE `compra` ADD FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`);
 
 ALTER TABLE `tarjeta_producto` ADD FOREIGN KEY (`id_lote`) REFERENCES `lote` (`id`);
-
-ALTER TABLE `entrada` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_responsabilidad` (`id`);
 
 ALTER TABLE `entrada` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
 
@@ -305,7 +315,7 @@ ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_entrada`) REFERENCES `entrada` (`
 
 ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_devolucion`) REFERENCES `devolucion` (`id`);
 
-ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_traslaado`) REFERENCES `traslado` (`id`);
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_traslado`) REFERENCES `traslado` (`id`);
 
 ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_tipo`) REFERENCES `tipo_transacion` (`id_tipo`);
 
@@ -341,8 +351,18 @@ ALTER TABLE `devolucion` ADD FOREIGN KEY (`id_traslado`) REFERENCES `traslado` (
 
 ALTER TABLE `salida` ADD FOREIGN KEY (`id_bodega`) REFERENCES `bodega` (`id`);
 
-ALTER TABLE `tipo_salida` ADD FOREIGN KEY (`id_salida`) REFERENCES `salida` (`id`);
+ALTER TABLE `entrada` ADD FOREIGN KEY (`id_tipo`) REFERENCES `tipo_entrada` (`id`);
 
-ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_salida`) REFERENCES `tipo_salida` (`id`);
+ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_salida`) REFERENCES `salida` (`id`);
 
-ALTER TABLE `transaccion` ADD FOREIGN KEY (`id_salida`) REFERENCES `tipo_salida` (`id`);
+ALTER TABLE `salida` ADD FOREIGN KEY (`id_tipo`) REFERENCES `tipo_salida` (`id`);
+
+ALTER TABLE `salida` ADD FOREIGN KEY (`id_persona`) REFERENCES `persona` (`id`);
+
+ALTER TABLE `rol_permiso` ADD FOREIGN KEY (`id_permiso`) REFERENCES `permiso` (`id`);
+
+ALTER TABLE `rol_permiso` ADD FOREIGN KEY (`id_rol`) REFERENCES `rol` (`id`);
+
+ALTER TABLE `entrada` ADD FOREIGN KEY (`id_tarjeta`) REFERENCES `tarjeta_producto` (`id`);
+
+ALTER TABLE `detalle_salida` ADD FOREIGN KEY (`id_salida`) REFERENCES `salida` (`id`);
