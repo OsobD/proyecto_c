@@ -9,14 +9,58 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Implanta datos en la base de datos para pruebas
+     *
+     * ORDEN DE EJECUCIÓN:
+     * 1. Roles, Permisos y Usuarios (seguridad)
+     * 2. Catálogos base (categorías, bodegas, regímenes)
+     * 3. Tipos de transacción (crítico para sistema de lotes)
+     * 4. Tipos de entrada y salida (subtipos)
+     * 5. Proveedores de prueba (opcional)
      */
     public function run(): void
     {
-        // Ejecutar seeders en orden
+        // 1. Seguridad y Usuarios
         $this->call([
             RolesPermisosSeeder::class,
             UsuarioAdminSeeder::class,
         ]);
+
+        // 2. Catálogos Base
+        $this->call([
+            CategoriaSeeder::class,        // Requerido para crear productos
+            BodegaSeeder::class,           // Requerido para compras y movimientos
+            RegimenTributarioSeeder::class, // Requerido para crear proveedores
+        ]);
+
+        // 3. Tipos de Transacción (CRÍTICO)
+        $this->call([
+            TipoTransaccionSeeder::class,  // Compra, Entrada, Devolución, Traslado, Salida
+        ]);
+
+        // 4. Subtipos de Entrada y Salida
+        $this->call([
+            TipoEntradaSeeder::class,      // Donación, Ajuste, Producción, etc.
+            TipoSalidaSeeder::class,       // Venta, Uso Interno, Merma, etc.
+        ]);
+
+        // 5. Datos de Prueba (OPCIONAL - comentar en producción)
+        $this->call([
+            ProveedorSeeder::class,        // Proveedores de ejemplo
+        ]);
+
+        $this->command->info('');
+        $this->command->info('==================================================');
+        $this->command->info('✓ TODOS LOS SEEDERS EJECUTADOS EXITOSAMENTE');
+        $this->command->info('==================================================');
+        $this->command->info('Sistema listo para usar con:');
+        $this->command->info('  • 5 Tipos de Transacción');
+        $this->command->info('  • 3 Bodegas activas');
+        $this->command->info('  • 6 Categorías de productos');
+        $this->command->info('  • 3 Regímenes tributarios');
+        $this->command->info('  • 4 Tipos de entrada');
+        $this->command->info('  • 6 Tipos de salida');
+        $this->command->info('  • 2 Proveedores de prueba');
+        $this->command->info('==================================================');
     }
 }
