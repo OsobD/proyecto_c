@@ -7,7 +7,10 @@
       "Bash(netstat -ano)",
       "Bash(findstr :5173)",
       "Bash(php artisan:*)",
-      "Bash(docker-compose exec:*)"
+      "Bash(docker-compose exec:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(wmic process:*)"
     ],
     "deny": [],
     "ask": []

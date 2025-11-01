@@ -101,8 +101,21 @@ class FormularioCompra extends Component
     /** @var string Número de factura de la compra */
     public $numeroFactura = '';
 
-    /** @var string Serie de la factura */
-    public $numeroSerie = '';
+    /** @var string Correlativo de la compra */
+    public $correlativo = '';
+
+    // Arrays temporales para datos creados durante el registro
+    /** @var array Productos nuevos creados pero no guardados en DB */
+    public $nuevosProductos = [];
+
+    /** @var array Proveedores nuevos creados pero no guardados en DB */
+    public $nuevosProveedores = [];
+
+    /** @var array Categorías nuevas creadas pero no guardadas en DB */
+    public $nuevasCategorias = [];
+
+    /** @var int Contador para IDs temporales negativos */
+    private $tempIdCounter = -1;
 
     // Propiedades del modal de creación de producto
     /** @var bool Controla visibilidad del modal de producto */
@@ -398,13 +411,13 @@ class FormularioCompra extends Component
             'selectedBodega' => 'required',
             'selectedProveedor' => 'required',
             'numeroFactura' => 'required|min:3',
-            'numeroSerie' => 'required|min:3',
+            'correlativo' => 'required|min:3',
             'productosSeleccionados' => 'required|array|min:1',
         ], [
             'selectedBodega.required' => 'Debe seleccionar una bodega destino.',
             'selectedProveedor.required' => 'Debe seleccionar un proveedor.',
             'numeroFactura.required' => 'El número de factura es obligatorio.',
-            'numeroSerie.required' => 'El número de serie es obligatorio.',
+            'correlativo.required' => 'El correlativo es obligatorio.',
             'productosSeleccionados.required' => 'Debe agregar al menos un producto a la compra.',
             'productosSeleccionados.min' => 'Debe agregar al menos un producto a la compra.',
         ]);
@@ -446,25 +459,74 @@ class FormularioCompra extends Component
         try {
             DB::beginTransaction();
 
-            // 1. Obtener o crear tipo de transacción "Compra"
+            // 0. Mapeo de IDs temporales a IDs reales
+            $mapeoIds = [
+                'categorias' => [],
+                'productos' => [],
+                'proveedores' => [],
+            ];
+
+            // 1. Crear categorías temporales primero
+            foreach ($this->nuevasCategorias as $categoriaTemp) {
+                $nuevaCategoria = Categoria::create([
+                    'nombre' => $categoriaTemp['nombre'],
+                    'activo' => true,
+                ]);
+                $mapeoIds['categorias'][$categoriaTemp['id']] = $nuevaCategoria->id;
+            }
+
+            // 2. Crear proveedores temporales
+            foreach ($this->nuevosProveedores as $proveedorTemp) {
+                $regimen = RegimenTributario::where('nombre', $proveedorTemp['regimen'])->first();
+                $nuevoProveedor = Proveedor::create([
+                    'nit' => $proveedorTemp['nit'],
+                    'id_regimen' => $regimen->id,
+                    'nombre' => $proveedorTemp['nombre'],
+                    'activo' => true,
+                ]);
+                $mapeoIds['proveedores'][$proveedorTemp['id']] = $nuevoProveedor->id;
+            }
+
+            // 3. Crear productos temporales (con categorías ya mapeadas)
+            foreach ($this->nuevosProductos as $productoTemp) {
+                $categoriaIdReal = $productoTemp['categoria_id'];
+                // Si la categoría es temporal, usar el ID real mapeado
+                if ($categoriaIdReal < 0 && isset($mapeoIds['categorias'][$categoriaIdReal])) {
+                    $categoriaIdReal = $mapeoIds['categorias'][$categoriaIdReal];
+                }
+
+                $nuevoProducto = Producto::create([
+                    'id' => $productoTemp['codigo'],
+                    'descripcion' => $productoTemp['descripcion'],
+                    'id_categoria' => $categoriaIdReal,
+                ]);
+                $mapeoIds['productos'][$productoTemp['id']] = $nuevoProducto->id;
+            }
+
+            // 4. Mapear proveedor si es temporal
+            $proveedorIdReal = $this->selectedProveedor['id'];
+            if ($proveedorIdReal < 0 && isset($mapeoIds['proveedores'][$proveedorIdReal])) {
+                $proveedorIdReal = $mapeoIds['proveedores'][$proveedorIdReal];
+            }
+
+            // 5. Obtener o crear tipo de transacción "Compra"
             $tipoTransaccion = TipoTransaccion::firstOrCreate(
                 ['nombre' => 'Compra'],
                 ['nombre' => 'Compra']
             );
 
-            // 2. Crear registro de Compra
+            // 6. Crear registro de Compra
             $compra = Compra::create([
                 'fecha' => now(),
-                'no_serie' => $this->numeroSerie,
                 'no_factura' => $this->numeroFactura,
-                'correltivo' => null, // Se puede auto-incrementar con trigger o lógica adicional
+                'correlativo' => $this->correlativo,
                 'total' => $this->total,
-                'id_proveedor' => $this->selectedProveedor['id'],
+                'id_proveedor' => $proveedorIdReal,
                 'id_bodega' => $this->selectedBodega['id'],
-                'id_usuario' => auth()->id() ?? 1, // Usuario autenticado o default
+                'id_usuario' => auth()->id() ?? 1,
             ]);
 
-            // 3. Crear registro de Transacción
+            // 7. Crear registro de Transacción
             $transaccion = Transaccion::create([
                 'id_tipo' => $tipoTransaccion->id,
                 'id_compra' => $compra->id,
@@ -474,52 +536,63 @@ class FormularioCompra extends Component
                 'id_salida' => null,
             ]);
 
-            // 4. Procesar cada producto
+            // 8. Procesar cada producto (mapeando IDs temporales)
             foreach ($this->productosSeleccionados as $productoData) {
+                $productoIdReal = $productoData['id'];
+                // Si el producto es temporal, usar el ID real mapeado
+                if ($productoIdReal < 0 && isset($mapeoIds['productos'][$productoIdReal])) {
+                    $productoIdReal = $mapeoIds['productos'][$productoIdReal];
+                }
+
                 $cantidad = (int)$productoData['cantidad'];
                 $costoConIva = (float)$productoData['costo'];
-                $costoSinIva = $costoConIva * 0.88; // Precio sin IVA
+                $costoSinIva = $costoConIva * 0.88;
                 $observaciones = $productoData['observaciones'] ?? '';
 
-                // 5. Crear DetalleCompra
-                $detalleCompra = DetalleCompra::create([
+                // 9. Crear DetalleCompra
+                DetalleCompra::create([
                     'id_compra' => $compra->id,
-                    'id_producto' => $productoData['id'],
+                    'id_producto' => $productoIdReal,
                     'precio_ingreso' => $costoSinIva,
                     'cantidad' => $cantidad,
                 ]);
 
-                // 6. Crear Lote (KEY PART!)
+                // 10. Crear Lote
                 Lote::create([
                     'cantidad' => $cantidad,
                     'cantidad_inicial' => $cantidad,
                     'fecha_ingreso' => now(),
                     'precio_ingreso' => $costoSinIva,
                     'observaciones' => $observaciones,
-                    'id_producto' => $productoData['id'],
-                    'id_bodega' => $this->selectedBodega['id'], // Hereda de compra
-                    'estado' => true, // Activo
+                    'id_producto' => $productoIdReal,
+                    'id_bodega' => $this->selectedBodega['id'],
+                    'estado' => true,
                     'id_transaccion' => $transaccion->id,
                 ]);
             }
 
             DB::commit();
 
+            $cantidadLotes = count($this->productosSeleccionados);
+
             // Limpiar formulario
             $this->reset([
                 'selectedBodega',
                 'selectedProveedor',
                 'numeroFactura',
-                'numeroSerie',
+                'correlativo',
                 'productosSeleccionados',
+                'nuevosProductos',
+                'nuevosProveedores',
+                'nuevasCategorias',
             ]);
 
             $this->closeModalConfirmacion();
 
-            session()->flash('message', 'Compra registrada exitosamente con ' . count($this->productosSeleccionados) . ' lote(s) creado(s).');
+            session()->flash('message', "Compra registrada exitosamente con {$cantidadLotes} lote(s) creado(s).");
 
-            // Redireccionar a lista de compras
-            return redirect()->route('compras.index');
+            // Redireccionar a lista de compras (ruta corregida)
+            return redirect()->route('compras');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -542,39 +615,49 @@ class FormularioCompra extends Component
 
     public function guardarNuevoProducto()
     {
+        // Validar (sin verificar unique en DB, solo en productos locales y temporales)
         $this->validate([
-            'codigo' => 'required|min:3|max:255|unique:producto,id',
+            'codigo' => 'required|min:3|max:255',
             'descripcion' => 'required|min:3|max:255',
-            'categoriaId' => 'required|exists:categoria,id',
+            'categoriaId' => 'required',
         ], [
             'codigo.required' => 'El código del producto es obligatorio.',
             'codigo.min' => 'El código debe tener al menos 3 caracteres.',
-            'codigo.unique' => 'Este código de producto ya existe.',
             'descripcion.required' => 'La descripción es obligatoria.',
             'descripcion.min' => 'La descripción debe tener al menos 3 caracteres.',
             'categoriaId.required' => 'Debe seleccionar una categoría.',
         ]);
 
-        // Crear nuevo producto
-        $nuevoProducto = Producto::create([
-            'id' => $this->codigo, // El código ES el ID
-            'descripcion' => $this->descripcion,
-            'id_categoria' => (int)$this->categoriaId,
-        ]);
+        // Verificar si ya existe en DB o en temporales
+        $existeEnBD = Producto::where('id', $this->codigo)->exists();
+        $existeEnTemporales = collect($this->nuevosProductos)->contains('codigo', $this->codigo);
 
-        // Agregar a la lista local
-        $this->productos[] = [
-            'id' => $nuevoProducto->id,
-            'codigo' => $nuevoProducto->id,
-            'descripcion' => $nuevoProducto->descripcion,
-            'categoria_id' => $nuevoProducto->id_categoria,
+        if ($existeEnBD || $existeEnTemporales) {
+            $this->addError('codigo', 'Este código de producto ya existe.');
+            return;
+        }
+
+        // Generar ID temporal negativo
+        $idTemporal = $this->tempIdCounter--;
+
+        // Agregar a array temporal (NO guardar en DB)
+        $productoTemp = [
+            'id' => $idTemporal,
+            'codigo' => $this->codigo,
+            'descripcion' => $this->descripcion,
+            'categoria_id' => (int)$this->categoriaId,
         ];
 
+        $this->nuevosProductos[] = $productoTemp;
+
+        // Agregar a la lista local para que aparezca en dropdown
+        $this->productos[] = $productoTemp;
+
         // Automáticamente agregar a la compra
-        $this->selectProducto($nuevoProducto->id);
+        $this->selectProducto($idTemporal);
 
         $this->closeModalProducto();
-        session()->flash('message', 'Producto creado y agregado a la compra exitosamente.');
+        session()->flash('message', 'Producto agregado. Se guardará al confirmar la compra.');
     }
 
     public function closeModalProducto()
@@ -608,26 +691,27 @@ class FormularioCompra extends Component
             'nuevaCategoriaNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
         ]);
 
-        $nuevaCategoria = Categoria::create([
+        // Generar ID temporal negativo
+        $idTemporal = $this->tempIdCounter--;
+
+        // Agregar a array temporal (NO guardar en DB)
+        $categoriaTemp = [
+            'id' => $idTemporal,
             'nombre' => $this->nuevaCategoriaNombre,
             'activo' => true,
-        ]);
-
-        // Agregar a la lista local
-        $this->categorias[] = [
-            'id' => $nuevaCategoria->id,
-            'nombre' => $nuevaCategoria->nombre,
-            'activo' => true,
         ];
 
-        $this->categoriaId = $nuevaCategoria->id;
-        $this->selectedCategoria = [
-            'id' => $nuevaCategoria->id,
-            'nombre' => $nuevaCategoria->nombre,
-        ];
+        $this->nuevasCategorias[] = $categoriaTemp;
+
+        // Agregar a la lista local para que aparezca en dropdown
+        $this->categorias[] = $categoriaTemp;
+
+        $this->categoriaId = $idTemporal;
+        $this->selectedCategoria = $categoriaTemp;
 
         $this->showSubModalCategoria = false;
         $this->nuevaCategoriaNombre = '';
+        session()->flash('message', 'Categoría agregada. Se guardará al confirmar la compra.');
     }
 
     public function closeSubModalCategoria()
@@ -675,7 +759,7 @@ class FormularioCompra extends Component
             'nuevoProveedorNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
         ]);
 
-        // Buscar régimen tributario
+        // Buscar régimen tributario para validar que existe
         $regimen = RegimenTributario::where('nombre', $this->nuevoProveedorRegimen)->first();
 
         if (!$regimen) {
@@ -683,29 +767,28 @@ class FormularioCompra extends Component
             return;
         }
 
-        $nuevoProveedor = Proveedor::create([
-            'nit' => $this->nuevoProveedorNit,
-            'id_regimen' => $regimen->id,
-            'nombre' => $this->nuevoProveedorNombre,
-            'activo' => true,
-        ]);
+        // Generar ID temporal negativo
+        $idTemporal = $this->tempIdCounter--;
 
-        // Agregar a lista local
-        $proveedorData = [
-            'id' => $nuevoProveedor->id,
-            'nit' => $nuevoProveedor->nit,
+        // Agregar a array temporal (NO guardar en DB)
+        $proveedorTemp = [
+            'id' => $idTemporal,
+            'nit' => $this->nuevoProveedorNit,
             'regimen' => $this->nuevoProveedorRegimen,
-            'nombre' => $nuevoProveedor->nombre,
+            'nombre' => $this->nuevoProveedorNombre,
             'activo' => true,
         ];
 
-        $this->proveedores[] = $proveedorData;
+        $this->nuevosProveedores[] = $proveedorTemp;
+
+        // Agregar a lista local para que aparezca en dropdown
+        $this->proveedores[] = $proveedorTemp;
 
         // Seleccionar automáticamente el nuevo proveedor
-        $this->selectedProveedor = $proveedorData;
+        $this->selectedProveedor = $proveedorTemp;
 
         $this->closeModalProveedor();
-        session()->flash('message', 'Proveedor creado y seleccionado exitosamente.');
+        session()->flash('message', 'Proveedor agregado. Se guardará al confirmar la compra.');
     }
 
     public function closeModalProveedor()

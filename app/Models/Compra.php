@@ -13,9 +13,8 @@ class Compra extends Model
 
     protected $fillable = [
         'fecha',
-        'no_serie',
         'no_factura',
-        'correltivo',
+        'correlativo',
         'total',
         'id_proveedor',
         'id_bodega',

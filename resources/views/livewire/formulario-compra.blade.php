@@ -31,7 +31,7 @@
                             </button>
                         </div>
                     @else
-                        <div class="relative" x-data="{ open: @entangle('showBodegaDropdown') }" @click.outside="open = false">
+                        <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }" @click.outside="open = false">
                             <input
                                 type="text"
                                 wire:model.live.debounce.300ms="searchBodega"
@@ -74,7 +74,7 @@
                             </button>
                         </div>
                     @else
-                        <div class="relative" x-data="{ open: @entangle('showProveedorDropdown') }" @click.outside="open = false">
+                        <div class="relative" x-data="{ open: @entangle('showProveedorDropdown').live }" @click.outside="open = false">
                             <input
                                 type="text"
                                 wire:model.live.debounce.300ms="searchProveedor"
@@ -121,13 +121,16 @@
                 </div>
 
                 <div>
-                    <label for="numero_serie" class="block text-sm font-medium text-gray-700">Número de Serie / Correlativo:</label>
+                    <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo / Número de Serie:</label>
                     <input
                         type="text"
-                        id="numero_serie"
-                        wire:model="numeroSerie"
+                        id="correlativo"
+                        wire:model="correlativo"
                         class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ingrese el número de serie...">
+                        placeholder="Ingrese el correlativo...">
+                    @error('correlativo')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
@@ -142,7 +145,7 @@
                         + Nuevo Producto
                     </button>
                 </div>
-                <div class="relative" x-data="{ open: @entangle('showProductoDropdown') }" @click.outside="open = false">
+                <div class="relative" x-data="{ open: @entangle('showProductoDropdown').live }" @click.outside="open = false">
                     <input
                         type="text"
                         id="searchProducto"
@@ -251,7 +254,8 @@
 
             <div class="mt-8 flex justify-end">
                 <button type="button" wire:click="abrirModalConfirmacion" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    Registrar Compra
+                    <span wire:loading.remove wire:target="abrirModalConfirmacion">Registrar Compra</span>
+                    <span wire:loading wire:target="abrirModalConfirmacion">Verificando...</span>
                 </button>
             </div>
         </form>
@@ -259,7 +263,7 @@
 
     {{-- Modal de Confirmación de Compra --}}
     <div x-data="{
-            show: @entangle('showModalConfirmacion'),
+            show: @entangle('showModalConfirmacion').live,
             animatingOut: false
          }"
          x-show="show || animatingOut"
@@ -298,8 +302,8 @@
                             <p class="font-semibold">{{ $numeroFactura }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Serie:</p>
-                            <p class="font-semibold">{{ $numeroSerie }}</p>
+                            <p class="text-sm text-gray-600">Correlativo:</p>
+                            <p class="font-semibold">{{ $correlativo }}</p>
                         </div>
                     </div>
                 </div>
@@ -353,8 +357,16 @@
                     <button
                         type="button"
                         wire:click="guardarCompra"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg">
-                        ✓ Confirmar y Registrar
+                        wire:loading.attr="disabled"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="guardarCompra">✓ Confirmar y Registrar</span>
+                        <span wire:loading wire:target="guardarCompra">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Guardando...
+                        </span>
                     </button>
                 </div>
             </div>
@@ -440,7 +452,7 @@
                                     </button>
                                 </div>
                             @else
-                                <div class="relative" x-data="{ open: @entangle('showCategoriaDropdown') }" @click.outside="open = false">
+                                <div class="relative" x-data="{ open: @entangle('showCategoriaDropdown').live }" @click.outside="open = false">
                                     <input
                                         type="text"
                                         wire:model.live.debounce.300ms="searchCategoria"
@@ -550,7 +562,7 @@
                                     </button>
                                 </div>
                             @else
-                                <div class="relative" x-data="{ open: @entangle('showRegimenDropdown') }" @click.outside="open = false">
+                                <div class="relative" x-data="{ open: @entangle('showRegimenDropdown').live }" @click.outside="open = false">
                                     <button
                                         type="button"
                                         @click="open = !open"

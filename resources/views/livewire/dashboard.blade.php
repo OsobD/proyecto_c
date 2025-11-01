@@ -91,8 +91,7 @@
             </div>
             <div class="ml-3">
                 <p class="text-sm text-blue-700">
-                    <strong>Nota de seguridad:</strong> Este sistema utiliza Argon2id para el hashing de contraseñas,
-                    proporcionando máxima seguridad para tus credenciales.
+                    <strong>Nota de seguridad:</strong> Este sistema utiliza Argon2id para el hashing de contraseñas.
                 </p>
             </div>
         </div>
