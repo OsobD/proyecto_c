@@ -20,6 +20,8 @@ class Devolucion extends Model
         'id_tarjeta',
         'id_bodega',
         'id_traslado',
+        'id_tipo_devolucion',
+        'id_razon_devolucion',
     ];
 
     protected $casts = [
@@ -58,5 +60,15 @@ class Devolucion extends Model
     public function transacciones()
     {
         return $this->hasMany(Transaccion::class, 'id_devolucion');
+    }
+
+    public function tipoDevolucion()
+    {
+        return $this->belongsTo(TipoDevolucion::class, 'id_tipo_devolucion');
+    }
+
+    public function razonDevolucion()
+    {
+        return $this->belongsTo(RazonDevolucion::class, 'id_razon_devolucion');
     }
 }

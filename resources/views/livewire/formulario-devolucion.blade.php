@@ -9,8 +9,61 @@
         <h1 class="text-2xl font-bold text-gray-800">Registrar Devolución de Material</h1>
     </div>
 
+    {{-- Mensajes de éxito/error --}}
+    @if (session()->has('success'))
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
+    {{-- Errores de validación --}}
+    @if ($errors->any())
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <ul class="list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="bg-white p-6 rounded-lg shadow-md">
-        <form>
+        <form wire:submit.prevent="save">
+            {{-- Tipo de Devolución --}}
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Devolución:</label>
+                <div class="flex flex-wrap gap-4">
+                    @foreach($this->tiposDevolucion as $tipo)
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio"
+                                   wire:model.live="tipoDevolucion"
+                                   value="{{ $tipo['value'] }}"
+                                   class="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out">
+                            <span class="ml-2 text-gray-700">{{ $tipo['nombre'] }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Razón de la Devolución --}}
+            <div class="mb-6">
+                <label for="razon_devolucion" class="block text-sm font-medium text-gray-700">Razón de la Devolución:</label>
+                <select id="razon_devolucion"
+                        wire:model="selectedRazonDevolucionId"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm">
+                    <option value="">Seleccione una razón...</option>
+                    @foreach($this->razonesDevolucion as $razon)
+                        <option value="{{ $razon['id'] }}">{{ $razon['nombre'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {{-- Origin Selection --}}
                 <div>
@@ -156,6 +209,7 @@
                                 <th class="py-3 px-6 text-left">Descripción</th>
                                 <th class="py-3 px-6 text-right">Precio Unit.</th>
                                 <th class="py-3 px-6 text-center">Cantidad</th>
+                                <th class="py-3 px-6 text-center">Estado</th>
                                 <th class="py-3 px-6 text-right">Total</th>
                                 <th class="py-3 px-6 text-center">Acción</th>
                             </tr>
@@ -165,7 +219,23 @@
                                 <tr class="border-b border-gray-200 hover:bg-gray-50">
                                     <td class="py-3 px-6 text-left font-mono">0x{{ strtoupper(dechex($producto['id'])) }}</td>
                                     <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
-                                    <td class="py-3 px-6 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
+                                    <td class="py-3 px-6 text-right">
+                                        @if($tipoDevolucion === 'equipo_no_registrado')
+                                            <div class="flex items-center justify-end gap-1">
+                                                <span class="text-gray-600">Q</span>
+                                                <input
+                                                    type="number"
+                                                    wire:model.live="productosSeleccionados.{{ $loop->index }}.precio"
+                                                    wire:change="actualizarPrecio({{ $producto['id'] }}, $event.target.value)"
+                                                    step="0.01"
+                                                    min="0"
+                                                    class="w-24 text-right border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                >
+                                            </div>
+                                        @else
+                                            Q{{ number_format($producto['precio'], 2) }}
+                                        @endif
+                                    </td>
                                     <td class="py-3 px-6 text-center">
                                         <input
                                             type="number"
@@ -174,6 +244,16 @@
                                             min="1"
                                             class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                         >
+                                    </td>
+                                    <td class="py-3 px-6 text-center">
+                                        <select
+                                            wire:model.live="productosSeleccionados.{{ $loop->index }}.estado"
+                                            wire:change="actualizarEstado({{ $producto['id'] }}, $event.target.value)"
+                                            class="border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                            <option value="bueno">Bueno</option>
+                                            <option value="regular">Regular</option>
+                                            <option value="malo">Malo</option>
+                                        </select>
                                     </td>
                                     <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
@@ -188,7 +268,7 @@
                             @endforeach
                             @if(count($productosSeleccionados) > 0)
                                 <tr class="bg-gray-100 font-bold">
-                                    <td colspan="4" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
+                                    <td colspan="5" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
                                     <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format($this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
@@ -198,9 +278,15 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    Registrar Devolución
+            <div class="mt-8 flex justify-end gap-4">
+                <a href="{{ route('devoluciones') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Cancelar
+                </a>
+                <button type="submit"
+                        wire:loading.attr="disabled"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove>Registrar Devolución</span>
+                    <span wire:loading>Guardando...</span>
                 </button>
             </div>
         </form>

@@ -2,6 +2,19 @@
 
 namespace App\Livewire;
 
+use App\Models\Bodega;
+use App\Models\Persona;
+use App\Models\Producto;
+use App\Models\TarjetaResponsabilidad;
+use App\Models\TipoDevolucion;
+use App\Models\RazonDevolucion;
+use App\Models\Devolucion;
+use App\Models\DetalleDevolucion;
+use App\Models\Lote;
+use App\Models\TipoTransaccion;
+use App\Models\Transaccion;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 /**
@@ -55,34 +68,66 @@ class FormularioDevolucion extends Component
     /** @var string Motivo de la devolución */
     public $motivo = '';
 
+    /** @var string Correlativo de la devolución */
+    public $correlativo = '';
+
+    /** @var string Tipo de devolución seleccionado */
+    public $tipoDevolucion = 'normal';
+
+    /** @var int|null ID del tipo de devolución seleccionado */
+    public $selectedTipoDevolucionId = null;
+
+    /** @var int|null ID de la razón de devolución seleccionada */
+    public $selectedRazonDevolucionId = null;
+
+    /** @var array|null Persona seleccionada (para insumos no utilizados o equipo no registrado) */
+    public $selectedPersona = null;
+
+    /** @var array|null Tarjeta de responsabilidad seleccionada (para devoluciones normales) */
+    public $selectedTarjeta = null;
+
+    /** @var array|null Bodega destino seleccionada */
+    public $bodegaDestino = null;
+
     /**
-     * Inicializa el componente con datos mock de prueba
+     * Inicializa el componente cargando datos de la base de datos
      *
-     * @todo Reemplazar con consultas a BD: Bodega::all(), User::all(), Producto::all()
      * @return void
      */
     public function mount()
     {
-        $this->bodegas = [
-            ['id' => 1, 'nombre' => 'Bodega Central'],
-            ['id' => 2, 'nombre' => 'Bodega Norte'],
-            ['id' => 3, 'nombre' => 'Bodega Sur'],
-            ['id' => 4, 'nombre' => 'Bodega de Devoluciones'],
-        ];
+        // Cargar bodegas activas
+        $this->bodegas = Bodega::where('activo', true)
+            ->select('id', 'nombre')
+            ->get()
+            ->toArray();
 
-        $this->empleados = [
-            ['id' => 1, 'nombre' => 'Juan Pérez'],
-            ['id' => 2, 'nombre' => 'María García'],
-            ['id' => 3, 'nombre' => 'Carlos López'],
-        ];
+        // Cargar personas activas con sus tarjetas
+        $this->empleados = Persona::where('estado', true)
+            ->with('tarjetasResponsabilidad:id,id_persona,activo')
+            ->select('id', 'nombres', 'apellidos')
+            ->get()
+            ->map(function($persona) {
+                return [
+                    'id' => $persona->id,
+                    'nombre' => $persona->nombres . ' ' . $persona->apellidos,
+                    'tiene_tarjeta' => $persona->tarjetasResponsabilidad->where('activo', true)->isNotEmpty(),
+                    'tarjetas' => $persona->tarjetasResponsabilidad->where('activo', true)->pluck('id')->toArray()
+                ];
+            })
+            ->toArray();
 
-        $this->productos = [
-            ['id' => 0xA1, 'descripcion' => 'Tornillos de acero inoxidable', 'precio' => 0.50],
-            ['id' => 0xB2, 'descripcion' => 'Abrazaderas de metal', 'precio' => 2.75],
-            ['id' => 0xC3, 'descripcion' => 'Cinta aislante', 'precio' => 3.25],
-            ['id' => 0xD4, 'descripcion' => 'Guantes de seguridad', 'precio' => 8.50],
-            ['id' => 0xE5, 'descripcion' => 'Fusibles de 15A', 'precio' => 1.25],
-        ];
+        // Cargar todos los productos del catálogo
+        $this->productos = Producto::select('id', 'descripcion')
+            ->get()
+            ->map(function($producto) {
+                return [
+                    'id' => $producto->id,
+                    'descripcion' => $producto->descripcion,
+                    'precio' => 0 // Se calculará según contexto
+                ];
+            })
+            ->toArray();
 
         $this->productosSeleccionados = [];
     }
@@ -91,27 +136,34 @@ class FormularioDevolucion extends Component
     {
         $results = [];
 
-        // Always add bodegas first
-        foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchOrigen) ||
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
-                $results[] = [
-                    'id' => 'B' . $bodega['id'],
-                    'nombre' => $bodega['nombre'],
-                    'tipo' => 'Bodega'
-                ];
-            }
-        }
+        // Filtrar según tipo de devolución
+        $search = strtolower(trim($this->searchOrigen));
 
-        // Then add empleados
-        foreach ($this->empleados as $empleado) {
-            if (empty($this->searchOrigen) ||
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchOrigen))) {
-                $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Empleado'
-                ];
+        // Para devolución normal, solo mostrar personas con tarjetas
+        if ($this->tipoDevolucion === 'normal') {
+            foreach ($this->empleados as $empleado) {
+                if ($empleado['tiene_tarjeta'] &&
+                    (empty($search) || str_contains(strtolower($empleado['nombre']), $search))) {
+                    $results[] = [
+                        'id' => 'P' . $empleado['id'],
+                        'nombre' => $empleado['nombre'] . ' (Con Tarjeta)',
+                        'tipo' => 'Persona',
+                        'tarjetas' => $empleado['tarjetas']
+                    ];
+                }
+            }
+        } else {
+            // Para equipo no registrado e insumos no utilizados, mostrar todas las personas
+            foreach ($this->empleados as $empleado) {
+                if (empty($search) || str_contains(strtolower($empleado['nombre']), $search)) {
+                    $etiqueta = $empleado['tiene_tarjeta'] ? 'Con Tarjeta' : 'Sin Tarjeta';
+                    $results[] = [
+                        'id' => 'P' . $empleado['id'],
+                        'nombre' => $empleado['nombre'] . ' (' . $etiqueta . ')',
+                        'tipo' => 'Persona',
+                        'tarjetas' => $empleado['tarjetas'] ?? []
+                    ];
+                }
             }
         }
 
@@ -121,27 +173,15 @@ class FormularioDevolucion extends Component
     public function getDestinoResultsProperty()
     {
         $results = [];
+        $search = strtolower(trim($this->searchDestino));
 
-        // Always add bodegas first
+        // El destino siempre son bodegas para devoluciones
         foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchDestino) ||
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
+            if (empty($search) || str_contains(strtolower($bodega['nombre']), $search)) {
                 $results[] = [
                     'id' => 'B' . $bodega['id'],
                     'nombre' => $bodega['nombre'],
                     'tipo' => 'Bodega'
-                ];
-            }
-        }
-
-        // Then add empleados
-        foreach ($this->empleados as $empleado) {
-            if (empty($this->searchDestino) ||
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
-                $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Empleado'
                 ];
             }
         }
@@ -211,32 +251,106 @@ class FormularioDevolucion extends Component
 
     public function getProductoResultsProperty()
     {
-        if (empty($this->searchProducto)) {
-            return $this->productos;
+        $search = strtolower(trim($this->searchProducto));
+        $productosFiltrados = [];
+
+        // Si es equipo no registrado, mostrar todos los productos
+        if ($this->tipoDevolucion === 'equipo_no_registrado') {
+            $productosFiltrados = Producto::when(!empty($search), function($query) use ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('descripcion', 'LIKE', "%{$search}%")
+                          ->orWhere('id', 'LIKE', "%{$search}%");
+                    });
+                })
+                ->select('id', 'descripcion')
+                ->limit(20)
+                ->get()
+                ->map(function($producto) {
+                    return [
+                        'id' => $producto->id,
+                        'descripcion' => $producto->descripcion,
+                        'precio' => 0 // Usuario lo ingresa manualmente
+                    ];
+                })
+                ->toArray();
+        } else {
+            // Para devolución normal e insumos no utilizados
+            // Mostrar solo productos con lotes activos en alguna bodega
+            // O productos asignados a la persona/tarjeta si hay origen seleccionado
+
+            if ($this->selectedOrigen && isset($this->selectedOrigen['tarjetas']) && !empty($this->selectedOrigen['tarjetas'])) {
+                // Filtrar por productos en las tarjetas de la persona
+                $productosFiltrados = DB::table('tarjeta_producto as tp')
+                    ->join('producto as p', 'tp.id_producto', '=', 'p.id')
+                    ->join('lote as l', 'tp.id_lote', '=', 'l.id')
+                    ->whereIn('tp.id_tarjeta', $this->selectedOrigen['tarjetas'])
+                    ->where('l.estado', true)
+                    ->where('l.cantidad', '>', 0)
+                    ->when(!empty($search), function($query) use ($search) {
+                        $query->where(function($q) use ($search) {
+                            $q->where('p.descripcion', 'LIKE', "%{$search}%")
+                              ->orWhere('p.id', 'LIKE', "%{$search}%");
+                        });
+                    })
+                    ->select('p.id', 'p.descripcion', DB::raw('AVG(l.precio_ingreso) as precio'))
+                    ->groupBy('p.id', 'p.descripcion')
+                    ->limit(20)
+                    ->get()
+                    ->map(function($producto) {
+                        return [
+                            'id' => $producto->id,
+                            'descripcion' => $producto->descripcion,
+                            'precio' => $producto->precio ?? 0
+                        ];
+                    })
+                    ->toArray();
+            } else {
+                // Mostrar productos con lotes activos
+                $productosFiltrados = Producto::whereHas('lotes', function($query) {
+                        $query->where('estado', true)
+                              ->where('cantidad', '>', 0);
+                    })
+                    ->when(!empty($search), function($query) use ($search) {
+                        $query->where(function($q) use ($search) {
+                            $q->where('descripcion', 'LIKE', "%{$search}%")
+                              ->orWhere('id', 'LIKE', "%{$search}%");
+                        });
+                    })
+                    ->select('id', 'descripcion')
+                    ->limit(20)
+                    ->get()
+                    ->map(function($producto) {
+                        // Calcular precio promedio de lotes activos
+                        $precioPromedio = Lote::where('id_producto', $producto->id)
+                            ->where('estado', true)
+                            ->where('cantidad', '>', 0)
+                            ->avg('precio_ingreso');
+
+                        return [
+                            'id' => $producto->id,
+                            'descripcion' => $producto->descripcion,
+                            'precio' => $precioPromedio ?? 0
+                        ];
+                    })
+                    ->toArray();
+            }
         }
 
-        $search = strtolower(trim($this->searchProducto));
-
-        return array_filter($this->productos, function($producto) use ($search) {
-            // Convertir el ID a hexadecimal para la comparación
-            $idHex = strtolower(dechex($producto['id']));
-
-            // Buscar tanto en el ID hexadecimal como en la descripción
-            return str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
-                   str_contains((string)$producto['id'], $search);
-        });
+        return $productosFiltrados;
     }
 
     public function selectProducto($productoId)
     {
-        $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
+        // Buscar en los resultados filtrados
+        $producto = collect($this->productoResults)->firstWhere('id', $productoId);
+
         if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
             $this->productosSeleccionados[] = [
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
-                'precio' => $producto['precio'],
-                'cantidad' => 1
+                'precio' => $producto['precio'] ?? 0,
+                'cantidad' => 1,
+                'estado' => 'bueno' // Valor por defecto
             ];
         }
         $this->searchProducto = '';
@@ -265,6 +379,277 @@ class FormularioDevolucion extends Component
         return collect($this->productosSeleccionados)->sum(function($producto) {
             return $producto['cantidad'] * $producto['precio'];
         });
+    }
+
+    /**
+     * Actualiza el estado de un producto seleccionado
+     */
+    public function actualizarEstado($productoId, $estado)
+    {
+        foreach ($this->productosSeleccionados as &$producto) {
+            if ($producto['id'] === (int)$productoId) {
+                $producto['estado'] = $estado;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Actualiza el precio de un producto (solo para equipo no registrado)
+     */
+    public function actualizarPrecio($productoId, $precio)
+    {
+        foreach ($this->productosSeleccionados as &$producto) {
+            if ($producto['id'] === (int)$productoId) {
+                $producto['precio'] = max(0, (float)$precio);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Obtiene los tipos de devolución disponibles
+     */
+    public function getTiposDevolucionProperty()
+    {
+        return TipoDevolucion::select('id', 'nombre')
+            ->get()
+            ->map(function($tipo) {
+                $value = match($tipo->nombre) {
+                    'Normal' => 'normal',
+                    'Equipo No Registrado' => 'equipo_no_registrado',
+                    'Insumos No Utilizados' => 'insumos_no_utilizados',
+                    default => strtolower(str_replace(' ', '_', $tipo->nombre))
+                };
+
+                return [
+                    'id' => $tipo->id,
+                    'nombre' => $tipo->nombre,
+                    'value' => $value
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Obtiene las razones de devolución disponibles
+     */
+    public function getRazonesDevolucionProperty()
+    {
+        return RazonDevolucion::select('id', 'nombre')
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * Guarda la devolución en la base de datos
+     */
+    public function save()
+    {
+        // Validaciones
+        $this->validate([
+            'selectedRazonDevolucionId' => 'required|exists:razon_devolucion,id',
+            'selectedDestino' => 'required',
+            'selectedOrigen' => 'required',
+            'productosSeleccionados' => 'required|min:1',
+            'correlativo' => 'nullable|string|max:255',
+            'motivo' => 'nullable|string|max:1000',
+        ], [
+            'selectedRazonDevolucionId.required' => 'Debe seleccionar una razón de devolución',
+            'selectedDestino.required' => 'Debe seleccionar una bodega de destino',
+            'selectedOrigen.required' => 'Debe seleccionar el origen de la devolución',
+            'productosSeleccionados.required' => 'Debe agregar al menos un producto',
+            'productosSeleccionados.min' => 'Debe agregar al menos un producto',
+        ]);
+
+        // Validar precios en equipo no registrado
+        if ($this->tipoDevolucion === 'equipo_no_registrado') {
+            foreach ($this->productosSeleccionados as $producto) {
+                if ($producto['precio'] <= 0) {
+                    session()->flash('error', 'Todos los productos deben tener un precio válido para equipo no registrado');
+                    return;
+                }
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            // Obtener bodega destino
+            $bodegaId = (int)str_replace('B', '', $this->selectedDestino['id']);
+
+            // Obtener tipo de devolución
+            $tipoDevolucion = TipoDevolucion::where('nombre', match($this->tipoDevolucion) {
+                'normal' => 'Normal',
+                'equipo_no_registrado' => 'Equipo No Registrado',
+                'insumos_no_utilizados' => 'Insumos No Utilizados',
+            })->first();
+
+            // Calcular total
+            $total = $this->subtotal;
+
+            // Crear devolución
+            $devolucion = Devolucion::create([
+                'fecha' => now(),
+                'no_formulario' => $this->correlativo,
+                'total' => $total,
+                'id_usuario' => Auth::id(),
+                'id_tarjeta' => null, // Se maneja en detalles
+                'id_bodega' => $bodegaId,
+                'id_tipo_devolucion' => $tipoDevolucion->id,
+                'id_razon_devolucion' => $this->selectedRazonDevolucionId,
+            ]);
+
+            // Procesar productos según tipo de devolución
+            foreach ($this->productosSeleccionados as $producto) {
+                $this->procesarProductoDevolucion($devolucion, $producto, $bodegaId);
+            }
+
+            // Crear transacción
+            $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Devolución']);
+            Transaccion::create([
+                'fecha' => now(),
+                'descripcion' => 'Devolución de material - ' . $tipoDevolucion->nombre,
+                'id_tipo_transaccion' => $tipoTransaccion->id,
+                'id_devolucion' => $devolucion->id,
+            ]);
+
+            DB::commit();
+
+            session()->flash('success', 'Devolución registrada exitosamente');
+            return redirect()->route('devoluciones');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al registrar la devolución: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Procesa un producto de la devolución según el tipo
+     */
+    private function procesarProductoDevolucion($devolucion, $producto, $bodegaId)
+    {
+        if ($this->tipoDevolucion === 'equipo_no_registrado') {
+            // Equipo no registrado
+            $this->procesarEquipoNoRegistrado($devolucion, $producto, $bodegaId);
+        } else {
+            // Devolución normal o insumos no utilizados
+            $this->procesarDevolucionNormal($devolucion, $producto, $bodegaId);
+        }
+    }
+
+    /**
+     * Procesa equipo no registrado
+     */
+    private function procesarEquipoNoRegistrado($devolucion, $producto, $bodegaId)
+    {
+        $idLote = null;
+
+        // Solo crear/usar lote si está en buen estado
+        if ($producto['estado'] === 'bueno') {
+            // Buscar lote de ajuste para esta bodega
+            $loteAjuste = Lote::obtenerLoteAjuste($bodegaId);
+
+            if ($loteAjuste) {
+                // Incrementar cantidad del lote de ajuste
+                $loteAjuste->cantidad += $producto['cantidad'];
+                $loteAjuste->cantidad_inicial += $producto['cantidad'];
+                $loteAjuste->save();
+                $idLote = $loteAjuste->id;
+            } else {
+                // Crear nuevo lote para el producto
+                $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Entrada']);
+                $transaccion = Transaccion::create([
+                    'fecha' => now(),
+                    'descripcion' => 'Lote creado por devolución de equipo no registrado',
+                    'id_tipo_transaccion' => $tipoTransaccion->id,
+                ]);
+
+                $lote = Lote::create([
+                    'cantidad' => $producto['cantidad'],
+                    'cantidad_inicial' => $producto['cantidad'],
+                    'fecha_ingreso' => now(),
+                    'precio_ingreso' => $producto['precio'],
+                    'observaciones' => 'Lote creado por devolución de equipo no registrado',
+                    'id_producto' => $producto['id'],
+                    'id_bodega' => $bodegaId,
+                    'estado' => true,
+                    'id_transaccion' => $transaccion->id,
+                ]);
+                $idLote = $lote->id;
+            }
+        }
+        // Si está en mal estado, idLote queda null
+
+        // Crear detalle de devolución
+        DetalleDevolucion::create([
+            'id_devolucion' => $devolucion->id,
+            'id_producto' => $producto['id'],
+            'id_lote' => $idLote,
+            'cantidad' => $producto['cantidad'],
+            'estado_producto' => $producto['estado'],
+            'precio_unitario' => $producto['precio'],
+        ]);
+    }
+
+    /**
+     * Procesa devolución normal o insumos no utilizados
+     */
+    private function procesarDevolucionNormal($devolucion, $producto, $bodegaId)
+    {
+        // Buscar lote del producto en la bodega destino
+        // Aplicar PEPS: el lote más antiguo primero
+        $lote = Lote::where('id_producto', $producto['id'])
+            ->where('id_bodega', $bodegaId)
+            ->orderBy('fecha_ingreso', 'asc')
+            ->first();
+
+        if ($lote) {
+            // Reactivar lote si está inactivo
+            if (!$lote->estado) {
+                $lote->estado = true;
+            }
+
+            // Sumar cantidad devuelta
+            $lote->cantidad += $producto['cantidad'];
+            $lote->save();
+
+            $idLote = $lote->id;
+            $precioUnitario = $lote->precio_ingreso;
+        } else {
+            // Si no existe lote, crear uno nuevo (caso de primera devolución)
+            $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Devolución']);
+            $transaccion = Transaccion::create([
+                'fecha' => now(),
+                'descripcion' => 'Lote creado por devolución',
+                'id_tipo_transaccion' => $tipoTransaccion->id,
+            ]);
+
+            $lote = Lote::create([
+                'cantidad' => $producto['cantidad'],
+                'cantidad_inicial' => $producto['cantidad'],
+                'fecha_ingreso' => now(),
+                'precio_ingreso' => $producto['precio'],
+                'observaciones' => 'Lote creado por devolución',
+                'id_producto' => $producto['id'],
+                'id_bodega' => $bodegaId,
+                'estado' => true,
+                'id_transaccion' => $transaccion->id,
+            ]);
+
+            $idLote = $lote->id;
+            $precioUnitario = $producto['precio'];
+        }
+
+        // Crear detalle de devolución
+        DetalleDevolucion::create([
+            'id_devolucion' => $devolucion->id,
+            'id_producto' => $producto['id'],
+            'id_lote' => $idLote,
+            'cantidad' => $producto['cantidad'],
+            'estado_producto' => $producto['estado'],
+            'precio_unitario' => $precioUnitario,
+        ]);
     }
 
     /**

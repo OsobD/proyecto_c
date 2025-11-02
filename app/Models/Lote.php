@@ -66,4 +66,18 @@ class Lote extends Model
     {
         return $this->hasMany(DetalleSalida::class, 'id_lote');
     }
+
+    /**
+     * Obtiene o crea el lote especial de ajuste para una bodega específica
+     * Este lote se usa para equipo no registrado que se devuelve en buen estado
+     *
+     * @param int $id_bodega ID de la bodega
+     * @return Lote|null
+     */
+    public static function obtenerLoteAjuste($id_bodega)
+    {
+        return self::where('id_bodega', $id_bodega)
+            ->where('observaciones', 'LIKE', '%Lote especial para equipo no registrado recuperado%')
+            ->first();
+    }
 }

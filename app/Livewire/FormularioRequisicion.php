@@ -2,6 +2,19 @@
 
 namespace App\Livewire;
 
+use App\Models\Bitacora;
+use App\Models\Bodega;
+use App\Models\DetalleSalida;
+use App\Models\Lote;
+use App\Models\Persona;
+use App\Models\Producto;
+use App\Models\Salida;
+use App\Models\TarjetaProducto;
+use App\Models\TarjetaResponsabilidad;
+use App\Models\TipoSalida;
+use App\Models\TipoTransaccion;
+use App\Models\Transaccion;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 /**
@@ -16,15 +29,6 @@ use Livewire\Component;
  */
 class FormularioRequisicion extends Component
 {
-    /** @var array Listado de empleados (tarjetas de responsabilidad) */
-    public $empleados = [];
-
-    /** @var array Listado de bodegas */
-    public $bodegas = [];
-
-    /** @var array Listado de productos */
-    public $productos = [];
-
     /** @var string Término de búsqueda para bodega origen */
     public $searchOrigen = '';
 
@@ -52,103 +56,199 @@ class FormularioRequisicion extends Component
     /** @var array Productos agregados a la requisición */
     public $productosSeleccionados = [];
 
+    /** @var string|null Correlativo de la requisición */
+    public $correlativo = null;
+
+    /** @var string|null Observaciones de la requisición */
+    public $observaciones = null;
+
     /**
-     * Inicializa el componente con datos mock de prueba
+     * Inicializa el componente
      *
-     * @todo Reemplazar con consultas a BD: Bodega::all(), User::all(), Producto::all()
      * @return void
      */
     public function mount()
     {
-        $this->bodegas = [
-            ['id' => 1, 'nombre' => 'Bodega Central'],
-            ['id' => 2, 'nombre' => 'Bodega Norte'],
-            ['id' => 3, 'nombre' => 'Bodega Sur'],
-        ];
-
-        $this->empleados = [
-            ['id' => 1, 'nombre' => 'Juan Pérez'],
-            ['id' => 2, 'nombre' => 'María García'],
-            ['id' => 3, 'nombre' => 'Carlos López'],
-        ];
-
-        $this->productos = [
-            ['id' => 0xA1, 'descripcion' => 'Tornillos de acero inoxidable', 'precio' => 0.50],
-            ['id' => 0xB2, 'descripcion' => 'Abrazaderas de metal', 'precio' => 2.75],
-            ['id' => 0xC3, 'descripcion' => 'Cinta aislante', 'precio' => 3.25],
-            ['id' => 0xD4, 'descripcion' => 'Guantes de seguridad', 'precio' => 8.50],
-            ['id' => 0xE5, 'descripcion' => 'Fusibles de 15A', 'precio' => 1.25],
-        ];
         $this->productosSeleccionados = [];
     }
 
+    /**
+     * Obtiene bodegas físicas activas filtradas por búsqueda
+     *
+     * @return array
+     */
     public function getOrigenResultsProperty()
     {
-        $results = [];
+        $query = Bodega::where('activo', true);
 
-        // Only show bodegas as origin (Bodega -> Tarjeta)
-        foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchOrigen) ||
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
-                $results[] = [
-                    'id' => 'B' . $bodega['id'],
-                    'nombre' => $bodega['nombre'],
-                    'tipo' => 'Bodega'
-                ];
-            }
+        if (!empty($this->searchOrigen)) {
+            $query->where('nombre', 'like', '%' . $this->searchOrigen . '%');
         }
 
-        return $results;
+        return $query->get()->map(function ($bodega) {
+            return [
+                'id' => 'B' . $bodega->id,
+                'nombre' => $bodega->nombre,
+                'tipo' => 'Bodega',
+                'bodega_id' => $bodega->id
+            ];
+        })->toArray();
     }
 
+    /**
+     * Obtiene todas las personas activas con indicador de tarjeta
+     *
+     * @return array
+     */
     public function getDestinoResultsProperty()
     {
-        $results = [];
+        $query = Persona::where('estado', true)
+            ->with(['tarjetasResponsabilidad' => function ($q) {
+                $q->where('activo', true)->latest();
+            }]);
 
-        // Only show empleados/tarjetas as destination (Bodega -> Tarjeta)
-        foreach ($this->empleados as $empleado) {
-            if (empty($this->searchDestino) ||
-                str_contains(strtolower($empleado['nombre']), strtolower($this->searchDestino))) {
-                $results[] = [
-                    'id' => 'E' . $empleado['id'],
-                    'nombre' => $empleado['nombre'],
-                    'tipo' => 'Tarjeta'
-                ];
-            }
+        if (!empty($this->searchDestino)) {
+            $query->where(function ($q) {
+                $q->where('nombres', 'like', '%' . $this->searchDestino . '%')
+                    ->orWhere('apellidos', 'like', '%' . $this->searchDestino . '%')
+                    ->orWhereRaw("CONCAT(nombres, ' ', apellidos) like ?", ['%' . $this->searchDestino . '%']);
+            });
         }
 
-        return $results;
+        return $query->get()->map(function ($persona) {
+            $tarjeta = $persona->tarjetasResponsabilidad->first();
+            $nombreCompleto = trim($persona->nombres . ' ' . $persona->apellidos);
+
+            return [
+                'id' => 'P' . $persona->id,
+                'nombre' => $nombreCompleto,
+                'tipo' => $tarjeta ? 'Con Tarjeta' : 'Sin Tarjeta',
+                'persona_id' => $persona->id,
+                'tarjeta_id' => $tarjeta ? $tarjeta->id : null,
+                'tiene_tarjeta' => $tarjeta !== null
+            ];
+        })->toArray();
     }
 
-    public function selectOrigen($id, $nombre, $tipo)
+    /**
+     * Obtiene productos disponibles en la bodega seleccionada
+     *
+     * @return array
+     */
+    public function getProductoResultsProperty()
+    {
+        // Si no hay bodega seleccionada, no mostrar productos
+        if (!$this->selectedOrigen) {
+            return [];
+        }
+
+        $bodegaId = $this->selectedOrigen['bodega_id'];
+
+        // Obtener productos con lotes disponibles en la bodega
+        $query = Producto::where('activo', true)
+            ->whereHas('lotes', function ($q) use ($bodegaId) {
+                $q->where('id_bodega', $bodegaId)
+                    ->where('cantidad', '>', 0)
+                    ->where('estado', true);
+            })
+            ->with(['lotes' => function ($q) use ($bodegaId) {
+                $q->where('id_bodega', $bodegaId)
+                    ->where('cantidad', '>', 0)
+                    ->where('estado', true)
+                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
+            }, 'categoria']);
+
+        // Filtrar por búsqueda si existe
+        if (!empty($this->searchProducto)) {
+            $search = strtolower(trim($this->searchProducto));
+            $query->where(function ($q) use ($search) {
+                $q->where('descripcion', 'like', '%' . $search . '%')
+                    ->orWhere('id', 'like', '%' . str_replace(['0x', '#'], '', $search) . '%');
+            });
+        }
+
+        return $query->get()->map(function ($producto) {
+            $cantidadTotal = $producto->lotes->sum('cantidad');
+            $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
+
+            return [
+                'id' => $producto->id,
+                'descripcion' => $producto->descripcion,
+                'categoria' => $producto->categoria->nombre ?? '',
+                'cantidad_disponible' => $cantidadTotal,
+                'precio' => $precioPromedio,
+                'lotes' => $producto->lotes->toArray()
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Selecciona una bodega como origen
+     *
+     * @param string $id
+     * @param string $nombre
+     * @param string $tipo
+     * @param int $bodegaId
+     * @return void
+     */
+    public function selectOrigen($id, $nombre, $tipo, $bodegaId)
     {
         $this->selectedOrigen = [
             'id' => $id,
             'nombre' => $nombre,
-            'tipo' => $tipo
+            'tipo' => $tipo,
+            'bodega_id' => $bodegaId
         ];
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
+
+        // Limpiar productos seleccionados al cambiar de bodega
+        $this->productosSeleccionados = [];
     }
 
-    public function selectDestino($id, $nombre, $tipo)
+    /**
+     * Selecciona una persona como destino
+     *
+     * @param string $id
+     * @param string $nombre
+     * @param string $tipo
+     * @param int $personaId
+     * @param int|null $tarjetaId
+     * @param bool $tieneTarjeta
+     * @return void
+     */
+    public function selectDestino($id, $nombre, $tipo, $personaId, $tarjetaId, $tieneTarjeta)
     {
         $this->selectedDestino = [
             'id' => $id,
             'nombre' => $nombre,
-            'tipo' => $tipo
+            'tipo' => $tipo,
+            'persona_id' => $personaId,
+            'tarjeta_id' => $tarjetaId,
+            'tiene_tarjeta' => $tieneTarjeta
         ];
         $this->searchDestino = '';
         $this->showDestinoDropdown = false;
     }
 
+    /**
+     * Limpia la selección de origen
+     *
+     * @return void
+     */
     public function clearOrigen()
     {
         $this->selectedOrigen = null;
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
+        $this->productosSeleccionados = [];
     }
 
+    /**
+     * Limpia la selección de destino
+     *
+     * @return void
+     */
     public function clearDestino()
     {
         $this->selectedDestino = null;
@@ -156,21 +256,41 @@ class FormularioRequisicion extends Component
         $this->showDestinoDropdown = false;
     }
 
+    /**
+     * Se ejecuta cuando cambia el término de búsqueda de origen
+     *
+     * @return void
+     */
     public function updatedSearchOrigen()
     {
         $this->showOrigenDropdown = true;
     }
 
+    /**
+     * Se ejecuta cuando cambia el término de búsqueda de destino
+     *
+     * @return void
+     */
     public function updatedSearchDestino()
     {
         $this->showDestinoDropdown = true;
     }
 
+    /**
+     * Se ejecuta cuando cambia el término de búsqueda de producto
+     *
+     * @return void
+     */
     public function updatedSearchProducto()
     {
         $this->showProductoDropdown = true;
     }
 
+    /**
+     * Selecciona el primer resultado de producto (útil para Enter)
+     *
+     * @return void
+     */
     public function seleccionarPrimerResultado()
     {
         $resultados = $this->productoResults;
@@ -180,62 +300,234 @@ class FormularioRequisicion extends Component
         }
     }
 
-    public function getProductoResultsProperty()
-    {
-        if (empty($this->searchProducto)) {
-            return $this->productos;
-        }
-
-        $search = strtolower(trim($this->searchProducto));
-
-        return array_filter($this->productos, function($producto) use ($search) {
-            // Convertir el ID a hexadecimal para la comparación
-            $idHex = strtolower(dechex($producto['id']));
-
-            // Buscar tanto en el ID hexadecimal como en la descripción
-            return str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
-                   str_contains((string)$producto['id'], $search);
-        });
-    }
-
+    /**
+     * Agrega un producto a la requisición
+     *
+     * @param int $productoId
+     * @return void
+     */
     public function selectProducto($productoId)
     {
-        $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
+        $productos = $this->productoResults;
+        $producto = collect($productos)->firstWhere('id', (int) $productoId);
+
         if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
             $this->productosSeleccionados[] = [
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
                 'precio' => $producto['precio'],
-                'cantidad' => 1
+                'cantidad' => 1,
+                'cantidad_disponible' => $producto['cantidad_disponible'],
+                'lotes' => $producto['lotes']
             ];
         }
+
         $this->searchProducto = '';
         $this->showProductoDropdown = false;
     }
 
+    /**
+     * Elimina un producto de la requisición
+     *
+     * @param int $productoId
+     * @return void
+     */
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
-            return $item['id'] !== (int)$productoId;
-        });
+        $this->productosSeleccionados = array_values(array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
+            return $item['id'] !== (int) $productoId;
+        }));
     }
 
+    /**
+     * Actualiza la cantidad de un producto
+     *
+     * @param int $productoId
+     * @param int $cantidad
+     * @return void
+     */
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
-            if ($producto['id'] === (int)$productoId) {
-                $producto['cantidad'] = max(1, (int)$cantidad);
+            if ($producto['id'] === (int) $productoId) {
+                // Validar que no exceda el stock disponible
+                $cantidadMaxima = $producto['cantidad_disponible'];
+                $producto['cantidad'] = max(1, min((int) $cantidad, $cantidadMaxima));
                 break;
             }
         }
     }
 
+    /**
+     * Calcula el subtotal de la requisición
+     *
+     * @return float
+     */
     public function getSubtotalProperty()
     {
-        return collect($this->productosSeleccionados)->sum(function($producto) {
+        return collect($this->productosSeleccionados)->sum(function ($producto) {
             return $producto['cantidad'] * $producto['precio'];
         });
+    }
+
+    /**
+     * Guarda la requisición
+     *
+     * @return void
+     */
+    public function save()
+    {
+        // Validaciones
+        $this->validate([
+            'selectedOrigen' => 'required',
+            'selectedDestino' => 'required',
+            'productosSeleccionados' => 'required|array|min:1',
+            'correlativo' => 'nullable|string|max:255',
+            'observaciones' => 'nullable|string',
+        ], [
+            'selectedOrigen.required' => 'Debe seleccionar una bodega origen.',
+            'selectedDestino.required' => 'Debe seleccionar un empleado destino.',
+            'productosSeleccionados.required' => 'Debe agregar al menos un producto.',
+            'productosSeleccionados.min' => 'Debe agregar al menos un producto.',
+        ]);
+
+        // Validar que el destino tenga tarjeta activa
+        if (!$this->selectedDestino['tiene_tarjeta']) {
+            session()->flash('error', 'El empleado seleccionado no tiene una tarjeta de responsabilidad activa.');
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Obtener tipo de salida "Salida por Uso Interno"
+            $tipoSalida = TipoSalida::where('nombre', 'Salida por Uso Interno')->first();
+            if (!$tipoSalida) {
+                throw new \Exception('No se encontró el tipo de salida "Salida por Uso Interno".');
+            }
+
+            // Obtener tipo de transacción "Salida"
+            $tipoTransaccion = TipoTransaccion::where('nombre', 'Salida')->first();
+            if (!$tipoTransaccion) {
+                throw new \Exception('No se encontró el tipo de transacción "Salida".');
+            }
+
+            // Crear el registro de salida
+            $salida = Salida::create([
+                'fecha' => now(),
+                'total' => $this->subtotal,
+                'descripcion' => $this->observaciones ?? 'Requisición de productos',
+                'ubicacion' => $this->correlativo,
+                'id_usuario' => auth()->id(),
+                'id_tarjeta' => null, // Se usará en detalle con TarjetaProducto
+                'id_bodega' => $this->selectedOrigen['bodega_id'],
+                'id_tipo' => $tipoSalida->id,
+                'id_persona' => $this->selectedDestino['persona_id'],
+            ]);
+
+            // Crear transacción
+            $transaccion = Transaccion::create([
+                'id_tipo' => $tipoTransaccion->id,
+                'id_salida' => $salida->id,
+            ]);
+
+            // Procesar cada producto
+            foreach ($this->productosSeleccionados as $producto) {
+                $cantidadRestante = $producto['cantidad'];
+                $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
+
+                foreach ($lotes as $lote) {
+                    if ($cantidadRestante <= 0) {
+                        break;
+                    }
+
+                    $loteModel = Lote::find($lote['id']);
+                    if (!$loteModel || $loteModel->cantidad <= 0) {
+                        continue;
+                    }
+
+                    // Calcular cantidad a tomar de este lote
+                    $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+
+                    // Crear detalle de salida
+                    DetalleSalida::create([
+                        'id_salida' => $salida->id,
+                        'id_producto' => $producto['id'],
+                        'id_lote' => $loteModel->id,
+                        'cantidad' => $cantidadDelLote,
+                        'precio_salida' => $loteModel->precio_ingreso,
+                    ]);
+
+                    // Actualizar cantidad del lote
+                    $loteModel->cantidad -= $cantidadDelLote;
+                    $loteModel->save();
+
+                    // Crear asignación en tarjeta de responsabilidad
+                    TarjetaProducto::create([
+                        'precio_asignacion' => $loteModel->precio_ingreso,
+                        'id_tarjeta' => $this->selectedDestino['tarjeta_id'],
+                        'id_producto' => $producto['id'],
+                        'id_lote' => $loteModel->id,
+                    ]);
+
+                    $cantidadRestante -= $cantidadDelLote;
+                }
+
+                // Validar que se pudo procesar toda la cantidad
+                if ($cantidadRestante > 0) {
+                    throw new \Exception("No hay suficiente stock disponible para el producto: {$producto['descripcion']}");
+                }
+            }
+
+            // Actualizar total de la tarjeta de responsabilidad
+            $tarjeta = TarjetaResponsabilidad::find($this->selectedDestino['tarjeta_id']);
+            if ($tarjeta) {
+                $tarjeta->total += $this->subtotal;
+                $tarjeta->save();
+            }
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'crear',
+                'modelo' => 'Salida',
+                'modelo_id' => $salida->id,
+                'descripcion' => auth()->user()->name . " creó Requisición #{$salida->id} desde bodega '{$this->selectedOrigen['nombre']}' hacia '{$this->selectedDestino['nombre']}'",
+                'datos_anteriores' => null,
+                'datos_nuevos' => json_encode([
+                    'id_salida' => $salida->id,
+                    'bodega' => $this->selectedOrigen['nombre'],
+                    'persona' => $this->selectedDestino['nombre'],
+                    'total' => $this->subtotal,
+                    'correlativo' => $this->correlativo,
+                ]),
+                'id_usuario' => auth()->id(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+
+            session()->flash('success', 'Requisición registrada exitosamente.');
+
+            // Limpiar formulario
+            $this->reset([
+                'selectedOrigen',
+                'selectedDestino',
+                'productosSeleccionados',
+                'correlativo',
+                'observaciones',
+                'searchOrigen',
+                'searchDestino',
+                'searchProducto'
+            ]);
+
+            // Redirigir a la lista de requisiciones o salidas
+            return redirect()->route('salidas');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al registrar la requisición: ' . $e->getMessage());
+        }
     }
 
     /**

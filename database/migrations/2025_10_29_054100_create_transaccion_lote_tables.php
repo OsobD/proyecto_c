@@ -37,7 +37,7 @@ return new class extends Migration
             $table->datetime('fecha_ingreso');
             $table->double('precio_ingreso')->default(0);
             $table->text('observaciones')->nullable();
-            $table->string('id_producto');
+            $table->string('id_producto')->nullable();
             $table->unsignedBigInteger('id_bodega')->nullable();
             $table->boolean('estado')->default(true);
             $table->unsignedBigInteger('id_transaccion')->nullable();
