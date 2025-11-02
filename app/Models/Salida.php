@@ -65,9 +65,4 @@ class Salida extends Model
     {
         return $this->hasMany(Transaccion::class, 'id_salida');
     }
-
-    public function transacciones()
-    {
-        return $this->hasMany(Transaccion::class, 'id_salida');
-    }
 }

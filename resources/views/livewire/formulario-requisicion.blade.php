@@ -256,7 +256,7 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-4">
-                <a href="{{ route('salidas') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                <a href="{{ route('traslados') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                     Cancelar
                 </a>
                 <button type="submit"
