@@ -173,7 +173,7 @@
 
             {{-- Tabla de productos agregados a la compra con inputs para cantidad y costo --}}
             <div class="mt-8">
-                <h2 class="text-lg font-semibold text-gray-800">Productos en la Compra</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Productos en la Compra ({{ count($productosSeleccionados) }} productos)</h2>
                 <div class="overflow-x-auto mt-4">
                     <table class="min-w-full bg-white">
                         <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -189,14 +189,14 @@
                             </tr>
                         </thead>
                         <tbody class="text-gray-600 text-sm font-light">
-                            @foreach($productosSeleccionados as $producto)
-                                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            @foreach($productosSeleccionados as $index => $producto)
+                                <tr class="border-b border-gray-200 hover:bg-gray-50" wire:key="producto-{{ $producto['id'] }}-{{ $index }}">
                                     <td class="py-3 px-6 text-left font-mono">{{ $producto['codigo'] }}</td>
                                     <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
                                     <td class="py-3 px-6 text-center">
                                         <input
                                             type="number"
-                                            wire:model.blur="productosSeleccionados.{{ $loop->index }}.cantidad"
+                                            wire:model.blur="productosSeleccionados.{{ $index }}.cantidad"
                                             min="1"
                                             placeholder="0"
                                             class="w-24 text-center border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold"
@@ -208,7 +208,7 @@
                                             <input
                                                 type="number"
                                                 step="0.01"
-                                                wire:model.blur="productosSeleccionados.{{ $loop->index }}.costo"
+                                                wire:model.blur="productosSeleccionados.{{ $index }}.costo"
                                                 min="0"
                                                 placeholder="0.00"
                                                 class="w-28 text-right border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold"
@@ -221,7 +221,7 @@
                                     <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] * 0.88), 2) }}</td>
                                     <td class="py-3 px-6 text-left">
                                         <textarea
-                                            wire:model.blur="productosSeleccionados.{{ $loop->index }}.observaciones"
+                                            wire:model.blur="productosSeleccionados.{{ $index }}.observaciones"
                                             rows="2"
                                             placeholder="Observaciones del lote..."
                                             class="w-full text-sm border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

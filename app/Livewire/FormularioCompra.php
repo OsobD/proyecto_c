@@ -114,8 +114,8 @@ class FormularioCompra extends Component
     /** @var array Categorías nuevas creadas pero no guardadas en DB */
     public $nuevasCategorias = [];
 
-    /** @var int Contador para IDs temporales negativos */
-    private $tempIdCounter = -1;
+    /** @var int Contador para IDs temporales negativos - debe ser público para persistir en Livewire */
+    public $tempIdCounter = -1;
 
     // Propiedades del modal de creación de producto
     /** @var bool Controla visibilidad del modal de producto */
@@ -358,11 +358,12 @@ class FormularioCompra extends Component
 
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
-            return $item['id'] !== $productoId;
-        });
-        // Re-index the array
-        $this->productosSeleccionados = array_values($this->productosSeleccionados);
+        // Filtrar y reindexar en una sola operación para forzar reactividad
+        $this->productosSeleccionados = array_values(
+            array_filter($this->productosSeleccionados, function($item) use ($productoId) {
+                return $item['id'] !== $productoId;
+            })
+        );
     }
 
     public function getSubtotalProperty()
