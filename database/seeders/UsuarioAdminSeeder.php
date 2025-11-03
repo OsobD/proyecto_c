@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\Usuario;
 use App\Models\Persona;
 use App\Models\Rol;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class UsuarioAdminSeeder extends Seeder
             'estado' => true,
         ]);
 
-        // Crear usuario administrador
+        // Crear usuario administrador en la tabla users (para autenticación Laravel)
         User::create([
             'name' => 'Administrador',
             'email' => 'admin@eemq.com',
@@ -39,6 +40,15 @@ class UsuarioAdminSeeder extends Seeder
             'id_rol' => $rolAdmin?->id,
             'estado' => true,
             'email_verified_at' => now(),
+        ]);
+
+        // IMPORTANTE: También crear en tabla usuario (para foreign keys de transacciones)
+        Usuario::create([
+            'nombre_usuario' => 'admin',
+            'contrasena' => Hash::make('admin123'),
+            'id_persona' => $persona->id,
+            'id_rol' => $rolAdmin?->id,
+            'estado' => true,
         ]);
     }
 }

@@ -21,7 +21,7 @@
         <form>
             {{-- Selección de bodega destino --}}
             <div class="mb-6">
-                <label for="bodega" class="block text-sm font-medium text-gray-700">Bodega Destino</label>
+                <label class="block text-sm font-medium text-gray-700">Bodega Destino</label>
                 <div class="relative">
                     @if($selectedBodega)
                         <div class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
@@ -61,7 +61,7 @@
 
             {{-- Selección de proveedor con autocompletado --}}
             <div class="mb-6">
-                <label for="proveedor" class="block text-sm font-medium text-gray-700">Proveedor</label>
+                <label class="block text-sm font-medium text-gray-700">Proveedor</label>
                 <div class="relative">
                     @if($selectedProveedor)
                         <div class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
@@ -137,7 +137,7 @@
             {{-- Búsqueda de productos --}}
             <div class="mt-6 pt-4 border-t border-gray-200">
                 <div class="flex justify-between items-center mb-2">
-                    <label for="searchProducto" class="block text-sm font-medium text-gray-700">Buscar producto:</label>
+                    <label class="block text-sm font-medium text-gray-700">Buscar producto:</label>
                     <button
                         type="button"
                         wire:click="abrirModalProducto"
@@ -173,7 +173,7 @@
 
             {{-- Tabla de productos agregados a la compra con inputs para cantidad y costo --}}
             <div class="mt-8">
-                <h2 class="text-lg font-semibold text-gray-800">Productos en la Compra ({{ count($productosSeleccionados) }} productos)</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Productos en la Compra</h2>
                 <div class="overflow-x-auto mt-4">
                     <table class="min-w-full bg-white">
                         <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -373,10 +373,16 @@
         </div>
     </div>
 
-    {{-- Mensaje de éxito al crear producto o proveedor --}}
+    {{-- Mensajes de éxito y error --}}
     @if (session()->has('message'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4">
             {{ session('message') }}
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+            <strong>Error:</strong> {{ session('error') }}
         </div>
     @endif
 
@@ -440,7 +446,7 @@
 
                     {{-- Categoría --}}
                     <div class="mb-4">
-                        <label for="categoriaId" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
                             Categoría
                         </label>
                         <div class="relative">
@@ -550,7 +556,7 @@
 
                     {{-- Régimen --}}
                     <div class="mb-6">
-                        <label for="nuevoProveedorRegimen" class="block text-sm font-medium text-gray-700">
+                        <label class="block text-sm font-medium text-gray-700">
                             Régimen
                         </label>
                         <div class="relative">

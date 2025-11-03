@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\Compra;
+use App\Models\Proveedor;
 use Livewire\Component;
 
 /**
@@ -22,48 +24,41 @@ class ComprasHub extends Component
     public $comprasRecientes = [];
 
     /**
-     * Inicializa el componente con datos mock
+     * Inicializa el componente con datos reales de la base de datos
      *
-     * @todo Conectar con BD: Compra::where('mes', now()->month)->get()
      * @return void
      */
     public function mount()
     {
-        // Estadísticas simuladas
+        // Obtener compras del mes actual
+        $comprasMes = Compra::whereMonth('fecha', now()->month)
+            ->whereYear('fecha', now()->year)
+            ->get();
+
+        // Calcular estadísticas
         $this->estadisticas = [
-            'total_mes' => 15,
-            'monto_total_mes' => 125450.50,
-            'pendientes_revision' => 3,
-            'proveedores_activos' => 8,
+            'total_mes' => $comprasMes->count(),
+            'monto_total_mes' => $comprasMes->sum('total'),
+            'pendientes_revision' => 0, // Puedes ajustar según tu lógica de negocio
+            'proveedores_activos' => Proveedor::where('activo', true)->count(),
         ];
 
-        // Compras recientes simuladas
-        $this->comprasRecientes = [
-            [
-                'id' => 1,
-                'numero_factura' => 'FAC-001',
-                'proveedor' => 'Ferretería El Martillo Feliz',
-                'fecha' => '2025-10-18',
-                'monto' => 5250.00,
-                'estado' => 'Completada',
-            ],
-            [
-                'id' => 2,
-                'numero_factura' => 'FAC-002',
-                'proveedor' => 'Suministros Industriales S.A.',
-                'fecha' => '2025-10-17',
-                'monto' => 12800.00,
-                'estado' => 'Pendiente',
-            ],
-            [
-                'id' => 3,
-                'numero_factura' => 'FAC-003',
-                'proveedor' => 'Distribuidora García',
-                'fecha' => '2025-10-16',
-                'monto' => 8450.00,
-                'estado' => 'Completada',
-            ],
-        ];
+        // Obtener las 5 compras más recientes
+        $this->comprasRecientes = Compra::with('proveedor')
+            ->orderBy('fecha', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function($compra) {
+                return [
+                    'id' => $compra->id,
+                    'numero_factura' => $compra->no_factura ?? 'N/A',
+                    'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
+                    'fecha' => $compra->fecha->format('Y-m-d'),
+                    'monto' => $compra->total,
+                    'estado' => 'Completada', // Todas las compras guardadas están completadas
+                ];
+            })
+            ->toArray();
     }
 
     public function render()

@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\Compra;
+use App\Models\Proveedor;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Livewire\Traits\TienePermisos;
@@ -34,9 +36,6 @@ class HistorialCompras extends Component
     /** @var string Filtro por ID de proveedor */
     public $proveedorFiltro = '';
 
-    /** @var array Listado de compras */
-    public $compras = [];
-
     /** @var array Listado de proveedores para filtro */
     public $proveedores = [];
 
@@ -47,69 +46,17 @@ class HistorialCompras extends Component
     public $compraSeleccionada = null;
 
     /**
-     * Inicializa el componente con datos mock
+     * Inicializa el componente con datos reales de la base de datos
      *
-     * @todo Conectar con BD: Compra::with('proveedor')->get()
      * @return void
      */
     public function mount()
     {
-        $this->proveedores = [
-            ['id' => 1, 'nombre' => 'Ferretería El Martillo Feliz'],
-            ['id' => 2, 'nombre' => 'Suministros Industriales S.A.'],
-            ['id' => 3, 'nombre' => 'Distribuidora García'],
-        ];
-
-        $this->compras = [
-            [
-                'id' => 1,
-                'numero_factura' => 'FAC-001',
-                'numero_serie' => 'A',
-                'proveedor' => 'Ferretería El Martillo Feliz',
-                'proveedor_id' => 1,
-                'fecha' => '2025-10-18',
-                'monto' => 5250.00,
-                'estado' => 'Completada',
-                'activa' => true,
-                'productos_count' => 5,
-            ],
-            [
-                'id' => 2,
-                'numero_factura' => 'FAC-002',
-                'numero_serie' => 'B',
-                'proveedor' => 'Suministros Industriales S.A.',
-                'proveedor_id' => 2,
-                'fecha' => '2025-10-17',
-                'monto' => 12800.00,
-                'estado' => 'Pendiente',
-                'activa' => true,
-                'productos_count' => 8,
-            ],
-            [
-                'id' => 3,
-                'numero_factura' => 'FAC-003',
-                'numero_serie' => 'A',
-                'proveedor' => 'Distribuidora García',
-                'proveedor_id' => 3,
-                'fecha' => '2025-10-16',
-                'monto' => 8450.00,
-                'estado' => 'Completada',
-                'activa' => true,
-                'productos_count' => 3,
-            ],
-            [
-                'id' => 4,
-                'numero_factura' => 'FAC-004',
-                'numero_serie' => 'C',
-                'proveedor' => 'Ferretería El Martillo Feliz',
-                'proveedor_id' => 1,
-                'fecha' => '2025-10-15',
-                'monto' => 3200.00,
-                'estado' => 'Completada',
-                'activa' => false,
-                'productos_count' => 2,
-            ],
-        ];
+        // Cargar proveedores activos para el filtro
+        $this->proveedores = Proveedor::where('activo', true)
+            ->get()
+            ->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])
+            ->toArray();
     }
 
     public function updatingSearch()
@@ -129,51 +76,78 @@ class HistorialCompras extends Component
 
     public function getComprasFiltradas()
     {
-        $compras = $this->compras;
+        $query = Compra::with(['proveedor', 'detalles']);
 
-        // Filtro por búsqueda
+        // Filtro por búsqueda (factura o proveedor)
         if ($this->search) {
-            $search = strtolower($this->search);
-            $compras = array_filter($compras, function($compra) use ($search) {
-                return str_contains(strtolower($compra['numero_factura']), $search) ||
-                       str_contains(strtolower($compra['proveedor']), $search);
+            $search = $this->search;
+            $query->where(function($q) use ($search) {
+                $q->where('no_factura', 'like', "%{$search}%")
+                  ->orWhere('correlativo', 'like', "%{$search}%")
+                  ->orWhereHas('proveedor', function($pq) use ($search) {
+                      $pq->where('nombre', 'like', "%{$search}%");
+                  });
             });
         }
 
         // Filtro por proveedor
         if ($this->proveedorFiltro) {
-            $compras = array_filter($compras, function($compra) {
-                return $compra['proveedor_id'] == $this->proveedorFiltro;
-            });
+            $query->where('id_proveedor', $this->proveedorFiltro);
         }
 
-        // Filtro por estado
-        if ($this->estadoFiltro) {
-            $compras = array_filter($compras, function($compra) {
-                return $compra['estado'] === $this->estadoFiltro;
-            });
-        }
-
-        // Filtro por fecha
+        // Filtro por rango de fechas
         if ($this->fechaInicio) {
-            $compras = array_filter($compras, function($compra) {
-                return $compra['fecha'] >= $this->fechaInicio;
-            });
+            $query->whereDate('fecha', '>=', $this->fechaInicio);
         }
 
         if ($this->fechaFin) {
-            $compras = array_filter($compras, function($compra) {
-                return $compra['fecha'] <= $this->fechaFin;
-            });
+            $query->whereDate('fecha', '<=', $this->fechaFin);
         }
 
-        return array_values($compras);
+        // Ordenar por fecha descendente
+        $query->orderBy('fecha', 'desc');
+
+        return $query->get()->map(function($compra) {
+            return [
+                'id' => $compra->id,
+                'numero_factura' => $compra->no_factura ?? 'N/A',
+                'numero_serie' => $compra->correlativo ?? 'N/A',
+                'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
+                'proveedor_id' => $compra->id_proveedor,
+                'fecha' => $compra->fecha->format('Y-m-d'),
+                'monto' => $compra->total,
+                'estado' => 'Completada',
+                'activa' => true,
+                'productos_count' => $compra->detalles->count(),
+            ];
+        })->toArray();
     }
 
     public function verDetalle($compraId)
     {
-        // Aquí iría la lógica para mostrar el detalle
-        session()->flash('message', 'Mostrando detalle de compra #' . $compraId);
+        $compra = Compra::with(['proveedor', 'detalles.producto', 'bodega'])->find($compraId);
+
+        if ($compra) {
+            $this->compraSeleccionada = [
+                'id' => $compra->id,
+                'numero_factura' => $compra->no_factura,
+                'correlativo' => $compra->correlativo,
+                'fecha' => $compra->fecha->format('Y-m-d H:i'),
+                'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
+                'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
+                'total' => $compra->total,
+                'productos' => $compra->detalles->map(function($detalle) {
+                    return [
+                        'codigo' => $detalle->id_producto,
+                        'descripcion' => $detalle->producto->descripcion ?? 'N/A',
+                        'cantidad' => $detalle->cantidad,
+                        'precio' => $detalle->precio_ingreso,
+                        'subtotal' => $detalle->cantidad * $detalle->precio_ingreso,
+                    ];
+                })->toArray(),
+            ];
+            $this->showModalEditar = true;
+        }
     }
 
     public function editarCompra($compraId)
@@ -182,8 +156,8 @@ class HistorialCompras extends Component
             return;
         }
 
-        $this->compraSeleccionada = collect($this->compras)->firstWhere('id', $compraId);
-        $this->showModalEditar = true;
+        // Por ahora solo mostramos el detalle
+        $this->verDetalle($compraId);
     }
 
     public function desactivarCompra($compraId)
@@ -192,20 +166,14 @@ class HistorialCompras extends Component
             return;
         }
 
-        $key = array_search($compraId, array_column($this->compras, 'id'));
-        if ($key !== false) {
-            $this->compras[$key]['activa'] = false;
-            session()->flash('message', 'Compra desactivada exitosamente.');
-        }
+        // Nota: La tabla compra no tiene campo 'activo', por lo que esto es solo informativo
+        session()->flash('message', 'Funcionalidad de desactivar compra pendiente de implementación.');
     }
 
     public function activarCompra($compraId)
     {
-        $key = array_search($compraId, array_column($this->compras, 'id'));
-        if ($key !== false) {
-            $this->compras[$key]['activa'] = true;
-            session()->flash('message', 'Compra activada exitosamente.');
-        }
+        // Nota: La tabla compra no tiene campo 'activo', por lo que esto es solo informativo
+        session()->flash('message', 'Funcionalidad de activar compra pendiente de implementación.');
     }
 
     public function closeModalEditar()

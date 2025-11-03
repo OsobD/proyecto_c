@@ -49,6 +49,12 @@ class Compra extends Model
         return $this->hasMany(DetalleCompra::class, 'id_compra');
     }
 
+    // Alias para compatibilidad
+    public function detalleCompras()
+    {
+        return $this->hasMany(DetalleCompra::class, 'id_compra');
+    }
+
     public function transacciones()
     {
         return $this->hasMany(Transaccion::class, 'id_compra');

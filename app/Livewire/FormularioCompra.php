@@ -516,7 +516,48 @@ class FormularioCompra extends Component
                 ['nombre' => 'Compra']
             );
 
-            // 6. Crear registro de Compra
+            // 6. Obtener usuario para la compra
+            $idUsuario = null;
+
+            Log::info('Intentando obtener usuario', [
+                'session_usuario_id' => session('usuario_id'),
+                'auth_check' => auth()->check(),
+                'auth_id' => auth()->id(),
+                'session_all' => session()->all()
+            ]);
+
+            // Intentar obtener de sesión (si hay autenticación custom)
+            if (session()->has('usuario_id')) {
+                $idUsuario = session('usuario_id');
+                Log::info('Usuario obtenido de sesión custom', ['id_usuario' => $idUsuario]);
+            }
+            // Intentar obtener de auth() de Laravel
+            elseif (auth()->check()) {
+                $idUsuario = auth()->id();
+                Log::info('Usuario obtenido de auth() Laravel', ['id_usuario' => $idUsuario]);
+            }
+            // Si no hay usuario, usar el primero disponible (para desarrollo/testing)
+            else {
+                $primerUsuario = \App\Models\Usuario::first();
+                if (!$primerUsuario) {
+                    throw new \Exception('No hay usuarios disponibles en el sistema. Por favor, cree un usuario primero.');
+                }
+                $idUsuario = $primerUsuario->id;
+                Log::info('Usando primer usuario disponible para compra (desarrollo)', ['id_usuario' => $idUsuario, 'nombre' => $primerUsuario->nombre]);
+            }
+
+            // Crear registro de Compra
+            // TEMPORAL: Permitir null en id_usuario si el usuario no existe en la tabla
+            Log::info('Validando usuario antes de crear compra', ['id_usuario_a_validar' => $idUsuario]);
+
+            $usuarioValido = $idUsuario ? \App\Models\Usuario::find($idUsuario) : null;
+
+            Log::info('Resultado de validación de usuario', [
+                'id_usuario_original' => $idUsuario,
+                'usuario_valido' => $usuarioValido ? 'sí' : 'no',
+                'id_a_usar' => $usuarioValido ? $usuarioValido->id : 'null'
+            ]);
+
             $compra = Compra::create([
                 'fecha' => now(),
                 'no_factura' => $this->numeroFactura,
@@ -524,8 +565,10 @@ class FormularioCompra extends Component
                 'total' => $this->total,
                 'id_proveedor' => $proveedorIdReal,
                 'id_bodega' => $this->selectedBodega['id'],
-                'id_usuario' => auth()->id() ?? 1,
+                'id_usuario' => $usuarioValido ? $usuarioValido->id : null,
             ]);
+
+            Log::info('Compra creada exitosamente', ['compra_id' => $compra->id, 'usuario_usado' => $usuarioValido ? $usuarioValido->id : 'null']);
 
             // 7. Crear registro de Transacción
             $transaccion = Transaccion::create([
@@ -598,7 +641,15 @@ class FormularioCompra extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al guardar compra: ' . $e->getMessage());
-            session()->flash('error', 'Error al registrar la compra: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            // Cerrar el modal incluso si hay error
+            $this->closeModalConfirmacion();
+
+            // Mostrar el error completo para depuración
+            $mensajeError = 'Error al registrar la compra: ' . $e->getMessage();
+
+            session()->flash('error', $mensajeError);
         }
     }
 
