@@ -16,7 +16,7 @@ npm run dev              # Mantener corriendo durante desarrollo
 ```
 
 **Credenciales de Acceso:**
-- Email: `admin@eemq.com`
+- Usuario: `admin`
 - Contraseña: `admin123`
 - **IMPORTANTE:** Cambia esta contraseña en producción
 

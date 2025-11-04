@@ -362,14 +362,37 @@
                         {{-- Rol --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-                            <select
-                                wire:model="rolId"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23666%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccione un rol...</option>
-                                @foreach($roles as $rol)
-                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
-                                @endforeach
-                            </select>
+                            <div class="relative">
+                                @if($selectedRol)
+                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
+                                        <span class="font-medium">{{ $selectedRol['nombre'] }}</span>
+                                        <button type="button" wire:click.prevent="clearRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                                            ×
+                                        </button>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showRolDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchRol"
+                                            @click="open = true"
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror"
+                                            placeholder="Buscar rol...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                            <ul>
+                                                @foreach (array_slice($this->rolResults, 0, 6) as $rol)
+                                                    <li wire:click.prevent="selectRol({{ $rol['id'] }})"
+                                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                        {{ $rol['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                             @error('rolId')
                                 <p class="text-red-500 text-xs mt-2 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -578,14 +601,37 @@
                         {{-- Rol --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-                            <select
-                                wire:model="rolId"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23666%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccione un rol...</option>
-                                @foreach($roles as $rol)
-                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
-                                @endforeach
-                            </select>
+                            <div class="relative">
+                                @if($selectedRol)
+                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
+                                        <span class="font-medium">{{ $selectedRol['nombre'] }}</span>
+                                        <button type="button" wire:click.prevent="clearRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                                            ×
+                                        </button>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showRolDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchRol"
+                                            @click="open = true"
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror"
+                                            placeholder="Buscar rol...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                            <ul>
+                                                @foreach (array_slice($this->rolResults, 0, 6) as $rol)
+                                                    <li wire:click.prevent="selectRol({{ $rol['id'] }})"
+                                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                        {{ $rol['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                             @error('rolId')
                                 <p class="text-red-500 text-xs mt-2 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
