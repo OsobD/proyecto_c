@@ -15,8 +15,8 @@
                     {{-- Logo de EEMQ --}}
                     <a href="/" class="text-xl font-semibold text-gray-700">EEMQ</a>
                 </div>
-
                 <div class="hidden md:flex items-center space-x-4">
+
                     {{-- Dropdown de Compras --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                         <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['compras', 'compras.*']) ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }} flex items-center">
@@ -136,7 +136,6 @@
                             </a>
                         </div>
                     </div>
-                    <a href="{{ route('proveedores') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('proveedores') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Proveedores</a>
                     <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bitácora</a>
                     <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Configuración</a>
                 </div>
