@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Autenticación' }} - EEMQ</title>
+    <title>{{ $title ?? 'Login' }} - EEMQ</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -14,7 +14,7 @@
                 EEMQ
             </h2>
             <p class="mt-2 text-sm text-gray-600">
-                Sistema de Gestión de Inventario
+                Sistema de GestiÃ³n de Inventario
             </p>
         </div>
 
