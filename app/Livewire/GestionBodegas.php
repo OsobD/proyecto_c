@@ -4,386 +4,180 @@ namespace App\Livewire;
 
 use App\Models\Bitacora;
 use App\Models\Bodega;
-use App\Models\Persona;
-use App\Models\TarjetaResponsabilidad;
 use Livewire\Component;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Componente GestionBodegas
  *
- * Gestiona el CRUD de bodegas del sistema de inventario. Permite administrar tanto
- * bodegas físicas como tarjetas de responsabilidad (bodegas virtuales asignadas a personas).
- *
- * **Tipos de bodegas:**
- * - Física: Almacenes o bodegas físicas de la organización
- * - Responsabilidad: Tarjetas de responsabilidad asignadas a personas específicas
+ * Gestiona el CRUD de bodegas físicas del sistema de inventario.
  *
  * @package App\Livewire
  * @see resources/views/livewire/gestion-bodegas.blade.php
  */
 class GestionBodegas extends Component
 {
-    /** @var array Listado de bodegas */
-    public $bodegas = [];
+    use WithPagination;
 
-    /** @var bool Controla visibilidad del modal */
-    public $isModalOpen = false;
+    public $search = '';
+    public $showModal = false;
+    public $editMode = false;
 
-    /** @var string|null Nombre de la bodega (solo para tipo Física) */
+    // Campos del formulario
+    public $bodegaId;
     public $nombre;
 
-    /** @var string|null Nombres de la persona (solo para tipo Responsabilidad) */
-    public $nombres;
+    protected $paginationTheme = 'bootstrap';
 
-    /** @var string|null Apellidos de la persona (solo para tipo Responsabilidad) */
-    public $apellidos;
-
-    /** @var string|null Tipo de bodega seleccionado */
-    public $tipo = null;
-
-    /** @var bool Controla visibilidad del dropdown de tipo */
-    public $showTipoDropdown = false;
-
-    /** @var array Tipos de bodega disponibles */
-    public $tiposDisponibles = [
-        ['id' => 1, 'nombre' => 'Física'],
-        ['id' => 2, 'nombre' => 'Responsabilidad'],
+    protected $rules = [
+        'nombre' => 'required|string|max:255',
     ];
 
-    /** @var int|null ID de la bodega/tarjeta en edición */
-    public $bodegaId = null;
+    protected $messages = [
+        'nombre.required' => 'El nombre de la bodega es obligatorio.',
+        'nombre.max' => 'El nombre no puede exceder los 255 caracteres.',
+    ];
 
-    /** @var string|null Tipo de entidad ('bodega' o 'tarjeta') */
-    public $entidadTipo = null;
-
-    /** @var int|null ID de la persona asociada a una tarjeta */
-    public $personaId = null;
-
-    /**
-     * Inicializa el componente cargando bodegas físicas y tarjetas de responsabilidad
-     *
-     * @return void
-     */
-    public function mount()
+    public function updatingSearch()
     {
-        $this->cargarBodegas();
+        $this->resetPage();
     }
 
-    /**
-     * Carga todas las bodegas (físicas y tarjetas de responsabilidad)
-     * Solo carga las que están activas
-     *
-     * @return void
-     */
-    private function cargarBodegas()
-    {
-        $this->bodegas = [];
-
-        // Cargar solo bodegas físicas activas
-        $bodegasFisicas = Bodega::where('activo', true)->get();
-        foreach ($bodegasFisicas as $bodega) {
-            $this->bodegas[] = [
-                'id' => 'B-' . $bodega->id,
-                'nombre' => $bodega->nombre,
-                'tipo' => 'Física',
-                'entidad' => 'bodega',
-                'entidad_id' => $bodega->id,
-            ];
-        }
-
-        // Cargar solo tarjetas de responsabilidad activas con sus personas
-        $tarjetas = TarjetaResponsabilidad::where('activo', true)->with('persona')->get();
-        foreach ($tarjetas as $tarjeta) {
-            if ($tarjeta->persona) {
-                $nombreCompleto = trim($tarjeta->persona->nombres . ' ' . $tarjeta->persona->apellidos);
-                $this->bodegas[] = [
-                    'id' => 'T-' . $tarjeta->id,
-                    'nombre' => $nombreCompleto,
-                    'tipo' => 'Responsabilidad',
-                    'entidad' => 'tarjeta',
-                    'entidad_id' => $tarjeta->id,
-                ];
-            }
-        }
-    }
-
-    /**
-     * Renderiza la vista del componente
-     *
-     * @return \Illuminate\View\View
-     */
     public function render()
     {
-        return view('livewire.gestion-bodegas');
+        $bodegas = Bodega::where('activo', true)
+            ->where('nombre', 'like', '%' . $this->search . '%')
+            ->orderBy('nombre', 'asc')
+            ->paginate(10);
+
+        return view('livewire.gestion-bodegas', [
+            'bodegas' => $bodegas
+        ]);
     }
 
-    /**
-     * Abre el modal para crear/editar bodega
-     *
-     * @return void
-     */
     public function openModal()
     {
-        $this->isModalOpen = true;
-        $this->showTipoDropdown = false;
+        $this->resetForm();
+        $this->editMode = false;
+        $this->showModal = true;
     }
 
-    /**
-     * Cierra el modal y limpia el formulario
-     *
-     * @return void
-     */
-    public function closeModal()
+    public function edit($id)
     {
-        $this->isModalOpen = false;
-        $this->nombre = null;
-        $this->nombres = null;
-        $this->apellidos = null;
-        $this->tipo = null;
-        $this->bodegaId = null;
-        $this->entidadTipo = null;
-        $this->personaId = null;
-        $this->reset(['nombre', 'nombres', 'apellidos', 'tipo', 'bodegaId', 'entidadTipo', 'personaId']);
+        $bodega = Bodega::findOrFail($id);
+
+        $this->bodegaId = $bodega->id;
+        $this->nombre = $bodega->nombre;
+
+        $this->editMode = true;
+        $this->showModal = true;
     }
 
-    /**
-     * Selecciona un tipo de bodega desde el dropdown
-     *
-     * @param string $tipo Tipo de bodega seleccionado
-     * @return void
-     */
-    public function selectTipo($tipo)
+    public function save()
     {
-        $this->tipo = $tipo;
-        $this->showTipoDropdown = false;
-    }
+        $this->validate();
 
-    /**
-     * Limpia la selección de tipo de bodega
-     *
-     * @return void
-     */
-    public function clearTipo()
-    {
-        $this->tipo = null;
-    }
-
-    /**
-     * Carga los datos de una bodega/tarjeta para editar
-     *
-     * @param string $id ID compuesto (ej: 'B-1' o 'T-1')
-     * @param string $tipo Tipo de bodega ('Física' o 'Responsabilidad')
-     * @param int $entidadId ID real en la tabla
-     * @param string $entidad Tipo de entidad ('bodega' o 'tarjeta')
-     * @return void
-     */
-    public function editBodega($id, $tipo, $entidadId, $entidad)
-    {
-        $this->bodegaId = $entidadId;
-        $this->entidadTipo = $entidad;
-        $this->tipo = $tipo;
-
-        if ($entidad === 'bodega') {
-            // Cargar datos de bodega física
-            $bodega = Bodega::find($entidadId);
-            $this->nombre = $bodega->nombre;
-        } else {
-            // Cargar datos de tarjeta de responsabilidad
-            $tarjeta = TarjetaResponsabilidad::with('persona')->find($entidadId);
-            $this->personaId = $tarjeta->id_persona;
-            $this->nombres = $tarjeta->persona->nombres;
-            $this->apellidos = $tarjeta->persona->apellidos;
-        }
-
-        $this->isModalOpen = true;
-        $this->showTipoDropdown = false;
-    }
-
-    /**
-     * Guarda la bodega (crear o actualizar)
-     *
-     * @return void
-     */
-    public function saveBodega()
-    {
         try {
-            if ($this->bodegaId) {
-                // MODO EDICIÓN
-                if ($this->tipo === 'Física') {
-                    // Validar y actualizar bodega física
-                    $this->validate([
-                        'nombre' => 'required|string|max:255',
-                    ]);
+            if ($this->editMode) {
+                $bodega = Bodega::findOrFail($this->bodegaId);
+                $bodega->update([
+                    'nombre' => $this->nombre,
+                    'updated_by' => Auth::id(),
+                ]);
 
-                    $bodega = Bodega::find($this->bodegaId);
-                    $bodega->update([
-                        'nombre' => $this->nombre,
-                    ]);
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Actualizar',
+                    'descripcion' => "Bodega actualizada: {$bodega->nombre}",
+                    'id_usuario' => Auth::id(),
+                ]);
 
-                    session()->flash('message', 'Bodega actualizada exitosamente.');
-                } elseif ($this->tipo === 'Responsabilidad') {
-                    // Validar y actualizar tarjeta de responsabilidad (persona)
-                    $this->validate([
-                        'nombres' => 'required|string|max:255',
-                        'apellidos' => 'required|string|max:255',
-                    ]);
-
-                    $persona = Persona::find($this->personaId);
-                    $persona->update([
-                        'nombres' => $this->nombres,
-                        'apellidos' => $this->apellidos,
-                    ]);
-
-                    session()->flash('message', 'Tarjeta de responsabilidad actualizada exitosamente.');
-                }
+                session()->flash('message', 'Bodega actualizada correctamente.');
             } else {
-                // MODO CREACIÓN
-                if ($this->tipo === 'Física') {
-                    // Validar campos para bodega física
-                    $this->validate([
-                        'nombre' => 'required|string|max:255',
-                    ]);
+                $bodega = Bodega::create([
+                    'nombre' => $this->nombre,
+                    'activo' => true,
+                    'created_by' => Auth::id(),
+                ]);
 
-                    // Crear bodega física
-                    Bodega::create([
-                        'nombre' => $this->nombre,
-                        'activo' => true,
-                    ]);
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Crear',
+                    'descripcion' => "Bodega creada: {$bodega->nombre}",
+                    'id_usuario' => Auth::id(),
+                ]);
 
-                    session()->flash('message', 'Bodega física creada exitosamente.');
-                } elseif ($this->tipo === 'Responsabilidad') {
-                    // Validar campos para tarjeta de responsabilidad
-                    $this->validate([
-                        'nombres' => 'required|string|max:255',
-                        'apellidos' => 'required|string|max:255',
-                    ]);
-
-                    // Crear persona con solo nombres y apellidos
-                    $persona = Persona::create([
-                        'nombres' => $this->nombres,
-                        'apellidos' => $this->apellidos,
-                        'estado' => true,
-                    ]);
-
-                    // Crear tarjeta de responsabilidad asociada a la persona
-                    TarjetaResponsabilidad::create([
-                        'id_persona' => $persona->id,
-                        'fecha_creacion' => now(),
-                        'total' => 0,
-                        'activo' => true,
-                    ]);
-
-                    session()->flash('message', 'Tarjeta de responsabilidad creada exitosamente.');
-                } else {
-                    session()->flash('error', 'Debe seleccionar un tipo de bodega.');
-                    return;
-                }
+                session()->flash('message', 'Bodega creada correctamente.');
             }
 
-            // Recargar bodegas y cerrar modal
-            $this->cargarBodegas();
             $this->closeModal();
         } catch (\Exception $e) {
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            session()->flash('error', 'Error al guardar la bodega: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Activa o desactiva una bodega/tarjeta (soft delete)
-     *
-     * @param int $entidadId ID de la entidad
-     * @param string $entidad Tipo de entidad ('bodega' o 'tarjeta')
-     * @return void
-     */
-    public function toggleEstado($entidadId, $entidad)
+    public function confirmDelete($id)
+    {
+        $bodega = Bodega::with([
+            'lotes',
+            'compras',
+            'entradas',
+            'devoluciones',
+            'traslados',
+            'salidas'
+        ])->findOrFail($id);
+
+        // Verificar si tiene relaciones activas
+        $tieneLotes = $bodega->lotes()->exists();
+        $tieneCompras = $bodega->compras()->exists();
+        $tieneEntradas = $bodega->entradas()->exists();
+        $tieneDevoluciones = $bodega->devoluciones()->exists();
+        $tieneTraslados = $bodega->traslados()->exists();
+        $tieneSalidas = $bodega->salidas()->exists();
+
+        if ($tieneLotes || $tieneCompras || $tieneEntradas || $tieneDevoluciones || $tieneTraslados || $tieneSalidas) {
+            session()->flash('error', 'No se puede desactivar la bodega porque tiene movimientos asociados (lotes, compras, entradas, salidas, etc.).');
+            return;
+        }
+
+        $this->bodegaId = $id;
+        $this->dispatch('confirm-delete');
+    }
+
+    public function delete()
     {
         try {
-            if ($entidad === 'bodega') {
-                $bodega = Bodega::find($entidadId);
+            $bodega = Bodega::findOrFail($this->bodegaId);
 
-                if (!$bodega) {
-                    session()->flash('error', 'Bodega no encontrada.');
-                    return;
-                }
+            $bodega->update([
+                'activo' => false,
+                'updated_by' => Auth::id(),
+            ]);
 
-                // Verificar si tiene relaciones activas antes de desactivar
-                if ($bodega->activo) {
-                    if ($bodega->lotes()->count() > 0 ||
-                        $bodega->compras()->count() > 0 ||
-                        $bodega->entradas()->count() > 0 ||
-                        $bodega->devoluciones()->count() > 0 ||
-                        $bodega->traslados()->count() > 0 ||
-                        $bodega->salidas()->count() > 0) {
-                        session()->flash('error', 'No se puede desactivar. La bodega tiene movimientos asociados.');
-                        return;
-                    }
-                }
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Desactivar',
+                'descripcion' => "Bodega desactivada: {$bodega->nombre}",
+                'id_usuario' => Auth::id(),
+            ]);
 
-                // Cambiar estado
-                $nuevoEstado = !$bodega->activo;
-                $bodega->activo = $nuevoEstado;
-                $bodega->save();
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => $nuevoEstado ? 'activar' : 'desactivar',
-                    'modelo' => 'Bodega',
-                    'modelo_id' => $entidadId,
-                    'descripcion' => auth()->user()->name . ($nuevoEstado ? ' activó ' : ' desactivó ') . "Bodega '{$bodega->nombre}' (#{$entidadId})",
-                    'datos_anteriores' => json_encode(['activo' => !$nuevoEstado]),
-                    'datos_nuevos' => json_encode(['activo' => $nuevoEstado]),
-                    'id_usuario' => auth()->id(),
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
-                    'created_at' => now(),
-                ]);
-
-                session()->flash('message', $nuevoEstado ? 'Bodega activada exitosamente.' : 'Bodega desactivada exitosamente.');
-            } else {
-                // Tarjeta de responsabilidad
-                $tarjeta = TarjetaResponsabilidad::with('persona')->find($entidadId);
-
-                if (!$tarjeta) {
-                    session()->flash('error', 'Tarjeta de responsabilidad no encontrada.');
-                    return;
-                }
-
-                // Verificar si tiene relaciones activas antes de desactivar
-                if ($tarjeta->activo) {
-                    if ($tarjeta->tarjetasProducto()->count() > 0 ||
-                        $tarjeta->entradas()->count() > 0) {
-                        session()->flash('error', 'No se puede desactivar. La tarjeta tiene productos o movimientos asociados.');
-                        return;
-                    }
-                }
-
-                // Cambiar estado
-                $nuevoEstado = !$tarjeta->activo;
-                $tarjeta->activo = $nuevoEstado;
-                $tarjeta->save();
-
-                // Registrar en bitácora
-                $nombrePersona = $tarjeta->persona ? trim($tarjeta->persona->nombres . ' ' . $tarjeta->persona->apellidos) : 'Sin persona';
-                Bitacora::create([
-                    'accion' => $nuevoEstado ? 'activar' : 'desactivar',
-                    'modelo' => 'TarjetaResponsabilidad',
-                    'modelo_id' => $entidadId,
-                    'descripcion' => auth()->user()->name . ($nuevoEstado ? ' activó ' : ' desactivó ') . "Tarjeta de Responsabilidad de '{$nombrePersona}' (#{$entidadId})",
-                    'datos_anteriores' => json_encode(['activo' => !$nuevoEstado]),
-                    'datos_nuevos' => json_encode(['activo' => $nuevoEstado]),
-                    'id_usuario' => auth()->id(),
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
-                    'created_at' => now(),
-                ]);
-
-                session()->flash('message', $nuevoEstado ? 'Tarjeta activada exitosamente.' : 'Tarjeta desactivada exitosamente.');
-            }
-
-            // Recargar bodegas
-            $this->cargarBodegas();
+            session()->flash('message', 'Bodega desactivada correctamente.');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al cambiar estado: ' . $e->getMessage());
+            session()->flash('error', 'Error al desactivar la bodega: ' . $e->getMessage());
         }
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
+    private function resetForm()
+    {
+        $this->bodegaId = null;
+        $this->nombre = '';
+        $this->resetErrorBag();
     }
 }

@@ -47,8 +47,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/productos', \App\Livewire\GestionProductos::class)->name('productos');
     Route::get('/productos/categorias', \App\Livewire\GestionCategorias::class)->name('productos.categorias');
 
-    // Otras rutas
+    // Rutas de Bodegas y Responsabilidad
     Route::get('/bodegas', \App\Livewire\GestionBodegas::class)->name('bodegas');
+    Route::get('/personas', \App\Livewire\GestionPersonas::class)->name('personas');
+    Route::get('/tarjetas-responsabilidad', \App\Livewire\GestionTarjetasResponsabilidad::class)->name('tarjetas.responsabilidad');
+
+    // Otras rutas
     Route::get('/usuarios', \App\Livewire\GestionUsuarios::class)->name('usuarios');
     Route::get('/proveedores', \App\Livewire\GestionProveedores::class)->name('proveedores');
     Route::get('/bitacora', \App\Livewire\BitacoraSistema::class)->name('bitacora');
