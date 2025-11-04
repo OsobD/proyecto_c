@@ -120,6 +120,7 @@ class GestionPersonas extends Component
                     'modelo_id' => $persona->id,
                     'descripcion' => "Persona actualizada: {$persona->nombres} {$persona->apellidos}",
                     'id_usuario' => Auth::id(),
+                    'created_at' => now(),
                 ]);
 
                 $mensaje = 'Persona actualizada correctamente.';
@@ -141,6 +142,7 @@ class GestionPersonas extends Component
                     'modelo_id' => $persona->id,
                     'descripcion' => "Persona creada: {$persona->nombres} {$persona->apellidos}",
                     'id_usuario' => Auth::id(),
+                    'created_at' => now(),
                 ]);
 
                 $mensaje = 'Persona creada correctamente.';
@@ -197,6 +199,7 @@ class GestionPersonas extends Component
                 'modelo_id' => $persona->id,
                 'descripcion' => ($nuevoEstado ? 'Persona activada: ' : 'Persona desactivada: ') . "{$persona->nombres} {$persona->apellidos}",
                 'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             session()->flash('message', $nuevoEstado ? 'Persona activada correctamente.' : 'Persona desactivada correctamente.');

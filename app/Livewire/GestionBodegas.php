@@ -91,6 +91,7 @@ class GestionBodegas extends Component
                     'accion' => 'Actualizar',
                     'descripcion' => "Bodega actualizada: {$bodega->nombre}",
                     'id_usuario' => Auth::id(),
+                    'created_at' => now(),
                 ]);
 
                 session()->flash('message', 'Bodega actualizada correctamente.');
@@ -106,6 +107,7 @@ class GestionBodegas extends Component
                     'accion' => 'Crear',
                     'descripcion' => "Bodega creada: {$bodega->nombre}",
                     'id_usuario' => Auth::id(),
+                    'created_at' => now(),
                 ]);
 
                 session()->flash('message', 'Bodega creada correctamente.');
@@ -160,6 +162,7 @@ class GestionBodegas extends Component
                 'accion' => 'Desactivar',
                 'descripcion' => "Bodega desactivada: {$bodega->nombre}",
                 'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Bodega desactivada correctamente.');

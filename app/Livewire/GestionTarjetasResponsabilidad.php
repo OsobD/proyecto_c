@@ -150,6 +150,7 @@ class GestionTarjetasResponsabilidad extends Component
                     'accion' => 'Actualizar',
                     'descripcion' => "Tarjeta de responsabilidad actualizada para: {$persona->nombres} {$persona->apellidos}",
                     'id_usuario' => Auth::id(),
+                    'created_at' => now(),
                 ]);
 
                 $mensaje = 'Tarjeta de responsabilidad actualizada correctamente.';
@@ -179,6 +180,7 @@ class GestionTarjetasResponsabilidad extends Component
                     'accion' => 'Crear',
                     'descripcion' => "Tarjeta de responsabilidad creada para: {$persona->nombres} {$persona->apellidos}",
                     'id_usuario' => Auth::id(),
+                    'created_at' => now(),
                 ]);
 
                 $mensaje = 'Tarjeta de responsabilidad creada correctamente.';
@@ -253,6 +255,7 @@ class GestionTarjetasResponsabilidad extends Component
                 'accion' => 'Desactivar',
                 'descripcion' => "Tarjeta de responsabilidad desactivada para: {$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}",
                 'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Tarjeta de responsabilidad desactivada correctamente.');
