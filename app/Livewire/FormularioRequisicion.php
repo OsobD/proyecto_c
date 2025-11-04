@@ -160,10 +160,10 @@ class FormularioRequisicion extends Component
 
         // Filtrar por búsqueda si existe
         if (!empty($this->searchProducto)) {
-            $search = strtolower(trim($this->searchProducto));
+            $search = trim($this->searchProducto);
             $query->where(function ($q) use ($search) {
                 $q->where('descripcion', 'like', '%' . $search . '%')
-                    ->orWhere('id', 'like', '%' . str_replace(['0x', '#'], '', $search) . '%');
+                    ->orWhere('id', 'like', '%' . $search . '%');
             });
         }
 
@@ -303,21 +303,21 @@ class FormularioRequisicion extends Component
     /**
      * Agrega un producto a la requisición
      *
-     * @param int $productoId
+     * @param string $productoId
      * @return void
      */
     public function selectProducto($productoId)
     {
         $productos = $this->productoResults;
-        $producto = collect($productos)->firstWhere('id', (int) $productoId);
+        $producto = collect($productos)->firstWhere('id', $productoId);
 
         if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
             $this->productosSeleccionados[] = [
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
-                'precio' => $producto['precio'],
+                'precio' => (float) $producto['precio'],
                 'cantidad' => 1,
-                'cantidad_disponible' => $producto['cantidad_disponible'],
+                'cantidad_disponible' => (int) $producto['cantidad_disponible'],
                 'lotes' => $producto['lotes']
             ];
         }
@@ -329,27 +329,27 @@ class FormularioRequisicion extends Component
     /**
      * Elimina un producto de la requisición
      *
-     * @param int $productoId
+     * @param string $productoId
      * @return void
      */
     public function eliminarProducto($productoId)
     {
         $this->productosSeleccionados = array_values(array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
-            return $item['id'] !== (int) $productoId;
+            return $item['id'] !== $productoId;
         }));
     }
 
     /**
      * Actualiza la cantidad de un producto
      *
-     * @param int $productoId
+     * @param string $productoId
      * @param int $cantidad
      * @return void
      */
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
-            if ($producto['id'] === (int) $productoId) {
+            if ($producto['id'] === $productoId) {
                 // Validar que no exceda el stock disponible
                 $cantidadMaxima = $producto['cantidad_disponible'];
                 $producto['cantidad'] = max(1, min((int) $cantidad, $cantidadMaxima));
@@ -412,13 +412,16 @@ class FormularioRequisicion extends Component
                 throw new \Exception('No se encontró el tipo de transacción "Salida".');
             }
 
+            // Obtener ID de usuario (si no está autenticado, usar NULL o un valor predeterminado)
+            $userId = auth()->check() ? auth()->id() : 1; // ID 1 como usuario por defecto si no hay autenticación
+
             // Crear el registro de salida
             $salida = Salida::create([
                 'fecha' => now(),
                 'total' => $this->subtotal,
                 'descripcion' => $this->observaciones ?? 'Requisición de productos',
                 'ubicacion' => $this->correlativo,
-                'id_usuario' => auth()->id(),
+                'id_usuario' => $userId,
                 'id_tarjeta' => null, // Se usará en detalle con TarjetaProducto
                 'id_bodega' => $this->selectedOrigen['bodega_id'],
                 'id_tipo' => $tipoSalida->id,
@@ -487,11 +490,12 @@ class FormularioRequisicion extends Component
             }
 
             // Registrar en bitácora
+            $userName = auth()->check() && auth()->user() ? auth()->user()->name : 'Sistema';
             Bitacora::create([
                 'accion' => 'crear',
                 'modelo' => 'Salida',
                 'modelo_id' => $salida->id,
-                'descripcion' => auth()->user()->name . " creó Requisición #{$salida->id} desde bodega '{$this->selectedOrigen['nombre']}' hacia '{$this->selectedDestino['nombre']}'",
+                'descripcion' => $userName . " creó Requisición #{$salida->id} desde bodega '{$this->selectedOrigen['nombre']}' hacia '{$this->selectedDestino['nombre']}'",
                 'datos_anteriores' => null,
                 'datos_nuevos' => json_encode([
                     'id_salida' => $salida->id,
@@ -500,7 +504,7 @@ class FormularioRequisicion extends Component
                     'total' => $this->subtotal,
                     'correlativo' => $this->correlativo,
                 ]),
-                'id_usuario' => auth()->id(),
+                'id_usuario' => $userId,
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'created_at' => now(),
@@ -526,6 +530,13 @@ class FormularioRequisicion extends Component
             return redirect()->route('salidas');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Log del error para debugging
+            \Log::error('Error al registrar requisición: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             session()->flash('error', 'Error al registrar la requisición: ' . $e->getMessage());
         }
     }

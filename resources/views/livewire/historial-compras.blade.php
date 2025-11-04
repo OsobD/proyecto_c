@@ -20,6 +20,13 @@
         </div>
     @endif
 
+    {{-- Mensajes de error --}}
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
     {{-- Filtros --}}
     <div class="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-6">Filtros de Búsqueda</h2>
@@ -340,7 +347,7 @@
 
                     {{-- Tabla editable de productos --}}
                     <div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Editar Precios de Productos:</h4>
+                        <h4 class="font-semibold text-gray-800 mb-2">Editar Productos (Cantidades y Precios):</h4>
                         <div class="overflow-x-auto max-h-96 overflow-y-auto border rounded-md">
                             <table class="min-w-full bg-white text-sm">
                                 <thead class="bg-gray-100 sticky top-0">
@@ -358,7 +365,15 @@
                                             <tr class="border-t hover:bg-gray-50">
                                                 <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                                 <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
-                                                <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
+                                                <td class="py-2 px-3 text-center">
+                                                    <input
+                                                        type="number"
+                                                        step="1"
+                                                        wire:model.blur="compraSeleccionada.productos.{{ $index }}.cantidad"
+                                                        min="1"
+                                                        class="w-20 text-center border-2 border-green-300 bg-green-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-semibold px-2 py-1"
+                                                    >
+                                                </td>
                                                 <td class="py-2 px-3 text-right">
                                                     <div class="flex items-center justify-end">
                                                         <span class="mr-1">Q</span>

@@ -27,7 +27,7 @@ trait TienePermisos
         return [
             'id' => 1,
             'nombre' => 'David Bautista',
-            'rol' => 'operador',
+            'rol' => 'supervisor', // Cambiado a supervisor para permitir editar y desactivar compras
         ];
     }
 
