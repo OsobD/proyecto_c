@@ -74,13 +74,5 @@
             </button>
         </div>
 
-        <div class="text-center">
-            <p class="text-sm text-gray-600">
-                ¿No tienes una cuenta?
-                <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
-                    Regístrate aquí
-                </a>
-            </p>
-        </div>
     </form>
 </div>
