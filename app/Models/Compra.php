@@ -19,11 +19,13 @@ class Compra extends Model
         'id_proveedor',
         'id_bodega',
         'id_usuario',
+        'activo',
     ];
 
     protected $casts = [
         'fecha' => 'datetime',
         'total' => 'double',
+        'activo' => 'boolean',
     ];
 
     public $timestamps = false;
