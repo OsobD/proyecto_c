@@ -42,7 +42,7 @@
                 </div>
                 <div class="ml-5">
                     <p class="text-gray-500 text-sm">Usuarios</p>
-                    <p class="text-gray-900 text-2xl font-bold">{{ \App\Models\User::count() }}</p>
+                    <p class="text-gray-900 text-2xl font-bold">{{ \App\Models\Usuario::count() }}</p>
                 </div>
             </div>
         </div>
@@ -52,18 +52,14 @@
         <div class="p-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">Información del Usuario</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @if(auth()->user()->persona)
                 <div>
-                    <p class="text-sm text-gray-600">Nombre</p>
-                    <p class="text-gray-900 font-medium">{{ auth()->user()->name }}</p>
+                    <p class="text-sm text-gray-600">Nombre Completo</p>
+                    <p class="text-gray-900 font-medium">{{ auth()->user()->persona->nombres }} {{ auth()->user()->persona->apellidos }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-600">Correo Electrónico</p>
-                    <p class="text-gray-900 font-medium">{{ auth()->user()->email }}</p>
-                </div>
-                @if(auth()->user()->persona)
-                <div>
-                    <p class="text-sm text-gray-600">Nombres Completos</p>
-                    <p class="text-gray-900 font-medium">{{ auth()->user()->persona->nombres }} {{ auth()->user()->persona->apellidos }}</p>
+                    <p class="text-gray-900 font-medium">{{ auth()->user()->persona->correo }}</p>
                 </div>
                 @endif
                 @if(auth()->user()->rol)

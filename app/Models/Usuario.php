@@ -22,18 +22,24 @@ class Usuario extends Authenticatable
 
     protected $hidden = [
         'contrasena',
+        'remember_token',
     ];
 
     protected $casts = [
         'estado' => 'boolean',
+        'contrasena' => 'hashed',
     ];
-
-    public $timestamps = false;
 
     // Accessor para password (Laravel Auth)
     public function getAuthPassword()
     {
         return $this->contrasena;
+    }
+
+    // Override para remember token
+    public function getRememberTokenName()
+    {
+        return 'remember_token';
     }
 
     // Relaciones

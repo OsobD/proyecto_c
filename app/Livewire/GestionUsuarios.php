@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Usuario;
-use App\Models\User;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Bitacora;
@@ -16,8 +15,7 @@ use Livewire\WithPagination;
 /**
  * Componente GestionUsuarios
  *
- * Gestiona el CRUD completo de usuarios del sistema con sincronización
- * entre tablas users (autenticación) y usuario (transacciones).
+ * Gestiona el CRUD completo de usuarios del sistema.
  * Incluye búsqueda, filtros, ordenamiento y registro en bitácora.
  *
  * @package App\Livewire
@@ -57,6 +55,16 @@ class GestionUsuarios extends Component
     // Password temporal generada
     public $passwordGenerada = '';
     public $mostrarPassword = false;
+
+    // Propiedades para autocompletado de rol
+    public $searchRol = '';
+    public $showRolDropdown = false;
+    public $selectedRol = null;
+
+    // Propiedades para filtro de rol mejorado
+    public $searchFilterRol = '';
+    public $showFilterRolDropdown = false;
+    public $selectedFilterRol = null;
 
     protected $paginationTheme = 'tailwind';
 
@@ -137,6 +145,105 @@ class GestionUsuarios extends Component
     }
 
     /**
+     * Actualiza cuando cambia la búsqueda de rol
+     */
+    public function updatedSearchRol()
+    {
+        $this->showRolDropdown = true;
+    }
+
+    /**
+     * Obtiene roles filtrados para el autocompletado
+     */
+    public function getRolResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchRol)) {
+            return $roles;
+        }
+
+        $search = strtolower(trim($this->searchRol));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol del autocompletado
+     */
+    public function selectRol($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedRol = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
+            $this->showRolDropdown = false;
+            $this->searchRol = '';
+        }
+    }
+
+    /**
+     * Limpia la selección de rol
+     */
+    public function clearRol()
+    {
+        $this->selectedRol = null;
+        $this->rolId = '';
+    }
+
+    /**
+     * Obtiene los roles filtrados para el filtro de búsqueda
+     */
+    public function getFilterRolResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchFilterRol)) {
+            return $roles;
+        }
+
+        $search = strtolower(trim($this->searchFilterRol));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol del filtro de búsqueda
+     */
+    public function selectFilterRol($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedFilterRol = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->filterRol = $rol->id;
+            $this->showFilterRolDropdown = false;
+            $this->searchFilterRol = '';
+            $this->resetPage(); // Resetear paginación al filtrar
+        }
+    }
+
+    /**
+     * Limpia la selección del filtro de rol
+     */
+    public function clearFilterRol()
+    {
+        $this->selectedFilterRol = null;
+        $this->filterRol = '';
+        $this->searchFilterRol = '';
+        $this->resetPage(); // Resetear paginación al limpiar filtro
+    }
+
+    /**
      * Abre el modal para crear nuevo usuario
      */
     public function abrirModal()
@@ -193,17 +300,7 @@ class GestionUsuarios extends Component
                 $this->generarPassword();
             }
 
-            // 3. Crear registro en tabla users (autenticación Laravel)
-            $user = User::create([
-                'name' => $this->nombres . ' ' . $this->apellidos,
-                'email' => $this->correo,
-                'password' => Hash::make($this->passwordGenerada),
-                'id_persona' => $persona->id,
-                'id_rol' => $this->rolId,
-                'estado' => true,
-            ]);
-
-            // 4. Crear registro en tabla usuario (transacciones)
+            // 3. Crear registro de usuario
             $usuario = Usuario::create([
                 'nombre_usuario' => $this->nombre_usuario,
                 'contrasena' => Hash::make($this->passwordGenerada),
@@ -212,13 +309,14 @@ class GestionUsuarios extends Component
                 'estado' => true,
             ]);
 
-            // 5. Registrar en bitácora
+            // 4. Registrar en bitácora
             Bitacora::create([
                 'accion' => 'crear',
-                'tabla' => 'usuario',
-                'registro_id' => $usuario->id,
-                'detalles' => "Usuario creado: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})",
-                'id_usuario' => auth()->id(),
+                'modelo' => 'Usuario',
+                'modelo_id' => $usuario->id,
+                'descripcion' => "Usuario creado: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})",
+                'id_usuario' => auth()->id() ?? 1,
+                'created_at' => now(),
             ]);
 
             DB::commit();
@@ -268,6 +366,15 @@ class GestionUsuarios extends Component
         $this->rolId = $usuario->id_rol;
         $this->estado = $usuario->estado;
 
+        // Cargar rol seleccionado para el dropdown
+        $rol = $this->roles->firstWhere('id', $usuario->id_rol);
+        if ($rol) {
+            $this->selectedRol = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+        }
+
         $this->showModalEditar = true;
     }
 
@@ -300,21 +407,14 @@ class GestionUsuarios extends Component
                 'estado' => $this->estado,
             ]);
 
-            // Actualizar User (sincronizado)
-            User::where('id_persona', $persona->id)->update([
-                'name' => $this->nombres . ' ' . $this->apellidos,
-                'email' => $this->correo,
-                'id_rol' => $this->rolId,
-                'estado' => $this->estado,
-            ]);
-
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'actualizar',
-                'tabla' => 'usuario',
-                'registro_id' => $usuario->id,
-                'detalles' => "Usuario actualizado: {$this->nombre_usuario}",
-                'id_usuario' => auth()->id(),
+                'modelo' => 'Usuario',
+                'modelo_id' => $usuario->id,
+                'descripcion' => "Usuario actualizado: {$this->nombre_usuario}",
+                'id_usuario' => auth()->id() ?? 1,
+                'created_at' => now(),
             ]);
 
             DB::commit();
@@ -356,6 +456,9 @@ class GestionUsuarios extends Component
         $this->usuarioId = null;
         $this->passwordGenerada = '';
         $this->mostrarPassword = false;
+        $this->selectedRol = null;
+        $this->searchRol = '';
+        $this->showRolDropdown = false;
     }
 
     /**
@@ -373,22 +476,19 @@ class GestionUsuarios extends Component
         try {
             DB::beginTransaction();
 
-            // Actualizar en ambas tablas
+            // Actualizar contraseña
             $usuario->update([
                 'contrasena' => Hash::make($this->passwordGenerada),
-            ]);
-
-            User::where('id_persona', $usuario->id_persona)->update([
-                'password' => Hash::make($this->passwordGenerada),
             ]);
 
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'resetear_password',
-                'tabla' => 'usuario',
-                'registro_id' => $usuario->id,
-                'detalles' => "Contraseña reseteada para usuario: {$this->nombre_usuario}",
-                'id_usuario' => auth()->id(),
+                'modelo' => 'Usuario',
+                'modelo_id' => $usuario->id,
+                'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario}",
+                'id_usuario' => auth()->id() ?? 1,
+                'created_at' => now(),
             ]);
 
             DB::commit();
@@ -413,21 +513,18 @@ class GestionUsuarios extends Component
             $usuario = Usuario::findOrFail($id);
             $nuevoEstado = !$usuario->estado;
 
-            // Actualizar en ambas tablas
+            // Actualizar estado
             $usuario->update(['estado' => $nuevoEstado]);
-
-            User::where('id_persona', $usuario->id_persona)->update([
-                'estado' => $nuevoEstado,
-            ]);
 
             // Registrar en bitácora
             $accion = $nuevoEstado ? 'activar' : 'desactivar';
             Bitacora::create([
                 'accion' => $accion,
-                'tabla' => 'usuario',
-                'registro_id' => $usuario->id,
-                'detalles' => "Usuario {$accion}do: {$usuario->nombre_usuario}",
-                'id_usuario' => auth()->id(),
+                'modelo' => 'Usuario',
+                'modelo_id' => $usuario->id,
+                'descripcion' => "Usuario {$accion}do: {$usuario->nombre_usuario}",
+                'id_usuario' => auth()->id() ?? 1,
+                'created_at' => now(),
             ]);
 
             DB::commit();
