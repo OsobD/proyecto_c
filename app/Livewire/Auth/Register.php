@@ -4,7 +4,7 @@ namespace App\Livewire\Auth;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use App\Models\User;
+use App\Models\Usuario;
 use App\Models\Persona;
 use App\Models\Rol;
 use Illuminate\Support\Facades\Hash;
@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class Register extends Component
 {
-    public $name = '';
-    public $email = '';
+    public $nombre_usuario = '';
+    public $correo = '';
     public $password = '';
     public $password_confirmation = '';
     public $nombres = '';
@@ -21,8 +21,8 @@ class Register extends Component
     public $telefono = '';
 
     protected $rules = [
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email',
+        'nombre_usuario' => 'required|string|max:255|unique:usuario,nombre_usuario',
+        'correo' => 'required|email',
         'password' => 'required|min:6|confirmed',
         'nombres' => 'required|string|max:255',
         'apellidos' => 'required|string|max:255',
@@ -30,10 +30,10 @@ class Register extends Component
     ];
 
     protected $messages = [
-        'name.required' => 'El nombre de usuario es obligatorio.',
-        'email.required' => 'El correo electrónico es obligatorio.',
-        'email.email' => 'Ingresa un correo electrónico válido.',
-        'email.unique' => 'Este correo ya está registrado.',
+        'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
+        'nombre_usuario.unique' => 'Este nombre de usuario ya está registrado.',
+        'correo.required' => 'El correo electrónico es obligatorio.',
+        'correo.email' => 'Ingresa un correo electrónico válido.',
         'password.required' => 'La contraseña es obligatoria.',
         'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
         'password.confirmed' => 'Las contraseñas no coinciden.',
@@ -50,7 +50,7 @@ class Register extends Component
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
             'telefono' => $this->telefono,
-            'correo' => $this->email,
+            'correo' => $this->correo,
             'estado' => true,
         ]);
 
@@ -58,17 +58,16 @@ class Register extends Component
         $rolOperador = Rol::where('nombre', 'Operador')->first();
 
         // Crear usuario
-        $user = User::create([
-            'name' => $this->name,
-            'email' => $this->email,
-            'password' => Hash::make($this->password),
+        $usuario = Usuario::create([
+            'nombre_usuario' => $this->nombre_usuario,
+            'contrasena' => Hash::make($this->password),
             'id_persona' => $persona->id,
             'id_rol' => $rolOperador?->id,
             'estado' => true,
         ]);
 
         // Autenticar automáticamente
-        Auth::login($user);
+        Auth::login($usuario);
 
         return redirect('/dashboard');
     }

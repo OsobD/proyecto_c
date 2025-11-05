@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Auth;
 
 class Login extends Component
 {
-    public $email = '';
+    public $nombre_usuario = '';
     public $password = '';
     public $remember = false;
 
     protected $rules = [
-        'email' => 'required|email',
+        'nombre_usuario' => 'required|string',
         'password' => 'required|min:6',
     ];
 
     protected $messages = [
-        'email.required' => 'El correo electrónico es obligatorio.',
-        'email.email' => 'Ingresa un correo electrónico válido.',
+        'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
+        'nombre_usuario.string' => 'Ingresa un nombre de usuario válido.',
         'password.required' => 'La contraseña es obligatoria.',
         'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
     ];
@@ -28,13 +28,13 @@ class Login extends Component
     {
         $this->validate();
 
-        if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        if (Auth::attempt(['nombre_usuario' => $this->nombre_usuario, 'password' => $this->password], $this->remember)) {
             request()->session()->regenerate();
 
             return redirect()->intended('/dashboard');
         }
 
-        $this->addError('email', 'Las credenciales no coinciden con nuestros registros.');
+        $this->addError('nombre_usuario', 'Las credenciales no coinciden con nuestros registros.');
     }
 
     #[Layout('components.layouts.auth')]
