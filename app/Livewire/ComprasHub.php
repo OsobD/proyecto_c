@@ -4,10 +4,8 @@ namespace App\Livewire;
 
 use App\Models\Compra;
 use App\Models\DetalleCompra;
-use App\Models\DetalleCompra;
 use App\Models\Proveedor;
 use Livewire\Component;
-use App\Livewire\Traits\TienePermisos;
 use App\Livewire\Traits\TienePermisos;
 
 /**
@@ -23,25 +21,11 @@ class ComprasHub extends Component
 {
     use TienePermisos;
 
-    use TienePermisos;
-
     /** @var array Estadísticas del mes actual */
     public $estadisticas = [];
 
     /** @var array Listado de compras recientes */
     public $comprasRecientes = [];
-
-    /** @var bool Controla visibilidad del modal de visualización */
-    public $showModalVer = false;
-
-    /** @var bool Controla visibilidad del modal de edición */
-    public $showModalEditar = false;
-
-    /** @var bool Controla visibilidad del modal de confirmación de edición */
-    public $showModalConfirmarEdicion = false;
-
-    /** @var array|null Compra seleccionada para ver/editar */
-    public $compraSeleccionada = null;
 
     /** @var bool Controla visibilidad del modal de visualización */
     public $showModalVer = false;
@@ -215,147 +199,6 @@ class ComprasHub extends Component
                 return;
             }
 
-            // Actualizar los detalles de la compra
-            foreach ($this->compraSeleccionada['productos'] as $producto) {
-                $detalle = DetalleCompra::find($producto['id_detalle']);
-                if ($detalle) {
-                    $detalle->precio_ingreso = $producto['precio'];
-                    $detalle->save();
-                }
-            }
-
-            // Actualizar el total de la compra
-            $compra->total = $this->compraSeleccionada['total'];
-            $compra->save();
-
-            session()->flash('message', 'Compra actualizada exitosamente.');
-
-            $this->closeModalConfirmarEdicion();
-            $this->closeModalEditar();
-
-            // Recargar datos
-            $this->mount();
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al actualizar la compra: ' . $e->getMessage());
-        }
-    }
-
-    public function verDetalle($compraId)
-    {
-        $compra = Compra::with(['proveedor', 'detalles.producto', 'bodega'])->find($compraId);
-
-        if ($compra) {
-            // Mapear productos y calcular total correctamente
-            $productos = $compra->detalles->map(function($detalle) {
-                $subtotal = $detalle->cantidad * $detalle->precio_ingreso;
-                return [
-                    'codigo' => $detalle->id_producto,
-                    'descripcion' => $detalle->producto->descripcion ?? 'N/A',
-                    'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_ingreso,
-                    'subtotal' => $subtotal,
-                ];
-            })->toArray();
-
-            // Calcular el total sumando todos los subtotales
-            $totalCalculado = array_sum(array_column($productos, 'subtotal'));
-
-            $this->compraSeleccionada = [
-                'id' => $compra->id,
-                'numero_factura' => $compra->no_factura,
-                'correlativo' => $compra->correlativo,
-                'fecha' => $compra->fecha->format('Y-m-d H:i'),
-                'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
-                'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : $compra->total,
-                'productos' => $productos,
-            ];
-            $this->showModalVer = true;
-        }
-    }
-
-    public function closeModalVer()
-    {
-        $this->showModalVer = false;
-        $this->compraSeleccionada = null;
-    }
-
-    public function editarCompra($compraId)
-    {
-        if (!$this->verificarPermiso('compras.editar', 'Solo supervisores pueden editar compras.')) {
-            return;
-        }
-
-        $compra = Compra::with(['proveedor', 'detalles.producto', 'bodega'])->find($compraId);
-
-        if ($compra) {
-            // Mapear productos con sus detalles para edición
-            $productos = $compra->detalles->map(function($detalle) {
-                $subtotal = $detalle->cantidad * $detalle->precio_ingreso;
-                return [
-                    'id_detalle' => $detalle->id,
-                    'codigo' => $detalle->id_producto,
-                    'descripcion' => $detalle->producto->descripcion ?? 'N/A',
-                    'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_ingreso,
-                    'subtotal' => $subtotal,
-                ];
-            })->toArray();
-
-            // Calcular el total
-            $totalCalculado = array_sum(array_column($productos, 'subtotal'));
-
-            $this->compraSeleccionada = [
-                'id' => $compra->id,
-                'numero_factura' => $compra->no_factura,
-                'correlativo' => $compra->correlativo,
-                'fecha' => $compra->fecha->format('Y-m-d H:i'),
-                'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
-                'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : $compra->total,
-                'productos' => $productos,
-            ];
-            $this->showModalEditar = true;
-        }
-    }
-
-    public function closeModalEditar()
-    {
-        $this->showModalEditar = false;
-        $this->compraSeleccionada = null;
-    }
-
-    public function abrirModalConfirmarEdicion()
-    {
-        // Recalcular el total antes de confirmar
-        if ($this->compraSeleccionada && isset($this->compraSeleccionada['productos'])) {
-            $total = 0;
-            foreach ($this->compraSeleccionada['productos'] as $index => $producto) {
-                $subtotal = $producto['cantidad'] * $producto['precio'];
-                $this->compraSeleccionada['productos'][$index]['subtotal'] = $subtotal;
-                $total += $subtotal;
-            }
-            $this->compraSeleccionada['total'] = $total;
-        }
-        $this->showModalConfirmarEdicion = true;
-    }
-
-    public function closeModalConfirmarEdicion()
-    {
-        $this->showModalConfirmarEdicion = false;
-    }
-
-    public function guardarEdicion()
-    {
-        try {
-            $compra = Compra::find($this->compraSeleccionada['id']);
-
-            if (!$compra) {
-                session()->flash('error', 'Compra no encontrada.');
-                return;
-            }
-
             // Actualizar los detalles de la compra (cantidad y precio)
             foreach ($this->compraSeleccionada['productos'] as $producto) {
                 $detalle = DetalleCompra::find($producto['id_detalle']);
@@ -375,7 +218,7 @@ class ComprasHub extends Component
             $this->closeModalConfirmarEdicion();
             $this->closeModalEditar();
 
-            // Recargar las compras recientes
+            // Recargar datos
             $this->mount();
 
         } catch (\Exception $e) {
