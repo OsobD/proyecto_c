@@ -251,10 +251,11 @@ class HistorialCompras extends Component
                 return;
             }
 
-            // Actualizar los detalles de la compra
+            // Actualizar los detalles de la compra (cantidad y precio)
             foreach ($this->compraSeleccionada['productos'] as $producto) {
                 $detalle = DetalleCompra::find($producto['id_detalle']);
                 if ($detalle) {
+                    $detalle->cantidad = $producto['cantidad'];
                     $detalle->precio_ingreso = $producto['precio'];
                     $detalle->save();
                 }

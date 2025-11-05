@@ -28,6 +28,7 @@ trait TienePermisos
             'id' => 1,
             'nombre' => 'David Bautista',
             'rol' => 'supervisor',
+            'rol' => 'supervisor', // Cambiado a supervisor para permitir editar y desactivar compras
         ];
     }
 

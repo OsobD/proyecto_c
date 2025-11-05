@@ -170,7 +170,7 @@
                             @click.outside="open = false"
                             wire:keydown.enter.prevent="seleccionarPrimerResultado"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                            placeholder="Buscar por ID (0xA1) o descripción..."
+                            placeholder="Buscar por código del producto o descripción..."
                         >
                         <div x-show="open"
                              x-transition
@@ -178,11 +178,11 @@
                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                             <ul>
                                 @foreach ($this->productoResults as $producto)
-                                    <li wire:click.prevent="selectProducto({{ $producto['id'] }})"
+                                    <li wire:click.prevent="selectProducto('{{ $producto['id'] }}')"
                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center">
-                                                <span class="font-mono text-gray-500 mr-2">0x{{ strtoupper(dechex($producto['id'])) }}</span>
+                                                <span class="font-mono text-gray-500 mr-2">{{ $producto['id'] }}</span>
                                                 <span>{{ $producto['descripcion'] }}</span>
                                             </div>
                                             <span class="text-sm text-gray-600">Disponible: {{ $producto['cantidad_disponible'] }}</span>
@@ -214,14 +214,14 @@
                         <tbody class="text-gray-600 text-sm font-light">
                             @foreach($productosSeleccionados as $producto)
                                 <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                    <td class="py-3 px-6 text-left font-mono">0x{{ strtoupper(dechex($producto['id'])) }}</td>
+                                    <td class="py-3 px-6 text-left font-mono">{{ $producto['id'] }}</td>
                                     <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
                                     <td class="py-3 px-6 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
                                         <input
                                             type="number"
                                             wire:model.live="productosSeleccionados.{{ $loop->index }}.cantidad"
-                                            wire:change="actualizarCantidad({{ $producto['id'] }}, $event.target.value)"
+                                            wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
                                             min="1"
                                             max="{{ $producto['cantidad_disponible'] }}"
                                             class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent {{ $producto['cantidad'] > $producto['cantidad_disponible'] ? 'border-red-500' : '' }}"
@@ -232,11 +232,11 @@
                                             {{ $producto['cantidad_disponible'] }}
                                         </span>
                                     </td>
-                                    <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}</td>
+                                    <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
                                         <button
                                             type="button"
-                                            wire:click="eliminarProducto({{ $producto['id'] }})"
+                                            wire:click="eliminarProducto('{{ $producto['id'] }}')"
                                             class="text-red-600 hover:text-red-800 font-medium">
                                             Eliminar
                                         </button>
