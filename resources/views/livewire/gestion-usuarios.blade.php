@@ -53,7 +53,7 @@
                                 wire:model.live.debounce.300ms="searchFilterRol"
                                 @click="open = true"
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                placeholder="Buscar rol... (vacío = todos)">
+                                placeholder="Seleccionar rol...">
                             <div x-show="open"
                                  x-transition
                                  class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">

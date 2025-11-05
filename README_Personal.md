@@ -15,10 +15,10 @@ npm run dev              # Mantener corriendo durante desarrollo
 
 ```
 
-**Credenciales de Acceso:**
+**Credenciales de Acceso preventiva:**
 - Usuario: `admin`
 - Contraseña: `admin123`
-- **IMPORTANTE:** Cambia esta contraseña en producción
+
 
 ## Sistema de Autenticación
 
