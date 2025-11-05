@@ -259,13 +259,187 @@
                 <a href="{{ route('traslados') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                     Cancelar
                 </a>
-                <button type="submit"
+                <button type="button"
+                        wire:click="abrirModalConfirmacion"
                         wire:loading.attr="disabled"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading.remove>Completar Requisición</span>
-                    <span wire:loading>Guardando...</span>
+                    <span wire:loading.remove wire:target="abrirModalConfirmacion">Registrar Requisición</span>
+                    <span wire:loading wire:target="abrirModalConfirmacion">Verificando...</span>
                 </button>
             </div>
         </form>
     </div>
+
+    {{-- Modal de Confirmación de Requisición --}}
+    <div x-data="{
+            show: @entangle('showModalConfirmacion').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModalConfirmacion">
+        <div class="relative p-6 border w-full max-w-3xl shadow-xl rounded-lg bg-white"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Confirmar Requisición</h3>
+                <button wire:click="closeModalConfirmacion" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                {{-- Información de la requisición --}}
+                <div class="bg-gray-50 p-4 rounded-md">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Bodega Origen:</p>
+                            <p class="font-semibold">{{ $selectedOrigen['nombre'] ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Empleado Destino:</p>
+                            <p class="font-semibold">{{ $selectedDestino['nombre'] ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Correlativo:</p>
+                            <p class="font-semibold">{{ $correlativo ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Estado Tarjeta:</p>
+                            @if($selectedDestino && $selectedDestino['tiene_tarjeta'])
+                                <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">Con Tarjeta Activa</span>
+                            @else
+                                <span class="bg-gray-200 text-gray-800 py-1 px-3 rounded-full text-xs font-semibold">Sin Tarjeta</span>
+                            @endif
+                        </div>
+                    </div>
+                    @if($observaciones)
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-600">Observaciones:</p>
+                            <p class="font-semibold">{{ $observaciones }}</p>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Resumen de productos --}}
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Productos a Requisar:</h4>
+                    <div class="overflow-x-auto max-h-64 overflow-y-auto border rounded-md">
+                        <table class="min-w-full bg-white text-sm">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-3 text-left">Código</th>
+                                    <th class="py-2 px-3 text-left">Descripción</th>
+                                    <th class="py-2 px-3 text-center">Cant.</th>
+                                    <th class="py-2 px-3 text-center">Disponible</th>
+                                    <th class="py-2 px-3 text-right">Precio Unit.</th>
+                                    <th class="py-2 px-3 text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($productosSeleccionados as $producto)
+                                    <tr class="border-t">
+                                        <td class="py-2 px-3 font-mono">{{ $producto['id'] }}</td>
+                                        <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
+                                        <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
+                                        <td class="py-2 px-3 text-center text-gray-500">{{ $producto['cantidad_disponible'] }}</td>
+                                        <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
+                                        <td class="py-2 px-3 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Total --}}
+                <div class="bg-blue-50 p-4 rounded-md">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-semibold text-gray-800">Valor Total de la Requisición:</span>
+                        <span class="text-2xl font-bold text-blue-600">Q{{ number_format($this->subtotal, 2) }}</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Se asignarán {{ count($productosSeleccionados) }} producto(s) a la tarjeta de responsabilidad del empleado.</p>
+                </div>
+
+                {{-- Botones de acción --}}
+                <div class="flex justify-end gap-3 mt-6">
+                    <button
+                        type="button"
+                        wire:click="closeModalConfirmacion"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="guardarRequisicion"
+                        wire:loading.attr="disabled"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="guardarRequisicion">✓ Confirmar y Registrar</span>
+                        <span wire:loading wire:target="guardarRequisicion">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Ocultar elementos hasta que Alpine.js esté listo */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Animaciones de entrada */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Animaciones de salida */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+        }
+    </style>
 </div>

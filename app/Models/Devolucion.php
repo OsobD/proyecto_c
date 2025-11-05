@@ -57,6 +57,12 @@ class Devolucion extends Model
         return $this->hasMany(DetalleDevolucion::class, 'id_devolucion');
     }
 
+    // Alias para compatibilidad
+    public function detallesDevolucion()
+    {
+        return $this->detalles();
+    }
+
     public function transacciones()
     {
         return $this->hasMany(Transaccion::class, 'id_devolucion');

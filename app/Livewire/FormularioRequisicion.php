@@ -62,6 +62,9 @@ class FormularioRequisicion extends Component
     /** @var string|null Observaciones de la requisición */
     public $observaciones = null;
 
+    /** @var bool Controla modal de confirmación */
+    public $showModalConfirmacion = false;
+
     /**
      * Inicializa el componente
      *
@@ -371,11 +374,11 @@ class FormularioRequisicion extends Component
     }
 
     /**
-     * Guarda la requisición
+     * Abre el modal de confirmación después de validar
      *
      * @return void
      */
-    public function save()
+    public function abrirModalConfirmacion()
     {
         // Validaciones
         $this->validate([
@@ -396,6 +399,36 @@ class FormularioRequisicion extends Component
             session()->flash('error', 'El empleado seleccionado no tiene una tarjeta de responsabilidad activa.');
             return;
         }
+
+        // Validar que ningún producto exceda el stock disponible
+        foreach ($this->productosSeleccionados as $producto) {
+            if ($producto['cantidad'] > $producto['cantidad_disponible']) {
+                session()->flash('error', "La cantidad del producto '{$producto['descripcion']}' excede el stock disponible.");
+                return;
+            }
+        }
+
+        // Abrir modal de confirmación
+        $this->showModalConfirmacion = true;
+    }
+
+    /**
+     * Cierra el modal de confirmación
+     *
+     * @return void
+     */
+    public function closeModalConfirmacion()
+    {
+        $this->showModalConfirmacion = false;
+    }
+
+    /**
+     * Guarda la requisición
+     *
+     * @return void
+     */
+    public function guardarRequisicion()
+    {
 
         try {
             DB::beginTransaction();
@@ -512,6 +545,9 @@ class FormularioRequisicion extends Component
 
             DB::commit();
 
+            // Cerrar modal
+            $this->showModalConfirmacion = false;
+
             session()->flash('success', 'Requisición registrada exitosamente.');
 
             // Limpiar formulario
@@ -526,8 +562,8 @@ class FormularioRequisicion extends Component
                 'searchProducto'
             ]);
 
-            // Redirigir a la lista de requisiciones o salidas
-            return redirect()->route('salidas');
+            // Redirigir al hub de traslados
+            return redirect()->route('traslados');
         } catch (\Exception $e) {
             DB::rollBack();
 

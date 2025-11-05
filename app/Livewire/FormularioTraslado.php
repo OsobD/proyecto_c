@@ -2,6 +2,15 @@
 
 namespace App\Livewire;
 
+use App\Models\Bitacora;
+use App\Models\Bodega;
+use App\Models\DetalleTraslado;
+use App\Models\Lote;
+use App\Models\Producto;
+use App\Models\Traslado;
+use App\Models\TipoTransaccion;
+use App\Models\Transaccion;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 /**
@@ -15,12 +24,6 @@ use Livewire\Component;
  */
 class FormularioTraslado extends Component
 {
-    /** @var array Listado de bodegas */
-    public $bodegas = [];
-
-    /** @var array Listado de productos */
-    public $productos = [];
-
     /** @var string Término de búsqueda para bodega origen */
     public $searchOrigen = '';
 
@@ -54,98 +57,138 @@ class FormularioTraslado extends Component
     /** @var string Observaciones del traslado */
     public $observaciones = '';
 
+    /** @var bool Controla modal de confirmación */
+    public $showModalConfirmacion = false;
+
     /**
-     * Inicializa el componente con datos mock de prueba
+     * Inicializa el componente
      *
-     * @todo Reemplazar con consultas a BD: Bodega::all(), Producto::all()
      * @return void
      */
     public function mount()
     {
-        $this->bodegas = [
-            ['id' => 1, 'nombre' => 'Bodega Central'],
-            ['id' => 2, 'nombre' => 'Bodega Norte'],
-            ['id' => 3, 'nombre' => 'Bodega Sur'],
-        ];
-
-        $this->productos = [
-            ['id' => 0xA1, 'descripcion' => 'Tornillos de acero inoxidable', 'precio' => 0.50],
-            ['id' => 0xB2, 'descripcion' => 'Abrazaderas de metal', 'precio' => 2.75],
-            ['id' => 0xC3, 'descripcion' => 'Cinta aislante', 'precio' => 3.25],
-            ['id' => 0xD4, 'descripcion' => 'Guantes de seguridad', 'precio' => 8.50],
-            ['id' => 0xE5, 'descripcion' => 'Fusibles de 15A', 'precio' => 1.25],
-        ];
-
         $this->productosSeleccionados = [];
     }
 
+    /**
+     * Obtiene bodegas físicas activas filtradas por búsqueda
+     *
+     * @return array
+     */
     public function getOrigenResultsProperty()
     {
-        $results = [];
+        $query = Bodega::where('activo', true);
 
-        // Only show bodegas for traslados (Bodega -> Bodega)
-        foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchOrigen) ||
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchOrigen))) {
-                $results[] = [
-                    'id' => 'B' . $bodega['id'],
-                    'nombre' => $bodega['nombre'],
-                    'tipo' => 'Bodega'
-                ];
-            }
+        if (!empty($this->searchOrigen)) {
+            $query->where('nombre', 'like', '%' . $this->searchOrigen . '%');
         }
 
-        return $results;
+        // Excluir la bodega destino si ya está seleccionada
+        if ($this->selectedDestino) {
+            $query->where('id', '!=', $this->selectedDestino['bodega_id']);
+        }
+
+        return $query->get()->map(function ($bodega) {
+            return [
+                'id' => 'B' . $bodega->id,
+                'nombre' => $bodega->nombre,
+                'tipo' => 'Bodega',
+                'bodega_id' => $bodega->id
+            ];
+        })->toArray();
     }
 
+    /**
+     * Obtiene bodegas físicas activas filtradas por búsqueda (destino)
+     *
+     * @return array
+     */
     public function getDestinoResultsProperty()
     {
-        $results = [];
+        $query = Bodega::where('activo', true);
 
-        // Only show bodegas for traslados (Bodega -> Bodega)
-        foreach ($this->bodegas as $bodega) {
-            if (empty($this->searchDestino) ||
-                str_contains(strtolower($bodega['nombre']), strtolower($this->searchDestino))) {
-                $results[] = [
-                    'id' => 'B' . $bodega['id'],
-                    'nombre' => $bodega['nombre'],
-                    'tipo' => 'Bodega'
-                ];
-            }
+        if (!empty($this->searchDestino)) {
+            $query->where('nombre', 'like', '%' . $this->searchDestino . '%');
         }
 
-        return $results;
+        // Excluir la bodega origen si ya está seleccionada
+        if ($this->selectedOrigen) {
+            $query->where('id', '!=', $this->selectedOrigen['bodega_id']);
+        }
+
+        return $query->get()->map(function ($bodega) {
+            return [
+                'id' => 'B' . $bodega->id,
+                'nombre' => $bodega->nombre,
+                'tipo' => 'Bodega',
+                'bodega_id' => $bodega->id
+            ];
+        })->toArray();
     }
 
-    public function selectOrigen($id, $nombre, $tipo)
+    /**
+     * Selecciona una bodega como origen
+     *
+     * @param string $id
+     * @param string $nombre
+     * @param string $tipo
+     * @param int $bodegaId
+     * @return void
+     */
+    public function selectOrigen($id, $nombre, $tipo, $bodegaId)
     {
         $this->selectedOrigen = [
             'id' => $id,
             'nombre' => $nombre,
-            'tipo' => $tipo
+            'tipo' => $tipo,
+            'bodega_id' => $bodegaId
         ];
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
+
+        // Limpiar productos seleccionados al cambiar de bodega
+        $this->productosSeleccionados = [];
     }
 
-    public function selectDestino($id, $nombre, $tipo)
+    /**
+     * Selecciona una bodega como destino
+     *
+     * @param string $id
+     * @param string $nombre
+     * @param string $tipo
+     * @param int $bodegaId
+     * @return void
+     */
+    public function selectDestino($id, $nombre, $tipo, $bodegaId)
     {
         $this->selectedDestino = [
             'id' => $id,
             'nombre' => $nombre,
-            'tipo' => $tipo
+            'tipo' => $tipo,
+            'bodega_id' => $bodegaId
         ];
         $this->searchDestino = '';
         $this->showDestinoDropdown = false;
     }
 
+    /**
+     * Limpia la selección de origen
+     *
+     * @return void
+     */
     public function clearOrigen()
     {
         $this->selectedOrigen = null;
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
+        $this->productosSeleccionados = [];
     }
 
+    /**
+     * Limpia la selección de destino
+     *
+     * @return void
+     */
     public function clearDestino()
     {
         $this->selectedDestino = null;
@@ -177,62 +220,315 @@ class FormularioTraslado extends Component
         }
     }
 
+    /**
+     * Obtiene productos con stock disponible en la bodega origen
+     *
+     * @return array
+     */
     public function getProductoResultsProperty()
     {
-        if (empty($this->searchProducto)) {
-            return $this->productos;
+        if (!$this->selectedOrigen) {
+            return [];
         }
 
+        $bodegaId = $this->selectedOrigen['bodega_id'];
         $search = strtolower(trim($this->searchProducto));
 
-        return array_filter($this->productos, function($producto) use ($search) {
-            // Convertir el ID a hexadecimal para la comparación
-            $idHex = strtolower(dechex($producto['id']));
+        $query = Producto::where('activo', true)
+            ->with(['lotes' => function ($q) use ($bodegaId) {
+                $q->where('id_bodega', $bodegaId)
+                    ->where('cantidad', '>', 0)
+                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
+            }]);
 
-            // Buscar tanto en el ID hexadecimal como en la descripción
-            return str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains($idHex, str_replace(['0x', '#'], '', $search)) ||
-                   str_contains((string)$producto['id'], $search);
-        });
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('descripcion', 'like', '%' . $search . '%')
+                    ->orWhere('id', 'like', '%' . $search . '%');
+            });
+        }
+
+        return $query->get()
+            ->filter(function ($producto) {
+                return $producto->lotes->count() > 0; // Solo productos con stock
+            })
+            ->map(function ($producto) {
+                $cantidadDisponible = $producto->lotes->sum('cantidad');
+                $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
+
+                return [
+                    'id' => (int)$producto->id,
+                    'descripcion' => $producto->descripcion,
+                    'precio' => (float)$precioPromedio,
+                    'cantidad_disponible' => (int)$cantidadDisponible,
+                    'lotes' => $producto->lotes->toArray()
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 
+    /**
+     * Selecciona un producto para agregarlo al traslado
+     *
+     * @param int $productoId
+     * @return void
+     */
     public function selectProducto($productoId)
     {
-        $producto = collect($this->productos)->firstWhere('id', (int)$productoId);
+        $producto = collect($this->productoResults)->firstWhere('id', (int)$productoId);
+
         if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
             $this->productosSeleccionados[] = [
-                'id' => $producto['id'],
+                'id' => (int)$producto['id'],
                 'descripcion' => $producto['descripcion'],
-                'precio' => $producto['precio'],
-                'cantidad' => 1
+                'precio' => (float)$producto['precio'],
+                'cantidad' => 1,
+                'cantidad_disponible' => (int)$producto['cantidad_disponible'],
+                'lotes' => $producto['lotes']
             ];
         }
         $this->searchProducto = '';
         $this->showProductoDropdown = false;
     }
 
+    /**
+     * Elimina un producto de la lista de seleccionados
+     *
+     * @param int $productoId
+     * @return void
+     */
     public function eliminarProducto($productoId)
     {
         $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
             return $item['id'] !== (int)$productoId;
         });
+        $this->productosSeleccionados = array_values($this->productosSeleccionados);
     }
 
+    /**
+     * Actualiza la cantidad de un producto seleccionado
+     *
+     * @param int $productoId
+     * @param int $cantidad
+     * @return void
+     */
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
             if ($producto['id'] === (int)$productoId) {
-                $producto['cantidad'] = max(1, (int)$cantidad);
+                $cantidadMax = $producto['cantidad_disponible'];
+                $producto['cantidad'] = max(1, min((int)$cantidad, $cantidadMax));
                 break;
             }
         }
     }
 
+    /**
+     * Calcula el subtotal del traslado
+     *
+     * @return float
+     */
     public function getSubtotalProperty()
     {
         return collect($this->productosSeleccionados)->sum(function($producto) {
-            return $producto['cantidad'] * $producto['precio'];
+            return (int)($producto['cantidad'] ?? 0) * (float)($producto['precio'] ?? 0);
         });
+    }
+
+    /**
+     * Abre el modal de confirmación con validaciones previas
+     *
+     * @return void
+     */
+    public function abrirModalConfirmacion()
+    {
+        // Validar que haya bodega origen
+        if (!$this->selectedOrigen) {
+            session()->flash('error', 'Debe seleccionar una bodega de origen.');
+            return;
+        }
+
+        // Validar que haya bodega destino
+        if (!$this->selectedDestino) {
+            session()->flash('error', 'Debe seleccionar una bodega de destino.');
+            return;
+        }
+
+        // Validar que las bodegas sean diferentes
+        if ($this->selectedOrigen['bodega_id'] === $this->selectedDestino['bodega_id']) {
+            session()->flash('error', 'La bodega de origen y destino no pueden ser la misma.');
+            return;
+        }
+
+        // Validar que haya productos seleccionados
+        if (empty($this->productosSeleccionados)) {
+            session()->flash('error', 'Debe agregar al menos un producto al traslado.');
+            return;
+        }
+
+        // Validar que ningún producto exceda el stock disponible
+        foreach ($this->productosSeleccionados as $producto) {
+            if ($producto['cantidad'] > $producto['cantidad_disponible']) {
+                session()->flash('error', "La cantidad del producto '{$producto['descripcion']}' excede el stock disponible.");
+                return;
+            }
+        }
+
+        $this->showModalConfirmacion = true;
+    }
+
+    /**
+     * Cierra el modal de confirmación
+     *
+     * @return void
+     */
+    public function closeModalConfirmacion()
+    {
+        $this->showModalConfirmacion = false;
+    }
+
+    /**
+     * Guarda el traslado en la base de datos
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function guardarTraslado()
+    {
+        try {
+            DB::beginTransaction();
+
+            // Obtener el usuario actual
+            $usuario = auth()->user();
+
+            // Crear el traslado
+            $traslado = Traslado::create([
+                'fecha' => now(),
+                'correlativo' => $this->correlativo,
+                'no_requisicion' => null,
+                'total' => $this->subtotal,
+                'descripcion' => null,
+                'observaciones' => $this->observaciones,
+                'estado' => 'Pendiente',
+                'activo' => true,
+                'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
+                'id_bodega_destino' => $this->selectedDestino['bodega_id'],
+                'id_usuario' => $usuario->id,
+                'id_tarjeta' => null,
+            ]);
+
+            // Obtener tipos de transacción
+            $tipoTraslado = TipoTransaccion::where('nombre', 'Traslado')->first();
+
+            // Procesar cada producto con FIFO
+            foreach ($this->productosSeleccionados as $productoData) {
+                $cantidadRestante = $productoData['cantidad'];
+                $producto = Producto::find($productoData['id']);
+
+                // Obtener lotes ordenados por FIFO
+                $lotes = Lote::where('id_producto', $producto->id)
+                    ->where('id_bodega', $this->selectedOrigen['bodega_id'])
+                    ->where('cantidad', '>', 0)
+                    ->orderBy('fecha_ingreso', 'asc')
+                    ->get();
+
+                foreach ($lotes as $lote) {
+                    if ($cantidadRestante <= 0) break;
+
+                    $cantidadAUsar = min($cantidadRestante, $lote->cantidad);
+
+                    // Crear detalle de traslado
+                    DetalleTraslado::create([
+                        'id_traslado' => $traslado->id,
+                        'id_producto' => $producto->id,
+                        'cantidad' => $cantidadAUsar,
+                        'id_lote' => $lote->id,
+                        'precio_traslado' => $lote->precio_ingreso,
+                    ]);
+
+                    // Disminuir cantidad en lote de bodega origen
+                    $lote->cantidad -= $cantidadAUsar;
+                    $lote->save();
+
+                    // Crear transacción de salida (bodega origen)
+                    Transaccion::create([
+                        'fecha' => now(),
+                        'tipo' => 'Salida',
+                        'descripcion' => "Traslado a {$this->selectedDestino['nombre']} - {$producto->descripcion}",
+                        'cantidad' => $cantidadAUsar,
+                        'id_lote' => $lote->id,
+                        'id_tipo_transaccion' => $tipoTraslado->id ?? null,
+                        'id_traslado' => $traslado->id,
+                    ]);
+
+                    // Crear o actualizar lote en bodega destino
+                    $loteDestino = Lote::where('id_producto', $producto->id)
+                        ->where('id_bodega', $this->selectedDestino['bodega_id'])
+                        ->where('precio_ingreso', $lote->precio_ingreso)
+                        ->where('fecha_ingreso', $lote->fecha_ingreso)
+                        ->first();
+
+                    if ($loteDestino) {
+                        $loteDestino->cantidad += $cantidadAUsar;
+                        $loteDestino->save();
+                    } else {
+                        $loteDestino = Lote::create([
+                            'cantidad' => $cantidadAUsar,
+                            'precio_ingreso' => $lote->precio_ingreso,
+                            'fecha_ingreso' => $lote->fecha_ingreso,
+                            'fecha_vencimiento' => $lote->fecha_vencimiento,
+                            'id_producto' => $producto->id,
+                            'id_bodega' => $this->selectedDestino['bodega_id'],
+                        ]);
+                    }
+
+                    // Crear transacción de entrada (bodega destino)
+                    Transaccion::create([
+                        'fecha' => now(),
+                        'tipo' => 'Entrada',
+                        'descripcion' => "Traslado desde {$this->selectedOrigen['nombre']} - {$producto->descripcion}",
+                        'cantidad' => $cantidadAUsar,
+                        'id_lote' => $loteDestino->id,
+                        'id_tipo_transaccion' => $tipoTraslado->id ?? null,
+                        'id_traslado' => $traslado->id,
+                    ]);
+
+                    $cantidadRestante -= $cantidadAUsar;
+                }
+            }
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'id_usuario' => $usuario->id,
+                'accion' => 'Creación',
+                'modelo' => 'App\\Models\\Traslado',
+                'modelo_id' => $traslado->id,
+                'descripcion' => "Traslado creado: {$this->selectedOrigen['nombre']} → {$this->selectedDestino['nombre']} - Total: Q" . number_format($this->subtotal, 2),
+                'created_at' => now(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            DB::commit();
+
+            session()->flash('success', 'Traslado registrado exitosamente.');
+            return redirect()->route('traslados');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Log del error para debugging
+            \Log::error('Error al guardar traslado', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'usuario_id' => auth()->id(),
+                'bodega_origen' => $this->selectedOrigen['bodega_id'] ?? null,
+                'bodega_destino' => $this->selectedDestino['bodega_id'] ?? null,
+            ]);
+
+            session()->flash('error', 'Error al registrar el traslado: ' . $e->getMessage());
+            $this->showModalConfirmacion = false;
+        }
     }
 
     /**

@@ -42,6 +42,12 @@ class Usuario extends Authenticatable
         return 'remember_token';
     }
 
+    // Accessor para name (compatibilidad)
+    public function getNameAttribute()
+    {
+        return $this->nombre_usuario;
+    }
+
     // Relaciones
     public function persona()
     {

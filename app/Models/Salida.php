@@ -51,6 +51,12 @@ class Salida extends Model
         return $this->belongsTo(TipoSalida::class, 'id_tipo');
     }
 
+    // Alias para compatibilidad
+    public function tipo()
+    {
+        return $this->tipoSalida();
+    }
+
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'id_persona');
@@ -59,6 +65,12 @@ class Salida extends Model
     public function detalles()
     {
         return $this->hasMany(DetalleSalida::class, 'id_salida');
+    }
+
+    // Alias para compatibilidad
+    public function detallesSalida()
+    {
+        return $this->detalles();
     }
 
     public function transacciones()

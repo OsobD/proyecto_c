@@ -360,14 +360,15 @@ class FormularioDevolucion extends Component
     public function eliminarProducto($productoId)
     {
         $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
-            return $item['id'] !== (int)$productoId;
+            return $item['id'] != $productoId; // Use != for loose comparison to handle both strings and ints
         });
+        $this->productosSeleccionados = array_values($this->productosSeleccionados);
     }
 
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
-            if ($producto['id'] === (int)$productoId) {
+            if ($producto['id'] == $productoId) { // Use == for loose comparison
                 $producto['cantidad'] = max(1, (int)$cantidad);
                 break;
             }
@@ -387,7 +388,7 @@ class FormularioDevolucion extends Component
     public function actualizarEstado($productoId, $estado)
     {
         foreach ($this->productosSeleccionados as &$producto) {
-            if ($producto['id'] === (int)$productoId) {
+            if ($producto['id'] == $productoId) { // Use == for loose comparison
                 $producto['estado'] = $estado;
                 break;
             }
@@ -400,7 +401,7 @@ class FormularioDevolucion extends Component
     public function actualizarPrecio($productoId, $precio)
     {
         foreach ($this->productosSeleccionados as &$producto) {
-            if ($producto['id'] === (int)$productoId) {
+            if ($producto['id'] == $productoId) { // Use == for loose comparison
                 $producto['precio'] = max(0, (float)$precio);
                 break;
             }

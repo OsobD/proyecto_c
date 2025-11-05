@@ -10,6 +10,19 @@
         <h1 class="text-2xl font-bold text-gray-800">Formulario de Traslado entre Bodegas</h1>
     </div>
 
+    {{-- Mensajes Flash --}}
+    @if (session()->has('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
     <div class="bg-white p-6 rounded-lg shadow-md">
         <form>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -38,7 +51,7 @@
                                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                                     <ul>
                                         @foreach ($this->origenResults as $result)
-                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
+                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['bodega_id'] }})"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                                 {{ $result['nombre'] }}
                                             </li>
@@ -75,7 +88,7 @@
                                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                                     <ul>
                                         @foreach ($this->destinoResults as $result)
-                                            <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
+                                            <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['bodega_id'] }})"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                                 {{ $result['nombre'] }}
                                             </li>
@@ -128,13 +141,26 @@
                          x-transition
                          class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                         <ul>
-                            @foreach ($this->productoResults as $producto)
+                            @forelse ($this->productoResults as $producto)
                                 <li wire:click.prevent="selectProducto({{ $producto['id'] }})"
-                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
-                                    <span class="font-mono text-gray-500 mr-2">0x{{ strtoupper(dechex($producto['id'])) }}</span>
-                                    <span>{{ $producto['descripcion'] }}</span>
+                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-mono text-gray-500 mr-2">#{{ $producto['id'] }}</span>
+                                            <span>{{ $producto['descripcion'] }}</span>
+                                        </div>
+                                        <span class="text-sm text-gray-500">Stock: {{ $producto['cantidad_disponible'] }}</span>
+                                    </div>
                                 </li>
-                            @endforeach
+                            @empty
+                                <li class="px-3 py-2 text-gray-500 text-center">
+                                    @if(!$this->selectedOrigen)
+                                        Seleccione primero una bodega de origen
+                                    @else
+                                        No hay productos disponibles
+                                    @endif
+                                </li>
+                            @endforelse
                         </ul>
                     </div>
                 </div>
@@ -156,21 +182,25 @@
                             </tr>
                         </thead>
                         <tbody class="text-gray-600 text-sm font-light">
-                            @foreach($productosSeleccionados as $producto)
+                            @foreach($productosSeleccionados as $index => $producto)
                                 <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                    <td class="py-3 px-6 text-left font-mono">0x{{ strtoupper(dechex($producto['id'])) }}</td>
-                                    <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
-                                    <td class="py-3 px-6 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
+                                    <td class="py-3 px-6 text-left font-mono">#{{ $producto['id'] }}</td>
+                                    <td class="py-3 px-6 text-left">
+                                        {{ $producto['descripcion'] }}
+                                        <span class="text-xs text-gray-500">(Disponible: {{ $producto['cantidad_disponible'] }})</span>
+                                    </td>
+                                    <td class="py-3 px-6 text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
                                         <input
                                             type="number"
-                                            wire:model.live="productosSeleccionados.{{ $loop->index }}.cantidad"
+                                            wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
                                             wire:change="actualizarCantidad({{ $producto['id'] }}, $event.target.value)"
                                             min="1"
+                                            max="{{ $producto['cantidad_disponible'] }}"
                                             class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                         >
                                     </td>
-                                    <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}</td>
+                                    <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
                                         <button
                                             type="button"
@@ -184,7 +214,7 @@
                             @if(count($productosSeleccionados) > 0)
                                 <tr class="bg-gray-100 font-bold">
                                     <td colspan="4" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
-                                    <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format($this->subtotal, 2) }}</td>
+                                    <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format((float)$this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
                             @endif
@@ -194,10 +224,118 @@
             </div>
 
             <div class="mt-8 flex justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                <button
+                    type="button"
+                    wire:click="abrirModalConfirmacion"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                     Completar Traslado
                 </button>
             </div>
         </form>
     </div>
+
+    {{-- Modal de Confirmación --}}
+    @if($showModalConfirmacion)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+             x-data="{ show: @entangle('showModalConfirmacion') }"
+             x-show="show"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+                 @click.away="$wire.closeModalConfirmacion()"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Confirmar Traslado</h2>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <p class="text-sm text-gray-600">Bodega Origen:</p>
+                            <p class="font-semibold">{{ $selectedOrigen['nombre'] ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Bodega Destino:</p>
+                            <p class="font-semibold">{{ $selectedDestino['nombre'] ?? 'N/A' }}</p>
+                        </div>
+                        @if($correlativo)
+                        <div>
+                            <p class="text-sm text-gray-600">Correlativo:</p>
+                            <p class="font-semibold">{{ $correlativo }}</p>
+                        </div>
+                        @endif
+                        <div>
+                            <p class="text-sm text-gray-600">Estado:</p>
+                            <p class="font-semibold text-yellow-600">Pendiente</p>
+                        </div>
+                    </div>
+
+                    @if($observaciones)
+                    <div class="mb-6">
+                        <p class="text-sm text-gray-600">Observaciones:</p>
+                        <p class="font-semibold">{{ $observaciones }}</p>
+                    </div>
+                    @endif
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Productos</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 text-left text-sm">Código</th>
+                                        <th class="py-2 px-4 text-left text-sm">Descripción</th>
+                                        <th class="py-2 px-4 text-right text-sm">Cantidad</th>
+                                        <th class="py-2 px-4 text-right text-sm">Precio Unit.</th>
+                                        <th class="py-2 px-4 text-right text-sm">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($productosSeleccionados as $producto)
+                                        <tr class="border-b">
+                                            <td class="py-2 px-4 text-sm font-mono">#{{ $producto['id'] }}</td>
+                                            <td class="py-2 px-4 text-sm">{{ $producto['descripcion'] }}</td>
+                                            <td class="py-2 px-4 text-sm text-right">{{ $producto['cantidad'] }}</td>
+                                            <td class="py-2 px-4 text-sm text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
+                                            <td class="py-2 px-4 text-sm text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                    <tr class="bg-gray-50 font-bold">
+                                        <td colspan="4" class="py-3 px-4 text-right text-gray-800">TOTAL:</td>
+                                        <td class="py-3 px-4 text-right text-lg text-blue-600">Q{{ number_format((float)$this->subtotal, 2) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-4">
+                        <button
+                            type="button"
+                            wire:click="closeModalConfirmacion"
+                            class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold">
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="guardarTraslado"
+                            wire:loading.attr="disabled"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50">
+                            <span wire:loading.remove wire:target="guardarTraslado">Confirmar Traslado</span>
+                            <span wire:loading wire:target="guardarTraslado">Procesando...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
