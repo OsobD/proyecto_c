@@ -61,6 +61,11 @@ class GestionUsuarios extends Component
     public $showRolDropdown = false;
     public $selectedRol = null;
 
+    // Propiedades para filtro de rol mejorado
+    public $searchFilterRol = '';
+    public $showFilterRolDropdown = false;
+    public $selectedFilterRol = null;
+
     protected $paginationTheme = 'tailwind';
 
     /**
@@ -189,6 +194,53 @@ class GestionUsuarios extends Component
     {
         $this->selectedRol = null;
         $this->rolId = '';
+    }
+
+    /**
+     * Obtiene los roles filtrados para el filtro de búsqueda
+     */
+    public function getFilterRolResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchFilterRol)) {
+            return $roles;
+        }
+
+        $search = strtolower(trim($this->searchFilterRol));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol del filtro de búsqueda
+     */
+    public function selectFilterRol($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedFilterRol = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->filterRol = $rol->id;
+            $this->showFilterRolDropdown = false;
+            $this->searchFilterRol = '';
+            $this->resetPage(); // Resetear paginación al filtrar
+        }
+    }
+
+    /**
+     * Limpia la selección del filtro de rol
+     */
+    public function clearFilterRol()
+    {
+        $this->selectedFilterRol = null;
+        $this->filterRol = '';
+        $this->searchFilterRol = '';
+        $this->resetPage(); // Resetear paginación al limpiar filtro
     }
 
     /**
