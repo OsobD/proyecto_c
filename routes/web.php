@@ -41,7 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/traslados/nuevo', \App\Livewire\FormularioTraslado::class)->name('traslados.nuevo');
     Route::get('/traslados/historial', \App\Livewire\HistorialTraslados::class)->name('traslados.historial');
     Route::get('/requisiciones', \App\Livewire\FormularioRequisicion::class)->name('requisiciones');
+
+    // Rutas de Devoluciones
     Route::get('/devoluciones', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');
+    Route::get('/devoluciones/historial', \App\Livewire\HistorialDevoluciones::class)->name('devoluciones.historial');
 
     // Rutas de Productos
     Route::get('/productos', \App\Livewire\GestionProductos::class)->name('productos');

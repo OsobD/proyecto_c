@@ -10,7 +10,9 @@
       "Bash(docker-compose exec:*)",
       "Bash(tasklist:*)",
       "Bash(findstr:*)",
-      "Bash(wmic process:*)"
+      "Bash(wmic process:*)",
+      "Bash(php -l:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

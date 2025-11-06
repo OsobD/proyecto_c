@@ -18,7 +18,12 @@ class Producto extends Model
         'id',
         'descripcion',
         'id_categoria',
+        'es_consumible',
         'activo'
+    ];
+
+    protected $casts = [
+        'es_consumible' => 'boolean',
     ];
 
     public $timestamps = false;

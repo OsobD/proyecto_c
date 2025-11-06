@@ -14,11 +14,16 @@ class Traslado extends Model
     protected $fillable = [
         'fecha',
         'no_requisicion',
+        'correlativo',
+        'estado',
         'total',
         'descripcion',
+        'observaciones',
         'id_usuario',
-        'id_bodega',
+        'id_bodega_origen',
+        'id_bodega_destino',
         'id_tarjeta',
+        'activo',
     ];
 
     protected $casts = [
@@ -34,9 +39,20 @@ class Traslado extends Model
         return $this->belongsTo(Usuario::class, 'id_usuario');
     }
 
+    public function bodegaOrigen()
+    {
+        return $this->belongsTo(Bodega::class, 'id_bodega_origen');
+    }
+
+    public function bodegaDestino()
+    {
+        return $this->belongsTo(Bodega::class, 'id_bodega_destino');
+    }
+
+    // Alias para compatibilidad con código legacy
     public function bodega()
     {
-        return $this->belongsTo(Bodega::class, 'id_bodega');
+        return $this->bodegaOrigen();
     }
 
     public function tarjetaProducto()
@@ -47,6 +63,12 @@ class Traslado extends Model
     public function detalles()
     {
         return $this->hasMany(DetalleTraslado::class, 'id_traslado');
+    }
+
+    // Alias para compatibilidad
+    public function detallesTraslado()
+    {
+        return $this->detalles();
     }
 
     public function devoluciones()
