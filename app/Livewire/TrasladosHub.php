@@ -133,7 +133,7 @@ class TrasladosHub extends Component
             });
 
         // Obtener devoluciones recientes
-        $devolucionesRecientes = Devolucion::with(['bodega', 'persona', 'detallesDevolucion.producto'])
+        $devolucionesRecientes = Devolucion::with(['bodega', 'detalles.producto'])
             ->orderBy('fecha', 'desc')
             ->limit(3)
             ->get()
@@ -142,13 +142,12 @@ class TrasladosHub extends Component
                     'id' => $devolucion->id,
                     'tipo' => 'Devolución',
                     'tipo_clase' => 'devolucion',
-                    'correlativo' => $devolucion->numero_documento ?? 'DEV-' . $devolucion->id,
-                    'origen' => $devolucion->persona ?
-                        trim($devolucion->persona->nombres . ' ' . $devolucion->persona->apellidos) : 'N/A',
+                    'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                    'origen' => 'Devolución',
                     'destino' => $devolucion->bodega->nombre ?? 'N/A',
                     'fecha' => $devolucion->fecha->format('Y-m-d'),
                     'total' => $devolucion->total,
-                    'productos_count' => $devolucion->detallesDevolucion->count(),
+                    'productos_count' => $devolucion->detalles->count(),
                     'estado' => 'Completado',
                     'activo' => true,
                 ];
@@ -226,25 +225,25 @@ class TrasladosHub extends Component
                     break;
 
                 case 'devolucion':
-                    $devolucion = Devolucion::with(['bodega', 'persona', 'detallesDevolucion.producto'])
+                    $devolucion = Devolucion::with(['bodega', 'detalles.producto', 'detalles.lote'])
                         ->findOrFail($id);
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
-                        'correlativo' => $devolucion->numero_documento ?? 'DEV-' . $devolucion->id,
-                        'origen' => $devolucion->persona ?
-                            trim($devolucion->persona->nombres . ' ' . $devolucion->persona->apellidos) : 'N/A',
+                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                        'origen' => 'Devolución',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'fecha' => $devolucion->fecha->format('d/m/Y'),
                         'total' => $devolucion->total,
-                        'observaciones' => $devolucion->descripcion,
-                        'productos' => $devolucion->detallesDevolucion->map(function($detalle) {
+                        'observaciones' => '',
+                        'productos' => $devolucion->detalles->map(function($detalle) {
+                            $precio = $detalle->lote ? $detalle->lote->precio_ingreso : 0;
                             return [
                                 'codigo' => $detalle->producto->id,
                                 'descripcion' => $detalle->producto->descripcion,
                                 'cantidad' => $detalle->cantidad,
-                                'precio' => $detalle->precio_devolucion,
-                                'subtotal' => $detalle->cantidad * $detalle->precio_devolucion,
+                                'precio' => $precio,
+                                'subtotal' => $detalle->cantidad * $precio,
                             ];
                         })->toArray(),
                     ];

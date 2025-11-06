@@ -26,7 +26,7 @@ class ComprasHub extends Component
 
     /** @var array Listado de compras recientes */
     public $comprasRecientes = [];
-
+    
     /** @var bool Controla visibilidad del modal de visualización */
     public $showModalVer = false;
 

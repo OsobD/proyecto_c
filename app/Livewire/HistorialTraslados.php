@@ -169,15 +169,12 @@ class HistorialTraslados extends Component
 
         // Cargar Devoluciones
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Devolución') {
-            $devoluciones = Devolucion::with(['bodega', 'persona', 'detallesDevolucion', 'usuario'])
+            $devoluciones = Devolucion::with(['bodega', 'detalles', 'usuario'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
-                        $query->where('numero_documento', 'like', '%' . $this->search . '%')
+                        $query->where('no_formulario', 'like', '%' . $this->search . '%')
                             ->orWhereHas('bodega', function($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
-                            })
-                            ->orWhereHas('persona', function($q) {
-                                $q->whereRaw("CONCAT(nombres, ' ', apellidos) like ?", ['%' . $this->search . '%']);
                             });
                     });
                 })
@@ -194,14 +191,13 @@ class HistorialTraslados extends Component
                         'id' => $devolucion->id,
                         'tipo' => 'Devolución',
                         'tipo_clase' => 'devolucion',
-                        'correlativo' => $devolucion->numero_documento ?? 'DEV-' . $devolucion->id,
-                        'origen' => $devolucion->persona ?
-                            trim($devolucion->persona->nombres . ' ' . $devolucion->persona->apellidos) : 'N/A',
+                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                        'origen' => 'Devolución',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'usuario' => $devolucion->usuario ? $devolucion->usuario->name : 'Sistema',
                         'fecha' => $devolucion->fecha->format('Y-m-d'),
                         'total' => $devolucion->total,
-                        'productos_count' => $devolucion->detallesDevolucion->count(),
+                        'productos_count' => $devolucion->detalles->count(),
                         'estado' => 'Completado',
                         'activo' => true,
                     ];
@@ -282,25 +278,25 @@ class HistorialTraslados extends Component
                     break;
 
                 case 'devolucion':
-                    $devolucion = Devolucion::with(['bodega', 'persona', 'detallesDevolucion.producto'])
+                    $devolucion = Devolucion::with(['bodega', 'detalles.producto', 'detalles.lote'])
                         ->findOrFail($id);
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
-                        'correlativo' => $devolucion->numero_documento ?? 'DEV-' . $devolucion->id,
-                        'origen' => $devolucion->persona ?
-                            trim($devolucion->persona->nombres . ' ' . $devolucion->persona->apellidos) : 'N/A',
+                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                        'origen' => 'Devolución',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'fecha' => $devolucion->fecha->format('d/m/Y'),
                         'total' => $devolucion->total,
-                        'observaciones' => $devolucion->descripcion,
-                        'productos' => $devolucion->detallesDevolucion->map(function($detalle) {
+                        'observaciones' => '',
+                        'productos' => $devolucion->detalles->map(function($detalle) {
+                            $precio = $detalle->lote ? $detalle->lote->precio_ingreso : 0;
                             return [
                                 'codigo' => $detalle->producto->id,
                                 'descripcion' => $detalle->producto->descripcion,
                                 'cantidad' => $detalle->cantidad,
-                                'precio' => $detalle->precio_devolucion,
-                                'subtotal' => $detalle->cantidad * $detalle->precio_devolucion,
+                                'precio' => $precio,
+                                'subtotal' => $detalle->cantidad * $precio,
                             ];
                         })->toArray(),
                     ];

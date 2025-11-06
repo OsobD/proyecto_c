@@ -16,12 +16,10 @@ class DetalleDevolucion extends Model
         'id_producto',
         'id_lote',
         'cantidad',
-        'estado_producto',
-        'precio_unitario',
     ];
 
     protected $casts = [
-        'precio_unitario' => 'decimal:2',
+        'cantidad' => 'integer',
     ];
 
     public $timestamps = false;

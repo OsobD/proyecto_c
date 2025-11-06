@@ -65,7 +65,8 @@ CREATE TABLE `tarjeta_producto` (
 CREATE TABLE `producto` (
   `id` varchar(255) PRIMARY KEY,
   `descripcion` varchar(255),
-  `id_categoria` int
+  `id_categoria` int,
+  `es_consumible` bool
 );
 
 CREATE TABLE `categoria` (
@@ -240,11 +241,11 @@ CREATE TABLE `kardex` (
 CREATE TABLE `detalle` (
   `id` int PRIMARY KEY,
   `id_tipo` int,
-  `id_det_compra` null,
-  `id_det_entrada` null,
-  `id_det_devolucion` null,
-  `id_det_traslado` null,
-  `id_det_salida` null
+  `id_det_compra` int,
+  `id_det_entrada` int,
+  `id_det_devolucion` int,
+  `id_det_traslado` int,
+  `id_det_salida` int
 );
 
 ALTER TABLE `usuario` ADD FOREIGN KEY (`id_persona`) REFERENCES `persona` (`id`);
