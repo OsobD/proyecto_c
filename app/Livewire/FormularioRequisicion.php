@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\DetalleSalida;
+use App\Models\DetalleTraslado;
 use App\Models\Lote;
 use App\Models\Persona;
 use App\Models\Producto;
@@ -14,6 +15,7 @@ use App\Models\TarjetaResponsabilidad;
 use App\Models\TipoSalida;
 use App\Models\TipoTransaccion;
 use App\Models\Transaccion;
+use App\Models\Traslado;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -177,6 +179,7 @@ class FormularioRequisicion extends Component
             return [
                 'id' => $producto->id,
                 'descripcion' => $producto->descripcion,
+                'es_consumible' => (bool)$producto->es_consumible,
                 'categoria' => $producto->categoria->nombre ?? '',
                 'cantidad_disponible' => $cantidadTotal,
                 'precio' => $precioPromedio,
@@ -318,6 +321,7 @@ class FormularioRequisicion extends Component
             $this->productosSeleccionados[] = [
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
+                'es_consumible' => (bool)($producto['es_consumible'] ?? false),
                 'precio' => (float) $producto['precio'],
                 'cantidad' => 1,
                 'cantidad_disponible' => (int) $producto['cantidad_disponible'],
@@ -369,7 +373,9 @@ class FormularioRequisicion extends Component
     public function getSubtotalProperty()
     {
         return collect($this->productosSeleccionados)->sum(function ($producto) {
-            return $producto['cantidad'] * $producto['precio'];
+            $cantidad = (float)($producto['cantidad'] ?? 0);
+            $precio = (float)($producto['precio'] ?? 0);
+            return $cantidad * $precio;
         });
     }
 
@@ -393,6 +399,18 @@ class FormularioRequisicion extends Component
             'productosSeleccionados.required' => 'Debe agregar al menos un producto.',
             'productosSeleccionados.min' => 'Debe agregar al menos un producto.',
         ]);
+
+        // Validar correlativo único si se proporcionó
+        if (!empty($this->correlativo)) {
+            $correlativoExiste = Salida::where('ubicacion', $this->correlativo)->exists() ||
+                                 Traslado::where('correlativo', $this->correlativo)->exists() ||
+                                 Traslado::where('no_requisicion', $this->correlativo)->exists();
+
+            if ($correlativoExiste) {
+                $this->addError('correlativo', "El correlativo '{$this->correlativo}' ya está en uso. Por favor, utilice uno diferente.");
+                return;
+            }
+        }
 
         // Validar que el destino tenga tarjeta activa
         if (!$this->selectedDestino['tiene_tarjeta']) {
@@ -429,113 +447,130 @@ class FormularioRequisicion extends Component
      */
     public function guardarRequisicion()
     {
-
         try {
             DB::beginTransaction();
 
-            // Obtener tipo de salida "Salida por Uso Interno"
-            $tipoSalida = TipoSalida::where('nombre', 'Salida por Uso Interno')->first();
-            if (!$tipoSalida) {
-                throw new \Exception('No se encontró el tipo de salida "Salida por Uso Interno".');
+            // Validar que el correlativo no esté duplicado en salidas o traslados
+            $correlativoExiste = Salida::where('ubicacion', $this->correlativo)->exists() ||
+                                 Traslado::where('correlativo', $this->correlativo)->exists() ||
+                                 Traslado::where('no_requisicion', $this->correlativo)->exists();
+
+            if ($correlativoExiste) {
+                throw new \Exception("El correlativo '{$this->correlativo}' ya está en uso. Por favor, utilice uno diferente.");
             }
 
-            // Obtener tipo de transacción "Salida"
-            $tipoTransaccion = TipoTransaccion::where('nombre', 'Salida')->first();
-            if (!$tipoTransaccion) {
-                throw new \Exception('No se encontró el tipo de transacción "Salida".');
+            // Obtener ID de usuario
+            $userId = auth()->check() ? auth()->id() : 1;
+
+            // Obtener o crear tarjeta de responsabilidad para la persona
+            $tarjeta = TarjetaResponsabilidad::firstOrCreate(
+                [
+                    'id_persona' => $this->selectedDestino['persona_id'],
+                    'activo' => true,
+                ],
+                [
+                    'fecha_creacion' => now(),
+                    'total' => 0,
+                ]
+            );
+
+            // Separar productos por tipo
+            $productosConsumibles = collect($this->productosSeleccionados)->filter(fn($p) => $p['es_consumible'] ?? false);
+            $productosNoConsumibles = collect($this->productosSeleccionados)->filter(fn($p) => !($p['es_consumible'] ?? false));
+
+            $registrosCreados = [];
+
+            // ============ PROCESAR PRODUCTOS CONSUMIBLES (TRASLADO) ============
+            if ($productosConsumibles->isNotEmpty()) {
+                // Obtener tipo de transacción "Traslado"
+                $tipoTraslado = TipoTransaccion::where('nombre', 'Traslado')->first();
+
+                // Crear traslado para productos consumibles
+                $traslado = Traslado::create([
+                    'fecha' => now(),
+                    'correlativo' => $this->correlativo,
+                    'no_requisicion' => $this->correlativo,
+                    'total' => $productosConsumibles->sum(fn($p) => $p['cantidad'] * $p['precio']),
+                    'descripcion' => 'Requisición de productos consumibles',
+                    'observaciones' => $this->observaciones,
+                    'estado' => 'Completado',
+                    'activo' => true,
+                    'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
+                    'id_bodega_destino' => $this->selectedOrigen['bodega_id'], // Misma bodega (salida lógica)
+                    'id_usuario' => $userId,
+                    'id_tarjeta' => $tarjeta->id, // Asociar con la persona pero no agregar a tarjeta
+                ]);
+
+                $registrosCreados[] = ['tipo' => 'Traslado', 'id' => $traslado->id];
+
+                // Procesar cada producto consumible
+                foreach ($productosConsumibles as $producto) {
+                    $this->procesarProductoConsumible($producto, $traslado, $tipoTraslado);
+                }
             }
 
-            // Obtener ID de usuario (si no está autenticado, usar NULL o un valor predeterminado)
-            $userId = auth()->check() ? auth()->id() : 1; // ID 1 como usuario por defecto si no hay autenticación
+            // ============ PROCESAR PRODUCTOS NO CONSUMIBLES (SALIDA) ============
+            if ($productosNoConsumibles->isNotEmpty()) {
+                // Obtener tipo de salida y transacción
+                $tipoSalida = TipoSalida::where('nombre', 'Salida por Uso Interno')->first();
+                $tipoTransaccionSalida = TipoTransaccion::where('nombre', 'Salida')->first();
 
-            // Crear el registro de salida
-            $salida = Salida::create([
-                'fecha' => now(),
-                'total' => $this->subtotal,
-                'descripcion' => $this->observaciones ?? 'Requisición de productos',
-                'ubicacion' => $this->correlativo,
-                'id_usuario' => $userId,
-                'id_tarjeta' => null, // Se usará en detalle con TarjetaProducto
-                'id_bodega' => $this->selectedOrigen['bodega_id'],
-                'id_tipo' => $tipoSalida->id,
-                'id_persona' => $this->selectedDestino['persona_id'],
-            ]);
+                if (!$tipoSalida) {
+                    throw new \Exception('No se encontró el tipo de salida "Salida por Uso Interno".');
+                }
 
-            // Crear transacción
-            $transaccion = Transaccion::create([
-                'id_tipo' => $tipoTransaccion->id,
-                'id_salida' => $salida->id,
-            ]);
+                // Crear salida para productos no consumibles
+                $salida = Salida::create([
+                    'fecha' => now(),
+                    'total' => $productosNoConsumibles->sum(fn($p) => $p['cantidad'] * $p['precio']),
+                    'descripcion' => 'Requisición de productos no consumibles',
+                    'ubicacion' => $this->correlativo,
+                    'id_usuario' => $userId,
+                    'id_tarjeta' => null,
+                    'id_bodega' => $this->selectedOrigen['bodega_id'],
+                    'id_tipo' => $tipoSalida->id,
+                    'id_persona' => $this->selectedDestino['persona_id'],
+                ]);
 
-            // Procesar cada producto
-            foreach ($this->productosSeleccionados as $producto) {
-                $cantidadRestante = $producto['cantidad'];
-                $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
+                $registrosCreados[] = ['tipo' => 'Salida', 'id' => $salida->id];
 
-                foreach ($lotes as $lote) {
-                    if ($cantidadRestante <= 0) {
-                        break;
-                    }
-
-                    $loteModel = Lote::find($lote['id']);
-                    if (!$loteModel || $loteModel->cantidad <= 0) {
-                        continue;
-                    }
-
-                    // Calcular cantidad a tomar de este lote
-                    $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
-
-                    // Crear detalle de salida
-                    DetalleSalida::create([
+                // Crear transacción
+                if ($tipoTransaccionSalida) {
+                    Transaccion::create([
+                        'id_tipo' => $tipoTransaccionSalida->id,
                         'id_salida' => $salida->id,
-                        'id_producto' => $producto['id'],
-                        'id_lote' => $loteModel->id,
-                        'cantidad' => $cantidadDelLote,
-                        'precio_salida' => $loteModel->precio_ingreso,
                     ]);
-
-                    // Actualizar cantidad del lote
-                    $loteModel->cantidad -= $cantidadDelLote;
-                    $loteModel->save();
-
-                    // Crear asignación en tarjeta de responsabilidad
-                    TarjetaProducto::create([
-                        'precio_asignacion' => $loteModel->precio_ingreso,
-                        'id_tarjeta' => $this->selectedDestino['tarjeta_id'],
-                        'id_producto' => $producto['id'],
-                        'id_lote' => $loteModel->id,
-                    ]);
-
-                    $cantidadRestante -= $cantidadDelLote;
                 }
 
-                // Validar que se pudo procesar toda la cantidad
-                if ($cantidadRestante > 0) {
-                    throw new \Exception("No hay suficiente stock disponible para el producto: {$producto['descripcion']}");
+                // Procesar cada producto no consumible
+                $totalTarjeta = 0;
+                foreach ($productosNoConsumibles as $producto) {
+                    $totalTarjeta += $this->procesarProductoNoConsumible($producto, $salida, $tarjeta);
                 }
-            }
 
-            // Actualizar total de la tarjeta de responsabilidad
-            $tarjeta = TarjetaResponsabilidad::find($this->selectedDestino['tarjeta_id']);
-            if ($tarjeta) {
-                $tarjeta->total += $this->subtotal;
+                // Actualizar total de la tarjeta
+                $tarjeta->total += $totalTarjeta;
                 $tarjeta->save();
             }
 
             // Registrar en bitácora
             $userName = auth()->check() && auth()->user() ? auth()->user()->name : 'Sistema';
+            $detalleRegistros = collect($registrosCreados)->map(fn($r) => "{$r['tipo']} #{$r['id']}")->join(', ');
+
             Bitacora::create([
                 'accion' => 'crear',
-                'modelo' => 'Salida',
-                'modelo_id' => $salida->id,
-                'descripcion' => $userName . " creó Requisición #{$salida->id} desde bodega '{$this->selectedOrigen['nombre']}' hacia '{$this->selectedDestino['nombre']}'",
+                'modelo' => 'Requisicion',
+                'modelo_id' => null,
+                'descripcion' => $userName . " creó Requisición desde bodega '{$this->selectedOrigen['nombre']}' hacia '{$this->selectedDestino['nombre']}'. Registros: {$detalleRegistros}",
                 'datos_anteriores' => null,
                 'datos_nuevos' => json_encode([
-                    'id_salida' => $salida->id,
+                    'registros' => $registrosCreados,
                     'bodega' => $this->selectedOrigen['nombre'],
                     'persona' => $this->selectedDestino['nombre'],
                     'total' => $this->subtotal,
                     'correlativo' => $this->correlativo,
+                    'consumibles' => $productosConsumibles->count(),
+                    'no_consumibles' => $productosNoConsumibles->count(),
                 ]),
                 'id_usuario' => $userId,
                 'ip_address' => request()->ip(),
@@ -548,7 +583,9 @@ class FormularioRequisicion extends Component
             // Cerrar modal
             $this->showModalConfirmacion = false;
 
-            session()->flash('success', 'Requisición registrada exitosamente.');
+            session()->flash('success', 'Requisición registrada exitosamente. ' .
+                ($productosConsumibles->isNotEmpty() ? $productosConsumibles->count() . ' consumibles en Traslado. ' : '') .
+                ($productosNoConsumibles->isNotEmpty() ? $productosNoConsumibles->count() . ' no consumibles en Salida.' : ''));
 
             // Limpiar formulario
             $this->reset([
@@ -562,12 +599,10 @@ class FormularioRequisicion extends Component
                 'searchProducto'
             ]);
 
-            // Redirigir al hub de traslados
             return redirect()->route('traslados');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Log del error para debugging
             \Log::error('Error al registrar requisición: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
@@ -575,6 +610,106 @@ class FormularioRequisicion extends Component
 
             session()->flash('error', 'Error al registrar la requisición: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Procesa un producto consumible (va a Traslado)
+     */
+    private function procesarProductoConsumible($producto, $traslado, $tipoTraslado)
+    {
+        $cantidadRestante = $producto['cantidad'];
+        $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
+
+        foreach ($lotes as $lote) {
+            if ($cantidadRestante <= 0) break;
+
+            $loteModel = Lote::find($lote['id']);
+            if (!$loteModel || $loteModel->cantidad <= 0) continue;
+
+            $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+
+            // Crear detalle de traslado
+            DetalleTraslado::create([
+                'id_traslado' => $traslado->id,
+                'id_producto' => $producto['id'],
+                'cantidad' => $cantidadDelLote,
+                'id_lote' => $loteModel->id,
+                'precio_traslado' => $loteModel->precio_ingreso,
+            ]);
+
+            // Actualizar cantidad del lote (salida)
+            $loteModel->cantidad -= $cantidadDelLote;
+            $loteModel->save();
+
+            // Crear transacción de salida
+            if ($tipoTraslado) {
+                Transaccion::create([
+                    'fecha' => now(),
+                    'tipo' => 'Salida',
+                    'descripcion' => "Requisición consumible - {$producto['descripcion']}",
+                    'cantidad' => $cantidadDelLote,
+                    'id_lote' => $loteModel->id,
+                    'id_tipo_transaccion' => $tipoTraslado->id,
+                    'id_traslado' => $traslado->id,
+                ]);
+            }
+
+            $cantidadRestante -= $cantidadDelLote;
+        }
+
+        if ($cantidadRestante > 0) {
+            throw new \Exception("No hay suficiente stock disponible para el producto: {$producto['descripcion']}");
+        }
+    }
+
+    /**
+     * Procesa un producto no consumible (va a Salida + TarjetaProducto)
+     */
+    private function procesarProductoNoConsumible($producto, $salida, $tarjeta)
+    {
+        $cantidadRestante = $producto['cantidad'];
+        $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
+        $totalPrecio = 0;
+
+        foreach ($lotes as $lote) {
+            if ($cantidadRestante <= 0) break;
+
+            $loteModel = Lote::find($lote['id']);
+            if (!$loteModel || $loteModel->cantidad <= 0) continue;
+
+            $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+
+            // Crear detalle de salida
+            DetalleSalida::create([
+                'id_salida' => $salida->id,
+                'id_producto' => $producto['id'],
+                'id_lote' => $loteModel->id,
+                'cantidad' => $cantidadDelLote,
+                'precio_salida' => $loteModel->precio_ingreso,
+            ]);
+
+            // Actualizar cantidad del lote
+            $loteModel->cantidad -= $cantidadDelLote;
+            $loteModel->save();
+
+            // Crear asignación en tarjeta de responsabilidad
+            $precioAsignacion = $loteModel->precio_ingreso * $cantidadDelLote;
+            TarjetaProducto::create([
+                'precio_asignacion' => $precioAsignacion,
+                'id_tarjeta' => $tarjeta->id,
+                'id_producto' => $producto['id'],
+                'id_lote' => $loteModel->id,
+            ]);
+
+            $totalPrecio += $precioAsignacion;
+            $cantidadRestante -= $cantidadDelLote;
+        }
+
+        if ($cantidadRestante > 0) {
+            throw new \Exception("No hay suficiente stock disponible para el producto: {$producto['descripcion']}");
+        }
+
+        return $totalPrecio;
     }
 
     /**

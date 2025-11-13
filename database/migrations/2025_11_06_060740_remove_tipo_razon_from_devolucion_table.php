@@ -11,19 +11,41 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('devolucion', function (Blueprint $table) {
-            // Eliminar foreign keys primero
-            $table->dropForeign(['id_tipo_devolucion']);
-            $table->dropForeign(['id_razon_devolucion']);
+        // Verificar si las columnas existen antes de intentar eliminarlas
+        if (Schema::hasColumn('devolucion', 'id_tipo_devolucion') || Schema::hasColumn('devolucion', 'id_razon_devolucion')) {
+            Schema::table('devolucion', function (Blueprint $table) {
+                // Eliminar foreign keys primero si existen
+                $foreignKeys = Schema::getConnection()
+                    ->getDoctrineSchemaManager()
+                    ->listTableForeignKeys('devolucion');
 
-            // Eliminar columnas
-            $table->dropColumn(['id_tipo_devolucion', 'id_razon_devolucion']);
-        });
+                foreach ($foreignKeys as $foreignKey) {
+                    if (in_array($foreignKey->getName(), ['devolucion_id_tipo_devolucion_foreign', 'devolucion_id_razon_devolucion_foreign'])) {
+                        $table->dropForeign($foreignKey->getName());
+                    }
+                }
 
-        // Eliminar columnas de detalle_devolucion
-        Schema::table('detalle_devolucion', function (Blueprint $table) {
-            $table->dropColumn(['estado_producto', 'precio_unitario']);
-        });
+                // Eliminar columnas si existen
+                if (Schema::hasColumn('devolucion', 'id_tipo_devolucion')) {
+                    $table->dropColumn('id_tipo_devolucion');
+                }
+                if (Schema::hasColumn('devolucion', 'id_razon_devolucion')) {
+                    $table->dropColumn('id_razon_devolucion');
+                }
+            });
+        }
+
+        // Eliminar columnas de detalle_devolucion si existen
+        if (Schema::hasColumn('detalle_devolucion', 'estado_producto') || Schema::hasColumn('detalle_devolucion', 'precio_unitario')) {
+            Schema::table('detalle_devolucion', function (Blueprint $table) {
+                if (Schema::hasColumn('detalle_devolucion', 'estado_producto')) {
+                    $table->dropColumn('estado_producto');
+                }
+                if (Schema::hasColumn('detalle_devolucion', 'precio_unitario')) {
+                    $table->dropColumn('precio_unitario');
+                }
+            });
+        }
 
         // Eliminar tablas
         Schema::dropIfExists('tipo_devolucion');

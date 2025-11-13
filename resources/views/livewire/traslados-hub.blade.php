@@ -132,11 +132,28 @@
             </a>
         </div>
 
+        {{-- Leyenda --}}
+        <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 flex gap-6 text-sm">
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    No Consumibles
+                </span>
+                <span class="text-gray-600">Se agregan a tarjeta de responsabilidad</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                    Consumibles
+                </span>
+                <span class="text-gray-600">Solo registro de retiro (sin tarjeta)</span>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
                         <th class="py-3 px-6 text-left">Tipo</th>
+                        <th class="py-3 px-6 text-left">Productos</th>
                         <th class="py-3 px-6 text-left">Correlativo</th>
                         <th class="py-3 px-6 text-left">Origen</th>
                         <th class="py-3 px-6 text-left">Destino</th>
@@ -160,6 +177,13 @@
                                 @else
                                     <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
                                         Devolución
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                @if(isset($traslado['tipo_badge']) && isset($traslado['tipo_color']))
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $traslado['tipo_color'] }}-100 text-{{ $traslado['tipo_color'] }}-800">
+                                        {{ $traslado['tipo_badge'] }}
                                     </span>
                                 @endif
                             </td>
@@ -261,6 +285,7 @@
                                     <tr>
                                         <th class="py-2 px-3 text-left">Código</th>
                                         <th class="py-2 px-3 text-left">Descripción</th>
+                                        <th class="py-2 px-3 text-center">Tipo</th>
                                         <th class="py-2 px-3 text-center">Cantidad</th>
                                         <th class="py-2 px-3 text-right">Precio Unit.</th>
                                         <th class="py-2 px-3 text-right">Subtotal</th>
@@ -272,6 +297,19 @@
                                             <tr class="border-t hover:bg-gray-50">
                                                 <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                                 <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
+                                                <td class="py-2 px-3 text-center">
+                                                    @if(isset($producto['es_consumible']))
+                                                        @if($producto['es_consumible'])
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                                Consumible
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                No Consumible
+                                                            </span>
+                                                        @endif
+                                                    @endif
+                                                </td>
                                                 <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
                                                 <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
                                                 <td class="py-2 px-3 text-right font-semibold">Q{{ number_format($producto['subtotal'], 2) }}</td>
@@ -279,7 +317,7 @@
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en este movimiento</td>
+                                            <td colspan="6" class="py-4 text-center text-gray-500">No hay productos en este movimiento</td>
                                         </tr>
                                     @endif
                                 </tbody>

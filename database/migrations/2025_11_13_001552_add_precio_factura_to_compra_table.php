@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('producto', 'es_consumible')) {
-            Schema::table('producto', function (Blueprint $table) {
-                $table->boolean('es_consumible')->default(false)->after('id_categoria');
-            });
-        }
+        Schema::table('compra', function (Blueprint $table) {
+            $table->double('precio_factura')->nullable()->after('total')->comment('Precio total según factura física para verificación');
+        });
     }
 
     /**
@@ -23,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('producto', function (Blueprint $table) {
-            $table->dropColumn('es_consumible');
+        Schema::table('compra', function (Blueprint $table) {
+            $table->dropColumn('precio_factura');
         });
     }
 };

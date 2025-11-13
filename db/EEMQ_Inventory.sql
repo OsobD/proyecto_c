@@ -2,6 +2,7 @@ CREATE TABLE `persona` (
   `id` int PRIMARY KEY,
   `nombres` varchar(255),
   `apellidos` varchar(255),
+  `dpi` int,
   `telefono` varchar(255),
   `correo` varchar(255),
   `fecha_nacimiento` date,
@@ -121,15 +122,17 @@ CREATE TABLE `proveedor` (
 );
 
 CREATE TABLE `compra` (
-  `id` int PRIMARY KEY,
+  `id` int PRIMARY KEY AUTO_INCREMENT,
   `fecha` datetime,
-  `no_serie` varchar(255),
   `no_factura` varchar(255),
-  `correltivo` int,
+  `no_serie` varchar(255),
+  `correlativo` int,
   `total` double,
+  `precio_factura` double COMMENT 'Precio total según factura física para verificación',
   `id_proveedor` int,
   `id_bodega` int,
-  `id_usuario` int
+  `id_usuario` int,
+  `activo` bool DEFAULT true
 );
 
 CREATE TABLE `detalle_compra` (

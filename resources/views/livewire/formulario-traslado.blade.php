@@ -100,6 +100,46 @@
                     </div>
                 </div>
 
+                {{-- Selección de Persona Responsable --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Persona Responsable:</label>
+                    <div class="relative">
+                        @if($selectedPersona)
+                            <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                                <span>{{ $selectedPersona['nombre_completo'] }}</span>
+                                <button type="button" wire:click.prevent="clearPersona" class="text-gray-400 hover:text-gray-600">
+                                    ×
+                                </button>
+                            </div>
+                        @else
+                            <div class="relative" x-data="{ open: @entangle('showPersonaDropdown') }" @click.outside="open = false">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.300ms="searchPersona"
+                                    @click="open = true"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
+                                    placeholder="Buscar persona responsable..."
+                                >
+                                <div x-show="open"
+                                     x-transition
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                    <ul>
+                                        @foreach ($this->personaResults as $result)
+                                            <li wire:click.prevent="selectPersona({{ $result['id'] }}, '{{ $result['nombre_completo'] }}')"
+                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                {{ $result['nombre_completo'] }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Los productos no consumibles se asignarán a la tarjeta de responsabilidad de esta persona
+                    </p>
+                </div>
+
             </div>
 
             {{-- Correlativo --}}
@@ -175,6 +215,7 @@
                             <tr>
                                 <th class="py-3 px-6 text-left">Código</th>
                                 <th class="py-3 px-6 text-left">Descripción</th>
+                                <th class="py-3 px-6 text-center">Tipo</th>
                                 <th class="py-3 px-6 text-right">Precio Unit.</th>
                                 <th class="py-3 px-6 text-center">Cantidad</th>
                                 <th class="py-3 px-6 text-right">Total</th>
@@ -183,11 +224,22 @@
                         </thead>
                         <tbody class="text-gray-600 text-sm font-light">
                             @foreach($productosSeleccionados as $index => $producto)
-                                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
                                     <td class="py-3 px-6 text-left font-mono">#{{ $producto['id'] }}</td>
                                     <td class="py-3 px-6 text-left">
                                         {{ $producto['descripcion'] }}
                                         <span class="text-xs text-gray-500">(Disponible: {{ $producto['cantidad_disponible'] }})</span>
+                                    </td>
+                                    <td class="py-3 px-6 text-center">
+                                        @if($producto['es_consumible'] ?? false)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                Consumible
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                No Consumible
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="py-3 px-6 text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
@@ -213,7 +265,7 @@
                             @endforeach
                             @if(count($productosSeleccionados) > 0)
                                 <tr class="bg-gray-100 font-bold">
-                                    <td colspan="4" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
+                                    <td colspan="5" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
                                     <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format((float)$this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
@@ -221,6 +273,20 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Leyenda de tipos de productos --}}
+                @if(count($productosSeleccionados) > 0)
+                    <div class="mt-4 flex gap-4 text-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
+                            <span class="text-gray-700">No Consumible: Se asigna a tarjeta de responsabilidad</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-amber-100 border border-amber-300 rounded"></div>
+                            <span class="text-gray-700">Consumible: Solo registro de quien lo retiró</span>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-8 flex justify-end">
@@ -267,6 +333,12 @@
                             <p class="text-sm text-gray-600">Bodega Destino:</p>
                             <p class="font-semibold">{{ $selectedDestino['nombre'] ?? 'N/A' }}</p>
                         </div>
+                        @if($selectedPersona)
+                        <div>
+                            <p class="text-sm text-gray-600">Persona Responsable:</p>
+                            <p class="font-semibold">{{ $selectedPersona['nombre_completo'] }}</p>
+                        </div>
+                        @endif
                         @if($correlativo)
                         <div>
                             <p class="text-sm text-gray-600">Correlativo:</p>
@@ -294,6 +366,7 @@
                                     <tr>
                                         <th class="py-2 px-4 text-left text-sm">Código</th>
                                         <th class="py-2 px-4 text-left text-sm">Descripción</th>
+                                        <th class="py-2 px-4 text-center text-sm">Tipo</th>
                                         <th class="py-2 px-4 text-right text-sm">Cantidad</th>
                                         <th class="py-2 px-4 text-right text-sm">Precio Unit.</th>
                                         <th class="py-2 px-4 text-right text-sm">Subtotal</th>
@@ -301,20 +374,46 @@
                                 </thead>
                                 <tbody>
                                     @foreach($productosSeleccionados as $producto)
-                                        <tr class="border-b">
+                                        <tr class="border-b {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
                                             <td class="py-2 px-4 text-sm font-mono">#{{ $producto['id'] }}</td>
                                             <td class="py-2 px-4 text-sm">{{ $producto['descripcion'] }}</td>
+                                            <td class="py-2 px-4 text-sm text-center">
+                                                @if($producto['es_consumible'] ?? false)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                        Consumible
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        No Consumible
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td class="py-2 px-4 text-sm text-right">{{ $producto['cantidad'] }}</td>
                                             <td class="py-2 px-4 text-sm text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
                                             <td class="py-2 px-4 text-sm text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
                                         </tr>
                                     @endforeach
                                     <tr class="bg-gray-50 font-bold">
-                                        <td colspan="4" class="py-3 px-4 text-right text-gray-800">TOTAL:</td>
+                                        <td colspan="5" class="py-3 px-4 text-right text-gray-800">TOTAL:</td>
                                         <td class="py-3 px-4 text-right text-lg text-blue-600">Q{{ number_format((float)$this->subtotal, 2) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- Leyenda en el modal --}}
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <p class="text-xs font-semibold text-gray-700 mb-2">Asignación de productos:</p>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-blue-600 font-bold">•</span>
+                                    <span><strong>No Consumibles:</strong> Se agregarán a la tarjeta de responsabilidad de {{ $selectedPersona['nombre_completo'] ?? 'la persona seleccionada' }}</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-amber-600 font-bold">•</span>
+                                    <span><strong>Consumibles:</strong> Solo quedará registro de quien los retiró, sin responsabilidad de devolución</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
 

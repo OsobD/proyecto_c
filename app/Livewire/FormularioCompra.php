@@ -101,8 +101,14 @@ class FormularioCompra extends Component
     /** @var string Número de factura de la compra */
     public $numeroFactura = '';
 
+    /** @var string Número de serie de la factura */
+    public $numeroSerie = '';
+
     /** @var string Correlativo de la compra */
     public $correlativo = '';
+
+    /** @var string Precio total según factura física */
+    public $precioFactura = '';
 
     // Arrays temporales para datos creados durante el registro
     /** @var array Productos nuevos creados pero no guardados en DB */
@@ -132,6 +138,9 @@ class FormularioCompra extends Component
 
     /** @var string|int ID de categoría del nuevo producto */
     public $categoriaId = '';
+
+    /** @var bool Indica si el nuevo producto es consumible */
+    public $esConsumible = false;
 
     /** @var string Nombre de nueva categoría a crear */
     public $nuevaCategoriaNombre = '';
@@ -211,6 +220,7 @@ class FormularioCompra extends Component
                 'codigo' => $producto->id, // El ID es el código
                 'descripcion' => $producto->descripcion,
                 'categoria_id' => $producto->id_categoria,
+                'es_consumible' => $producto->es_consumible,
             ])
             ->toArray();
 
@@ -347,6 +357,7 @@ class FormularioCompra extends Component
                 'id' => $producto['id'],
                 'codigo' => $producto['codigo'],
                 'descripcion' => $producto['descripcion'],
+                'es_consumible' => $producto['es_consumible'] ?? false,
                 'cantidad' => '',
                 'costo' => '',
                 'observaciones' => ''
@@ -366,19 +377,48 @@ class FormularioCompra extends Component
         );
     }
 
+    /**
+     * Calcula el subtotal (precio sin IVA)
+     * En Guatemala: Precio con IVA / 1.12 = Precio sin IVA
+     */
     public function getSubtotalProperty()
     {
         return collect($this->productosSeleccionados)->sum(function($producto) {
             $cantidad = (float)($producto['cantidad'] ?? 0);
             $costoConIva = (float)($producto['costo'] ?? 0);
-            $costoSinIva = $costoConIva * 0.88; // Resta el 12% de IVA
+            // Dividir entre 1.12 para obtener el precio sin IVA
+            $costoSinIva = $costoConIva / 1.12;
             return $cantidad * $costoSinIva;
         });
     }
 
+    /**
+     * Calcula el IVA (12% en Guatemala)
+     * IVA = Subtotal * 0.12
+     */
+    public function getIvaProperty()
+    {
+        return $this->subtotal * 0.12;
+    }
+
+    /**
+     * Calcula el total (Subtotal + IVA)
+     */
     public function getTotalProperty()
     {
-        return $this->subtotal;
+        return $this->subtotal + $this->iva;
+    }
+
+    /**
+     * Verifica si el total calculado coincide con el precio de factura
+     */
+    public function getDiferenciaFacturaProperty()
+    {
+        if (empty($this->precioFactura)) {
+            return 0;
+        }
+        $precioFacturaNum = (float)$this->precioFactura;
+        return $precioFacturaNum - $this->total;
     }
 
     // Asegurar que los valores sean numéricos cuando se actualizan
@@ -412,13 +452,18 @@ class FormularioCompra extends Component
             'selectedBodega' => 'required',
             'selectedProveedor' => 'required',
             'numeroFactura' => 'required|min:3',
+            'numeroSerie' => 'nullable|min:1',
             'correlativo' => 'required|min:3',
+            'precioFactura' => 'nullable|numeric|min:0',
             'productosSeleccionados' => 'required|array|min:1',
         ], [
             'selectedBodega.required' => 'Debe seleccionar una bodega destino.',
             'selectedProveedor.required' => 'Debe seleccionar un proveedor.',
             'numeroFactura.required' => 'El número de factura es obligatorio.',
+            'numeroSerie.min' => 'El número de serie debe tener al menos 1 carácter.',
             'correlativo.required' => 'El correlativo es obligatorio.',
+            'precioFactura.numeric' => 'El precio de factura debe ser un número válido.',
+            'precioFactura.min' => 'El precio de factura debe ser mayor o igual a 0.',
             'productosSeleccionados.required' => 'Debe agregar al menos un producto a la compra.',
             'productosSeleccionados.min' => 'Debe agregar al menos un producto a la compra.',
         ]);
@@ -500,6 +545,8 @@ class FormularioCompra extends Component
                     'id' => $productoTemp['codigo'],
                     'descripcion' => $productoTemp['descripcion'],
                     'id_categoria' => $categoriaIdReal,
+                    'es_consumible' => $productoTemp['es_consumible'] ?? false,
+                    'activo' => true,
                 ]);
                 $mapeoIds['productos'][$productoTemp['id']] = $nuevoProducto->id;
             }
@@ -561,8 +608,10 @@ class FormularioCompra extends Component
             $compra = Compra::create([
                 'fecha' => now(),
                 'no_factura' => $this->numeroFactura,
+                'no_serie' => $this->numeroSerie,
                 'correlativo' => $this->correlativo,
                 'total' => $this->total,
+                'precio_factura' => !empty($this->precioFactura) ? (float)$this->precioFactura : null,
                 'id_proveedor' => $proveedorIdReal,
                 'id_bodega' => $this->selectedBodega['id'],
                 'id_usuario' => $usuarioValido ? $usuarioValido->id : null,
@@ -590,7 +639,8 @@ class FormularioCompra extends Component
 
                 $cantidad = (int)$productoData['cantidad'];
                 $costoConIva = (float)$productoData['costo'];
-                $costoSinIva = $costoConIva * 0.88;
+                // Corregido: Dividir entre 1.12 para obtener precio sin IVA (12% Guatemala)
+                $costoSinIva = $costoConIva / 1.12;
                 $observaciones = $productoData['observaciones'] ?? '';
 
                 // 9. Crear DetalleCompra
@@ -624,7 +674,9 @@ class FormularioCompra extends Component
                 'selectedBodega',
                 'selectedProveedor',
                 'numeroFactura',
+                'numeroSerie',
                 'correlativo',
+                'precioFactura',
                 'productosSeleccionados',
                 'nuevosProductos',
                 'nuevosProveedores',
@@ -698,6 +750,7 @@ class FormularioCompra extends Component
             'codigo' => $this->codigo,
             'descripcion' => $this->descripcion,
             'categoria_id' => (int)$this->categoriaId,
+            'es_consumible' => $this->esConsumible,
         ];
 
         $this->nuevosProductos[] = $productoTemp;
@@ -723,6 +776,7 @@ class FormularioCompra extends Component
         $this->codigo = '';
         $this->descripcion = '';
         $this->categoriaId = '';
+        $this->esConsumible = false;
         $this->selectedCategoria = null;
         $this->resetErrorBag();
     }

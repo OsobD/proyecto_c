@@ -204,6 +204,7 @@
                             <tr>
                                 <th class="py-3 px-6 text-left">Código</th>
                                 <th class="py-3 px-6 text-left">Descripción</th>
+                                <th class="py-3 px-6 text-center">Tipo</th>
                                 <th class="py-3 px-6 text-right">Precio Unit.</th>
                                 <th class="py-3 px-6 text-center">Cantidad</th>
                                 <th class="py-3 px-6 text-center">Disponible</th>
@@ -213,9 +214,20 @@
                         </thead>
                         <tbody class="text-gray-600 text-sm font-light">
                             @foreach($productosSeleccionados as $producto)
-                                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
                                     <td class="py-3 px-6 text-left font-mono">{{ $producto['id'] }}</td>
                                     <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
+                                    <td class="py-3 px-6 text-center">
+                                        @if($producto['es_consumible'] ?? false)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                Consumible
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                No Consumible
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="py-3 px-6 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
                                         <input
@@ -245,7 +257,7 @@
                             @endforeach
                             @if(count($productosSeleccionados) > 0)
                                 <tr class="bg-gray-100 font-bold">
-                                    <td colspan="5" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
+                                    <td colspan="6" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
                                     <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format($this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
@@ -253,6 +265,27 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Leyenda de tipos de productos --}}
+                @if(count($productosSeleccionados) > 0)
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Gestión automática por tipo:</p>
+                        <div class="space-y-2">
+                            <div class="flex items-start gap-2">
+                                <div class="w-4 h-4 mt-0.5 bg-blue-100 border border-blue-300 rounded"></div>
+                                <div class="flex-1">
+                                    <span class="text-sm text-gray-700"><strong>No Consumibles:</strong> Se registran en <span class="font-mono text-xs bg-gray-200 px-1 rounded">Salida</span> y se agregan a la tarjeta de responsabilidad (persona responsable de devolverlos)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <div class="w-4 h-4 mt-0.5 bg-amber-100 border border-amber-300 rounded"></div>
+                                <div class="flex-1">
+                                    <span class="text-sm text-gray-700"><strong>Consumibles:</strong> Se registran en <span class="font-mono text-xs bg-gray-200 px-1 rounded">Traslado</span> solo como registro de quien los retiró (sin responsabilidad de devolución)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-8 flex justify-end gap-4">
@@ -336,6 +369,7 @@
                                 <tr>
                                     <th class="py-2 px-3 text-left">Código</th>
                                     <th class="py-2 px-3 text-left">Descripción</th>
+                                    <th class="py-2 px-3 text-center">Tipo</th>
                                     <th class="py-2 px-3 text-center">Cant.</th>
                                     <th class="py-2 px-3 text-center">Disponible</th>
                                     <th class="py-2 px-3 text-right">Precio Unit.</th>
@@ -344,9 +378,20 @@
                             </thead>
                             <tbody>
                                 @foreach($productosSeleccionados as $producto)
-                                    <tr class="border-t">
+                                    <tr class="border-t {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
                                         <td class="py-2 px-3 font-mono">{{ $producto['id'] }}</td>
                                         <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
+                                        <td class="py-2 px-3 text-center">
+                                            @if($producto['es_consumible'] ?? false)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                    Consumible
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    No Consumible
+                                                </span>
+                                            @endif
+                                        </td>
                                         <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
                                         <td class="py-2 px-3 text-center text-gray-500">{{ $producto['cantidad_disponible'] }}</td>
                                         <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
@@ -358,13 +403,24 @@
                     </div>
                 </div>
 
-                {{-- Total --}}
+                {{-- Total y Resumen --}}
                 <div class="bg-blue-50 p-4 rounded-md">
                     <div class="flex justify-between items-center">
                         <span class="text-lg font-semibold text-gray-800">Valor Total de la Requisición:</span>
                         <span class="text-2xl font-bold text-blue-600">Q{{ number_format($this->subtotal, 2) }}</span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">Se asignarán {{ count($productosSeleccionados) }} producto(s) a la tarjeta de responsabilidad del empleado.</p>
+                    @php
+                        $consumibles = collect($productosSeleccionados)->filter(fn($p) => $p['es_consumible'] ?? false)->count();
+                        $noConsumibles = collect($productosSeleccionados)->filter(fn($p) => !($p['es_consumible'] ?? false))->count();
+                    @endphp
+                    <div class="mt-3 pt-3 border-t border-blue-200 text-xs text-gray-600 space-y-1">
+                        @if($noConsumibles > 0)
+                            <p><strong class="text-blue-700">{{ $noConsumibles }} producto(s) no consumible(s)</strong> se registrarán en <span class="font-mono bg-white px-1 rounded">Salida</span> y se agregarán a la tarjeta de responsabilidad</p>
+                        @endif
+                        @if($consumibles > 0)
+                            <p><strong class="text-amber-700">{{ $consumibles }} producto(s) consumible(s)</strong> se registrarán en <span class="font-mono bg-white px-1 rounded">Traslado</span> solo como registro de retiro</p>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Botones de acción --}}
