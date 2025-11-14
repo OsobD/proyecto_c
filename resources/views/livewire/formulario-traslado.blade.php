@@ -100,57 +100,6 @@
                     </div>
                 </div>
 
-                {{-- Selección de Persona Responsable --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Persona Responsable:</label>
-                    <div class="relative">
-                        @if($selectedPersona)
-                            <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <span>{{ $selectedPersona['nombre_completo'] }}</span>
-                                <button type="button" wire:click.prevent="clearPersona" class="text-gray-400 hover:text-gray-600">
-                                    ×
-                                </button>
-                            </div>
-                        @else
-                            <div class="relative" x-data="{ open: @entangle('showPersonaDropdown') }" @click.outside="open = false">
-                                <input
-                                    type="text"
-                                    wire:model.live.debounce.300ms="searchPersona"
-                                    @click="open = true"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                                    placeholder="Buscar persona responsable..."
-                                >
-                                <div x-show="open"
-                                     x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                    <ul>
-                                        @foreach ($this->personaResults as $result)
-                                            <li wire:click.prevent="selectPersona({{ $result['id'] }}, '{{ $result['nombre_completo'] }}')"
-                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre_completo'] }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">
-                        Los productos no consumibles se asignarán a la tarjeta de responsabilidad de esta persona
-                    </p>
-                </div>
-
-            </div>
-
-            {{-- Correlativo --}}
-            <div class="mt-6">
-                <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
-                <input
-                    type="text"
-                    id="correlativo"
-                    wire:model="correlativo"
-                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Ingrese el correlativo...">
             </div>
 
             {{-- Observaciones --}}
@@ -333,18 +282,6 @@
                             <p class="text-sm text-gray-600">Bodega Destino:</p>
                             <p class="font-semibold">{{ $selectedDestino['nombre'] ?? 'N/A' }}</p>
                         </div>
-                        @if($selectedPersona)
-                        <div>
-                            <p class="text-sm text-gray-600">Persona Responsable:</p>
-                            <p class="font-semibold">{{ $selectedPersona['nombre_completo'] }}</p>
-                        </div>
-                        @endif
-                        @if($correlativo)
-                        <div>
-                            <p class="text-sm text-gray-600">Correlativo:</p>
-                            <p class="font-semibold">{{ $correlativo }}</p>
-                        </div>
-                        @endif
                         <div>
                             <p class="text-sm text-gray-600">Estado:</p>
                             <p class="font-semibold text-yellow-600">Pendiente</p>

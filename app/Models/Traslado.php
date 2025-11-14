@@ -20,6 +20,7 @@ class Traslado extends Model
         'descripcion',
         'observaciones',
         'id_usuario',
+        'id_persona',
         'id_bodega_origen',
         'id_bodega_destino',
         'id_tarjeta',
@@ -37,6 +38,11 @@ class Traslado extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario');
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona');
     }
 
     public function bodegaOrigen()

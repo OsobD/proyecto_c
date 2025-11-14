@@ -495,6 +495,7 @@ class FormularioRequisicion extends Component
                     'observaciones' => $this->observaciones,
                     'estado' => 'Completado',
                     'activo' => true,
+                    'id_persona' => $this->selectedPersona['id'],
                     'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
                     'id_bodega_destino' => $this->selectedOrigen['bodega_id'], // Misma bodega (salida lógica)
                     'id_usuario' => $userId,

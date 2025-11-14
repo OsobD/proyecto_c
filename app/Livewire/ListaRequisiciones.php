@@ -99,13 +99,13 @@ class ListaRequisiciones extends Component
 
         // Obtener Traslados (productos consumibles desde requisiciones)
         if ($this->filtroTipo === 'todos' || $this->filtroTipo === 'traslado') {
-            $traslados = Traslado::with(['tarjetaResponsabilidad.persona', 'bodegaOrigen', 'detalles.producto'])
+            $traslados = Traslado::with(['persona', 'bodegaOrigen', 'detalles.producto'])
                 ->whereNotNull('no_requisicion') // Solo traslados de requisiciones
                 ->when($this->search, function($query) {
                     $query->where(function($q) {
                         $q->where('correlativo', 'like', '%' . $this->search . '%')
                           ->orWhere('no_requisicion', 'like', '%' . $this->search . '%')
-                          ->orWhereHas('tarjetaResponsabilidad.persona', function($pq) {
+                          ->orWhereHas('persona', function($pq) {
                               $pq->whereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $this->search . '%']);
                           });
                     });
@@ -113,8 +113,8 @@ class ListaRequisiciones extends Component
                 ->orderBy($this->sortBy, $this->sortDirection)
                 ->get()
                 ->map(function($traslado) {
-                    $persona = $traslado->tarjetaResponsabilidad && $traslado->tarjetaResponsabilidad->persona
-                        ? $traslado->tarjetaResponsabilidad->persona->nombres . ' ' . $traslado->tarjetaResponsabilidad->persona->apellidos
+                    $persona = $traslado->persona
+                        ? $traslado->persona->nombres . ' ' . $traslado->persona->apellidos
                         : 'N/A';
 
                     return [
