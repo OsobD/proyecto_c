@@ -84,32 +84,23 @@
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-center">
-                                <div class="flex item-center justify-center">
-                                    <button wire:click="edit({{ $persona->id }})"
-                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-100 hover:bg-yellow-200 mr-2"
-                                            title="Editar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
-                                        </svg>
-                                    </button>
+                                <div class="flex item-center justify-center gap-2">
+                                    <x-action-button
+                                        type="edit"
+                                        wire:click="edit({{ $persona->id }})"
+                                        title="Editar persona" />
                                     @if($persona->estado)
-                                        <button wire:click="toggleEstado({{ $persona->id }})"
-                                                wire:confirm="¿Está seguro de que desea desactivar esta persona?"
-                                                class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
-                                                title="Desactivar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                            </svg>
-                                        </button>
+                                        <x-action-button
+                                            type="delete"
+                                            wire:click="toggleEstado({{ $persona->id }})"
+                                            wire:confirm="¿Está seguro de que desea desactivar esta persona?"
+                                            title="Desactivar persona" />
                                     @else
-                                        <button wire:click="toggleEstado({{ $persona->id }})"
-                                                wire:confirm="¿Está seguro de que desea activar esta persona?"
-                                                class="w-8 h-8 flex items-center justify-center rounded-full bg-green-100 hover:bg-green-200"
-                                                title="Activar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </button>
+                                        <x-action-button
+                                            type="activate"
+                                            wire:click="toggleEstado({{ $persona->id }})"
+                                            wire:confirm="¿Está seguro de que desea activar esta persona?"
+                                            title="Activar persona" />
                                     @endif
                                 </div>
                             </td>
