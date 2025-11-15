@@ -92,29 +92,22 @@
                             <td class="py-4 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     {{-- Editar --}}
-                                    <button
+                                    <x-action-button
+                                        type="edit"
                                         wire:click="editarCategoria({{ $categoria['id'] }})"
-                                        class="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-100 hover:bg-blue-200 transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
-                                        title="Editar categoría">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
-                                        </svg>
-                                    </button>
+                                        title="Editar categoría" />
                                     {{-- Toggle Estado --}}
-                                    <button
-                                        wire:click="toggleEstado({{ $categoria['id'] }})"
-                                        class="w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md {{ $categoria['activo'] ? 'bg-red-100 hover:bg-red-200' : 'bg-green-100 hover:bg-green-200' }}"
-                                        title="{{ $categoria['activo'] ? 'Desactivar' : 'Activar' }} categoría">
-                                        @if($categoria['activo'])
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                            </svg>
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        @endif
-                                    </button>
+                                    @if($categoria['activo'])
+                                        <x-action-button
+                                            type="delete"
+                                            wire:click="toggleEstado({{ $categoria['id'] }})"
+                                            title="Desactivar categoría" />
+                                    @else
+                                        <x-action-button
+                                            type="activate"
+                                            wire:click="toggleEstado({{ $categoria['id'] }})"
+                                            title="Activar categoría" />
+                                    @endif
                                 </div>
                             </td>
                         </tr>
