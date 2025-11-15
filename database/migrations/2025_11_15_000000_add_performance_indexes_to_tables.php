@@ -110,9 +110,9 @@ return new class extends Migration
             // desde la migración original de la tabla
             $table->index('id_persona');
             $table->index('id_rol');
-            $table->index('activo');
-            // Índice para búsquedas activas
-            $table->index(['activo', 'id_rol'], 'idx_usuario_activo_rol');
+            $table->index('estado'); // Columna correcta: estado, no activo
+            // Índice para búsquedas por estado activo
+            $table->index(['estado', 'id_rol'], 'idx_usuario_estado_rol');
         });
 
         // 8. PRODUCTO - HIGH: Search operations (usado en múltiples componentes)
@@ -330,8 +330,8 @@ return new class extends Migration
             // NOTA: No eliminamos unique en nombre_usuario porque no lo creamos nosotros
             $table->dropIndex(['id_persona']);
             $table->dropIndex(['id_rol']);
-            $table->dropIndex(['activo']);
-            $table->dropIndex('idx_usuario_activo_rol');
+            $table->dropIndex(['estado']);
+            $table->dropIndex('idx_usuario_estado_rol');
         });
 
         Schema::table('devolucion', function (Blueprint $table) {
