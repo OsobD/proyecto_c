@@ -159,41 +159,26 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button
-                                        wire:click="verDetalle({{ $compra['id'] }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200"
-                                        title="Ver detalle">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </button>
+                                    <x-action-button
+                                        type="view"
+                                        title="Ver detalle"
+                                        wire:click="verDetalle({{ $compra['id'] }})" />
+
                                     @if($compra['activa'])
-                                        <button
-                                            wire:click="editarCompra({{ $compra['id'] }})"
-                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-100 hover:bg-yellow-200"
-                                            title="Editar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            wire:click="abrirModalDesactivar({{ $compra['id'] }})"
-                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
-                                            title="Desactivar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
+                                        <x-action-button
+                                            type="edit"
+                                            title="Editar"
+                                            wire:click="editarCompra({{ $compra['id'] }})" />
+
+                                        <x-action-button
+                                            type="delete"
+                                            title="Desactivar"
+                                            wire:click="abrirModalDesactivar({{ $compra['id'] }})" />
                                     @else
-                                        <button
-                                            wire:click="activarCompra({{ $compra['id'] }})"
-                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-green-100 hover:bg-green-200"
-                                            title="Activar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </button>
+                                        <x-action-button
+                                            type="activate"
+                                            title="Activar"
+                                            wire:click="activarCompra({{ $compra['id'] }})" />
                                     @endif
                                 </div>
                             </td>
