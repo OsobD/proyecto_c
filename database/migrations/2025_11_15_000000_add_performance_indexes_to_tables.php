@@ -95,7 +95,8 @@ return new class extends Migration
             $table->index('fecha');
             $table->index('id_bodega');
             $table->index('id_usuario');
-            $table->index('id_tarjeta_responsabilidad');
+            $table->index('id_tarjeta'); // Columna correcta: id_tarjeta, no id_tarjeta_responsabilidad
+            $table->index('id_traslado');
         });
 
         // ========================================
@@ -350,7 +351,8 @@ return new class extends Migration
             $table->dropIndex(['fecha']);
             $table->dropIndex(['id_bodega']);
             $table->dropIndex(['id_usuario']);
-            $table->dropIndex(['id_tarjeta_responsabilidad']);
+            $table->dropIndex(['id_tarjeta']);
+            $table->dropIndex(['id_traslado']);
         });
 
         Schema::table('salida', function (Blueprint $table) {
