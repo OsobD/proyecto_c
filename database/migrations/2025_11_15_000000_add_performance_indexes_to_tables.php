@@ -106,17 +106,8 @@ return new class extends Migration
         // 7. USUARIO - HIGH: Search and authentication (usado en GestionUsuarios, auth)
         // Impacto: 5-10x más rápido
         Schema::table('usuario', function (Blueprint $table) {
-            // Índice único para login (si no existe ya)
-            if (!Schema::hasColumn('usuario', 'nombre_usuario')) {
-                // La columna no existe, skip
-            } else {
-                // Verificar si ya existe un índice único
-                try {
-                    $table->unique('nombre_usuario');
-                } catch (\Exception $e) {
-                    // Ya existe, continuar
-                }
-            }
+            // NOTA: No agregamos unique en nombre_usuario porque ya existe
+            // desde la migración original de la tabla
             $table->index('id_persona');
             $table->index('id_rol');
             $table->index('activo');
@@ -336,11 +327,7 @@ return new class extends Migration
         });
 
         Schema::table('usuario', function (Blueprint $table) {
-            try {
-                $table->dropUnique(['nombre_usuario']);
-            } catch (\Exception $e) {
-                // No existe, continuar
-            }
+            // NOTA: No eliminamos unique en nombre_usuario porque no lo creamos nosotros
             $table->dropIndex(['id_persona']);
             $table->dropIndex(['id_rol']);
             $table->dropIndex(['activo']);
