@@ -40,7 +40,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/traslados', \App\Livewire\TrasladosHub::class)->name('traslados');
     Route::get('/traslados/nuevo', \App\Livewire\FormularioTraslado::class)->name('traslados.nuevo');
     Route::get('/traslados/historial', \App\Livewire\HistorialTraslados::class)->name('traslados.historial');
-    Route::get('/requisiciones', \App\Livewire\FormularioRequisicion::class)->name('requisiciones');
+    // Requisiciones
+    Route::get('/requisiciones', \App\Livewire\ListaRequisiciones::class)->name('requisiciones');
+    Route::get('/requisiciones/nueva', \App\Livewire\FormularioRequisicion::class)->name('requisiciones.create');
+    Route::get('/requisiciones/{tipo}/{id}', \App\Livewire\DetalleRequisicion::class)->name('requisiciones.ver');
 
     // Rutas de Devoluciones
     Route::get('/devoluciones', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');

@@ -106,6 +106,8 @@ class HistorialTraslados extends Component
                         'id' => $salida->id,
                         'tipo' => 'Requisición',
                         'tipo_clase' => 'salida',
+                        'tipo_badge' => 'No Consumibles',
+                        'tipo_color' => 'blue',
                         'correlativo' => $salida->ubicacion ?? 'REQ-' . $salida->id,
                         'origen' => $salida->bodega->nombre ?? 'N/A',
                         'destino' => $salida->persona ?
@@ -152,6 +154,8 @@ class HistorialTraslados extends Component
                         'id' => $traslado->id,
                         'tipo' => 'Traslado',
                         'tipo_clase' => 'traslado',
+                        'tipo_badge' => 'Consumibles',
+                        'tipo_color' => 'amber',
                         'correlativo' => $traslado->correlativo ?? 'TRA-' . $traslado->id,
                         'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
                         'destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
@@ -248,6 +252,7 @@ class HistorialTraslados extends Component
                                 'cantidad' => $detalle->cantidad,
                                 'precio' => $detalle->precio_salida,
                                 'subtotal' => $detalle->cantidad * $detalle->precio_salida,
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
                             ];
                         })->toArray(),
                     ];
@@ -272,6 +277,7 @@ class HistorialTraslados extends Component
                                 'cantidad' => $detalle->cantidad,
                                 'precio' => $detalle->lote->precio_ingreso ?? 0,
                                 'subtotal' => $detalle->cantidad * ($detalle->lote->precio_ingreso ?? 0),
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
                             ];
                         })->toArray(),
                     ];

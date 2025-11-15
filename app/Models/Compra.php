@@ -14,8 +14,10 @@ class Compra extends Model
     protected $fillable = [
         'fecha',
         'no_factura',
+        'no_serie',
         'correlativo',
         'total',
+        'precio_factura',
         'id_proveedor',
         'id_bodega',
         'id_usuario',
@@ -25,6 +27,7 @@ class Compra extends Model
     protected $casts = [
         'fecha' => 'datetime',
         'total' => 'double',
+        'precio_factura' => 'double',
         'activo' => 'boolean',
     ];
 

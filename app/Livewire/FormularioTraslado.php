@@ -6,7 +6,10 @@ use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\DetalleTraslado;
 use App\Models\Lote;
+use App\Models\Persona;
 use App\Models\Producto;
+use App\Models\TarjetaProducto;
+use App\Models\TarjetaResponsabilidad;
 use App\Models\Traslado;
 use App\Models\TipoTransaccion;
 use App\Models\Transaccion;
@@ -30,6 +33,9 @@ class FormularioTraslado extends Component
     /** @var string Término de búsqueda para bodega destino */
     public $searchDestino = '';
 
+    /** @var string Término de búsqueda de persona */
+    public $searchPersona = '';
+
     /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
 
@@ -39,11 +45,17 @@ class FormularioTraslado extends Component
     /** @var array|null Bodega destino seleccionada */
     public $selectedDestino = null;
 
+    /** @var array|null Persona responsable seleccionada */
+    public $selectedPersona = null;
+
     /** @var bool Controla dropdown de bodega origen */
     public $showOrigenDropdown = false;
 
     /** @var bool Controla dropdown de bodega destino */
     public $showDestinoDropdown = false;
+
+    /** @var bool Controla dropdown de persona */
+    public $showPersonaDropdown = false;
 
     /** @var bool Controla dropdown de productos */
     public $showProductoDropdown = false;
@@ -196,6 +208,60 @@ class FormularioTraslado extends Component
         $this->showDestinoDropdown = false;
     }
 
+    /**
+     * Obtiene personas activas filtradas por búsqueda
+     *
+     * @return array
+     */
+    public function getPersonaResultsProperty()
+    {
+        $query = Persona::where('estado', true);
+
+        if (!empty($this->searchPersona)) {
+            $query->where(function($q) {
+                $q->where('nombres', 'like', '%' . $this->searchPersona . '%')
+                  ->orWhere('apellidos', 'like', '%' . $this->searchPersona . '%')
+                  ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $this->searchPersona . '%']);
+            });
+        }
+
+        return $query->get()->map(function ($persona) {
+            return [
+                'id' => $persona->id,
+                'nombre_completo' => $persona->nombres . ' ' . $persona->apellidos,
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Selecciona una persona responsable
+     *
+     * @param int $id
+     * @param string $nombreCompleto
+     * @return void
+     */
+    public function selectPersona($id, $nombreCompleto)
+    {
+        $this->selectedPersona = [
+            'id' => $id,
+            'nombre_completo' => $nombreCompleto,
+        ];
+        $this->searchPersona = '';
+        $this->showPersonaDropdown = false;
+    }
+
+    /**
+     * Limpia la selección de persona
+     *
+     * @return void
+     */
+    public function clearPersona()
+    {
+        $this->selectedPersona = null;
+        $this->searchPersona = '';
+        $this->showPersonaDropdown = false;
+    }
+
     public function updatedSearchOrigen()
     {
         $this->showOrigenDropdown = true;
@@ -204,6 +270,11 @@ class FormularioTraslado extends Component
     public function updatedSearchDestino()
     {
         $this->showDestinoDropdown = true;
+    }
+
+    public function updatedSearchPersona()
+    {
+        $this->showPersonaDropdown = true;
     }
 
     public function updatedSearchProducto()
@@ -259,6 +330,7 @@ class FormularioTraslado extends Component
                 return [
                     'id' => (int)$producto->id,
                     'descripcion' => $producto->descripcion,
+                    'es_consumible' => (bool)$producto->es_consumible,
                     'precio' => (float)$precioPromedio,
                     'cantidad_disponible' => (int)$cantidadDisponible,
                     'lotes' => $producto->lotes->toArray()
@@ -282,6 +354,7 @@ class FormularioTraslado extends Component
             $this->productosSeleccionados[] = [
                 'id' => (int)$producto['id'],
                 'descripcion' => $producto['descripcion'],
+                'es_consumible' => (bool)($producto['es_consumible'] ?? false),
                 'precio' => (float)$producto['precio'],
                 'cantidad' => 1,
                 'cantidad_disponible' => (int)$producto['cantidad_disponible'],
@@ -401,6 +474,21 @@ class FormularioTraslado extends Component
             // Obtener el usuario actual
             $usuario = auth()->user();
 
+            // Obtener o crear tarjeta de responsabilidad para la persona seleccionada
+            $tarjetaResponsabilidad = null;
+            if ($this->selectedPersona) {
+                $tarjetaResponsabilidad = TarjetaResponsabilidad::firstOrCreate(
+                    [
+                        'id_persona' => $this->selectedPersona['id'],
+                        'activo' => true,
+                    ],
+                    [
+                        'fecha_creacion' => now(),
+                        'total' => 0,
+                    ]
+                );
+            }
+
             // Crear el traslado
             $traslado = Traslado::create([
                 'fecha' => now(),
@@ -414,7 +502,7 @@ class FormularioTraslado extends Component
                 'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
                 'id_bodega_destino' => $this->selectedDestino['bodega_id'],
                 'id_usuario' => $usuario->id,
-                'id_tarjeta' => null,
+                'id_tarjeta' => $tarjetaResponsabilidad ? $tarjetaResponsabilidad->id : null,
             ]);
 
             // Obtener tipos de transacción
@@ -492,6 +580,24 @@ class FormularioTraslado extends Component
                         'id_tipo_transaccion' => $tipoTraslado->id ?? null,
                         'id_traslado' => $traslado->id,
                     ]);
+
+                    // Si el producto NO es consumible y hay tarjeta de responsabilidad,
+                    // agregarlo a la tarjeta (persona es responsable de devolverlo)
+                    $esConsumible = $productoData['es_consumible'] ?? false;
+                    if (!$esConsumible && $tarjetaResponsabilidad) {
+                        TarjetaProducto::create([
+                            'precio_asignacion' => $lote->precio_ingreso * $cantidadAUsar,
+                            'id_tarjeta' => $tarjetaResponsabilidad->id,
+                            'id_producto' => $producto->id,
+                            'id_lote' => $loteDestino->id,
+                        ]);
+
+                        // Actualizar el total de la tarjeta
+                        $tarjetaResponsabilidad->total += ($lote->precio_ingreso * $cantidadAUsar);
+                        $tarjetaResponsabilidad->save();
+                    }
+                    // Si es consumible, solo queda registrado en el traslado asociado a la persona
+                    // pero NO se agrega a la tarjeta (persona no es responsable de devolverlo)
 
                     $cantidadRestante -= $cantidadAUsar;
                 }

@@ -109,7 +109,7 @@
             </div>
 
             {{-- Información de factura --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div>
                     <label for="numero_factura" class="block text-sm font-medium text-gray-700">Número de Factura:</label>
                     <input
@@ -117,21 +117,55 @@
                         id="numero_factura"
                         wire:model="numeroFactura"
                         class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ingrese el número de factura...">
+                        placeholder="Ej: 12345678">
+                    @error('numeroFactura')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
-                    <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo / Número de Serie:</label>
+                    <label for="numero_serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
+                    <input
+                        type="text"
+                        id="numero_serie"
+                        wire:model="numeroSerie"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Ej: A">
+                    @error('numeroSerie')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
                     <input
                         type="text"
                         id="correlativo"
                         wire:model="correlativo"
                         class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ingrese el correlativo...">
+                        placeholder="Ej: 001">
                     @error('correlativo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
+
+            {{-- Precio de Factura (opcional para verificación) --}}
+            <div class="mb-6">
+                <label for="precio_factura" class="block text-sm font-medium text-gray-700">Precio Total de Factura (Opcional):</label>
+                <input
+                    type="number"
+                    step="0.01"
+                    id="precio_factura"
+                    wire:model.live="precioFactura"
+                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="Ingrese el total de la factura para verificación">
+                <p class="text-xs text-gray-500 mt-1">
+                    Ingrese el monto total que aparece en la factura física para verificar que coincida con el cálculo del sistema
+                </p>
+                @error('precioFactura')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             {{-- Búsqueda de productos --}}
@@ -216,9 +250,9 @@
                                         </div>
                                     </td>
                                     <td class="py-3 px-6 text-right">
-                                        <span class="text-gray-700 font-medium">Q{{ number_format((float)$producto['costo'] * 0.88, 2) }}</span>
+                                        <span class="text-gray-700 font-medium">Q{{ number_format((float)$producto['costo'] / 1.12, 2) }}</span>
                                     </td>
-                                    <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] * 0.88), 2) }}</td>
+                                    <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] / 1.12), 2) }}</td>
                                     <td class="py-3 px-6 text-left">
                                         <textarea
                                             wire:model.blur="productosSeleccionados.{{ $index }}.observaciones"
@@ -242,13 +276,43 @@
                 </div>
             </div>
 
-            {{-- Totales de la compra --}}
+            {{-- Totales de la compra con desglose de IVA --}}
             <div class="mt-8 flex justify-end">
-                <div class="w-full max-w-sm">
-                    <div class="flex justify-between py-2 border-b">
-                        <span class="font-medium text-gray-700">Total:</span>
-                        <span class="font-bold text-lg text-gray-800">Q{{ number_format($this->total, 2) }}</span>
+                <div class="w-full max-w-sm bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex justify-between py-2">
+                        <span class="text-gray-600">Subtotal (sin IVA):</span>
+                        <span class="font-semibold text-gray-800">Q{{ number_format($this->subtotal, 2) }}</span>
                     </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-gray-600">IVA (12%):</span>
+                        <span class="font-semibold text-gray-800">Q{{ number_format($this->iva, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between py-3 border-t-2 border-gray-300 mt-2">
+                        <span class="font-bold text-gray-700 text-lg">Total:</span>
+                        <span class="font-bold text-lg text-indigo-600">Q{{ number_format($this->total, 2) }}</span>
+                    </div>
+
+                    @if(!empty($precioFactura))
+                        <div class="mt-3 pt-3 border-t border-gray-300">
+                            <div class="flex justify-between py-1">
+                                <span class="text-sm text-gray-600">Precio Factura:</span>
+                                <span class="text-sm font-semibold text-gray-700">Q{{ number_format((float)$precioFactura, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-sm font-medium {{ abs($this->diferenciaFactura) < 0.01 ? 'text-green-600' : 'text-red-600' }}">
+                                    Diferencia:
+                                </span>
+                                <span class="text-sm font-bold {{ abs($this->diferenciaFactura) < 0.01 ? 'text-green-600' : 'text-red-600' }}">
+                                    Q{{ number_format($this->diferenciaFactura, 2) }}
+                                    @if(abs($this->diferenciaFactura) < 0.01)
+                                        ✓
+                                    @else
+                                        ⚠
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -302,6 +366,10 @@
                             <p class="font-semibold">{{ $numeroFactura }}</p>
                         </div>
                         <div>
+                            <p class="text-sm text-gray-600">Número de Serie:</p>
+                            <p class="font-semibold">{{ $numeroSerie ?: 'N/A' }}</p>
+                        </div>
+                        <div>
                             <p class="text-sm text-gray-600">Correlativo:</p>
                             <p class="font-semibold">{{ $correlativo }}</p>
                         </div>
@@ -328,8 +396,8 @@
                                         <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                         <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
                                         <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
-                                        <td class="py-2 px-3 text-right">Q{{ number_format((float)$producto['costo'] * 0.88, 2) }}</td>
-                                        <td class="py-2 px-3 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] * 0.88), 2) }}</td>
+                                        <td class="py-2 px-3 text-right">Q{{ number_format((float)$producto['costo'] / 1.12, 2) }}</td>
+                                        <td class="py-2 px-3 text-right font-semibold">Q{{ number_format((float)$producto['cantidad'] * ((float)$producto['costo'] / 1.12), 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -337,13 +405,46 @@
                     </div>
                 </div>
 
-                {{-- Total --}}
-                <div class="bg-blue-50 p-4 rounded-md">
-                    <div class="flex justify-between items-center">
-                        <span class="text-lg font-semibold text-gray-800">Total de la Compra:</span>
+                {{-- Resumen de Totales --}}
+                <div class="bg-blue-50 p-4 rounded-md space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-700">Subtotal (sin IVA):</span>
+                        <span class="font-semibold text-gray-800">Q{{ number_format($this->subtotal, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-700">IVA (12%):</span>
+                        <span class="font-semibold text-gray-800">Q{{ number_format($this->iva, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t-2 border-blue-200">
+                        <span class="text-lg font-bold text-gray-800">Total de la Compra:</span>
                         <span class="text-2xl font-bold text-blue-600">Q{{ number_format($this->total, 2) }}</span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">Se crearán {{ count($productosSeleccionados) }} lote(s) en la bodega seleccionada.</p>
+
+                    @if(!empty($precioFactura))
+                        <div class="pt-2 border-t border-blue-200 mt-2">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Precio Factura:</span>
+                                <span class="text-sm font-semibold">Q{{ number_format((float)$precioFactura, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium {{ abs($this->diferenciaFactura) < 0.01 ? 'text-green-600' : 'text-red-600' }}">
+                                    Diferencia:
+                                </span>
+                                <span class="text-sm font-bold {{ abs($this->diferenciaFactura) < 0.01 ? 'text-green-600' : 'text-red-600' }}">
+                                    Q{{ number_format($this->diferenciaFactura, 2) }}
+                                    @if(abs($this->diferenciaFactura) < 0.01)
+                                        ✓ Correcto
+                                    @else
+                                        ⚠ No coincide
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+
+                    <p class="text-xs text-gray-500 mt-2 pt-2 border-t border-blue-200">
+                        Se crearán {{ count($productosSeleccionados) }} lote(s) en la bodega seleccionada.
+                    </p>
                 </div>
 
                 {{-- Botones de acción --}}
@@ -493,6 +594,22 @@
                         @error('categoriaId')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    {{-- Es Consumible --}}
+                    <div class="mb-4">
+                        <label class="flex items-center space-x-3">
+                            <input
+                                type="checkbox"
+                                wire:model="esConsumible"
+                                class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                            <span class="text-sm font-medium text-gray-700">
+                                Este producto es consumible
+                            </span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1 ml-8">
+                            Marca esta opción si el producto se agota con el uso (ej: materiales, insumos)
+                        </p>
                     </div>
 
                     <div class="flex justify-between mt-6">
