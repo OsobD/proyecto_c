@@ -98,8 +98,11 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800">
-                Compras encontradas: <span class="text-blue-600">{{ count($comprasFiltradas) }}</span>
+                Compras encontradas: <span class="text-blue-600">{{ $comprasFiltradas->total() }}</span>
             </h2>
+            <p class="text-sm text-gray-600">
+                Mostrando {{ $comprasFiltradas->firstItem() ?? 0 }} - {{ $comprasFiltradas->lastItem() ?? 0 }} de {{ $comprasFiltradas->total() }}
+            </p>
         </div>
 
         <div class="overflow-x-auto">
@@ -118,50 +121,44 @@
                 </thead>
                 <tbody class="text-gray-600 text-sm font-light">
                     @forelse($comprasFiltradas as $compra)
-                        <tr class="border-b border-gray-200 hover:bg-gray-50 {{ !$compra['activa'] ? 'opacity-50' : '' }}">
-                            <td class="py-3 px-6 text-left font-medium">{{ $compra['numero_factura'] }}</td>
-                            <td class="py-3 px-6 text-left">{{ $compra['numero_serie'] }}</td>
-                            <td class="py-3 px-6 text-left">{{ $compra['proveedor'] }}</td>
-                            <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($compra['fecha'])->format('d/m/Y') }}</td>
+                        <tr class="border-b border-gray-200 hover:bg-gray-50 {{ !$compra->activo ? 'opacity-50' : '' }}">
+                            <td class="py-3 px-6 text-left font-medium">{{ $compra->no_factura ?? 'N/A' }}</td>
+                            <td class="py-3 px-6 text-left">{{ $compra->correlativo ?? 'N/A' }}</td>
+                            <td class="py-3 px-6 text-left">{{ $compra->proveedor->nombre ?? 'Sin proveedor' }}</td>
+                            <td class="py-3 px-6 text-left">{{ $compra->fecha->format('d/m/Y') }}</td>
                             <td class="py-3 px-6 text-center">
                                 <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                    {{ $compra['productos_count'] }}
+                                    {{ $compra->detalles->count() }}
                                 </span>
                             </td>
-                            <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra['monto'], 2) }}</td>
+                            <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra->total, 2) }}</td>
                             <td class="py-3 px-6 text-center">
-                                @if($compra['estado'] === 'Completada')
-                                    <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                        Completada
-                                    </span>
-                                @else
-                                    <span class="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                        Pendiente
-                                    </span>
-                                @endif
+                                <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                    Completada
+                                </span>
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <x-action-button
                                         type="view"
                                         title="Ver detalle"
-                                        wire:click="verDetalle({{ $compra['id'] }})" />
+                                        wire:click="verDetalle({{ $compra->id }})" />
 
-                                    @if($compra['activa'])
+                                    @if($compra->activo)
                                         <x-action-button
                                             type="edit"
                                             title="Editar"
-                                            wire:click="editarCompra({{ $compra['id'] }})" />
+                                            wire:click="editarCompra({{ $compra->id }})" />
 
                                         <x-action-button
                                             type="delete"
                                             title="Desactivar"
-                                            wire:click="abrirModalDesactivar({{ $compra['id'] }})" />
+                                            wire:click="abrirModalDesactivar({{ $compra->id }})" />
                                     @else
                                         <x-action-button
                                             type="activate"
                                             title="Activar"
-                                            wire:click="activarCompra({{ $compra['id'] }})" />
+                                            wire:click="activarCompra({{ $compra->id }})" />
                                     @endif
                                 </div>
                             </td>
@@ -175,6 +172,11 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Paginación --}}
+        <div class="mt-6">
+            {{ $comprasFiltradas->links() }}
         </div>
     </div>
 

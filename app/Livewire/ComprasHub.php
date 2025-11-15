@@ -6,6 +6,7 @@ use App\Models\Compra;
 use App\Models\DetalleCompra;
 use App\Models\Proveedor;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use App\Livewire\Traits\TienePermisos;
 
 /**
@@ -21,12 +22,6 @@ class ComprasHub extends Component
 {
     use TienePermisos;
 
-    /** @var array Estadísticas del mes actual */
-    public $estadisticas = [];
-
-    /** @var array Listado de compras recientes */
-    public $comprasRecientes = [];
-    
     /** @var bool Controla visibilidad del modal de visualización */
     public $showModalVer = false;
 
@@ -46,27 +41,38 @@ class ComprasHub extends Component
     public $compraIdDesactivar = null;
 
     /**
-     * Inicializa el componente con datos reales de la base de datos
+     * OPTIMIZACIÓN: Estadísticas del mes con caché
+     * Solo se calcula una vez y se reutiliza
      *
-     * @return void
+     * @return array
      */
-    public function mount()
+    #[Computed]
+    public function estadisticas()
     {
-        // Obtener compras del mes actual
+        // Obtener compras del mes actual (una sola consulta con agregados)
         $comprasMes = Compra::whereMonth('fecha', now()->month)
             ->whereYear('fecha', now()->year)
-            ->get();
+            ->selectRaw('COUNT(*) as total, SUM(total) as monto_total')
+            ->first();
 
-        // Calcular estadísticas
-        $this->estadisticas = [
-            'total_mes' => $comprasMes->count(),
-            'monto_total_mes' => $comprasMes->sum('total'),
-            'pendientes_revision' => 0, // Puedes ajustar según tu lógica de negocio
+        return [
+            'total_mes' => $comprasMes->total ?? 0,
+            'monto_total_mes' => $comprasMes->monto_total ?? 0,
+            'pendientes_revision' => 0,
             'proveedores_activos' => Proveedor::where('activo', true)->count(),
         ];
+    }
 
-        // Obtener las 5 compras más recientes
-        $this->comprasRecientes = Compra::with('proveedor')
+    /**
+     * OPTIMIZACIÓN: Compras recientes con caché
+     * Solo se carga una vez y se reutiliza
+     *
+     * @return array
+     */
+    #[Computed]
+    public function comprasRecientes()
+    {
+        return Compra::with('proveedor')
             ->orderBy('fecha', 'desc')
             ->limit(5)
             ->get()
@@ -77,7 +83,7 @@ class ComprasHub extends Component
                     'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                     'fecha' => $compra->fecha->format('Y-m-d'),
                     'monto' => $compra->total,
-                    'estado' => 'Completada', // Todas las compras guardadas están completadas
+                    'estado' => 'Completada',
                     'activa' => $compra->activo ?? true,
                 ];
             })
