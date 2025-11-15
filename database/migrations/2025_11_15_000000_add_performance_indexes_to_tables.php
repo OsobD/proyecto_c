@@ -193,39 +193,26 @@ return new class extends Migration
         });
 
         // 18. BITACORA - MEDIUM: Audit queries
+        // NOTA: bitacora ya tiene índices en accion, created_at, [modelo, modelo_id] desde add_audit_fields
+        // Solo agregamos índices adicionales que no existen
         Schema::table('bitacora', function (Blueprint $table) {
             $table->index('id_usuario');
-            $table->index('accion');
-            $table->index('fecha');
-            // Índice compuesto para consultas de auditoría
-            $table->index(['id_usuario', 'fecha'], 'idx_bitacora_usuario_fecha');
+            // Índice compuesto para consultas de auditoría por usuario y fecha
+            $table->index(['id_usuario', 'created_at'], 'idx_bitacora_usuario_fecha');
         });
 
         // 19. KARDEX - MEDIUM: Transaction tracking
+        // NOTA: kardex solo tiene: id, timestamp, tipo_movimiento, id_detalle
         Schema::table('kardex', function (Blueprint $table) {
-            $table->index('id_producto');
-            $table->index('id_bodega');
-            $table->index('fecha');
-            $table->index('id_transaccion');
-            // Índice compuesto para consultas de kardex por producto/bodega
-            $table->index(['id_producto', 'id_bodega', 'fecha'], 'idx_kardex_producto_bodega');
+            $table->index('timestamp');
+            $table->index('tipo_movimiento');
+            $table->index('id_detalle');
         });
 
-        // 20. DETALLE_KARDEX - MEDIUM: Detailed transaction tracking
-        Schema::table('detalle_kardex', function (Blueprint $table) {
-            $table->index('id_kardex');
-            $table->index('id_lote');
-        });
+        // NOTA: Las tablas detalle_kardex y transaccion_lote NO EXISTEN en el schema actual
+        // Se removieron de la migración de índices
 
-        // 21. TRANSACCION_LOTE - MEDIUM: Batch transaction tracking
-        Schema::table('transaccion_lote', function (Blueprint $table) {
-            $table->index('id_lote');
-            $table->index('id_transaccion');
-            $table->index('id_tipo_transaccion');
-            $table->index('fecha');
-        });
-
-        // 22. CATEGORIA - MEDIUM: Category filtering
+        // 20. CATEGORIA - MEDIUM: Category filtering
         Schema::table('categoria', function (Blueprint $table) {
             $table->index('nombre');
         });
@@ -242,30 +229,14 @@ return new class extends Migration
             $table->dropIndex(['nombre']);
         });
 
-        Schema::table('transaccion_lote', function (Blueprint $table) {
-            $table->dropIndex(['id_lote']);
-            $table->dropIndex(['id_transaccion']);
-            $table->dropIndex(['id_tipo_transaccion']);
-            $table->dropIndex(['fecha']);
-        });
-
-        Schema::table('detalle_kardex', function (Blueprint $table) {
-            $table->dropIndex(['id_kardex']);
-            $table->dropIndex(['id_lote']);
-        });
-
         Schema::table('kardex', function (Blueprint $table) {
-            $table->dropIndex(['id_producto']);
-            $table->dropIndex(['id_bodega']);
-            $table->dropIndex(['fecha']);
-            $table->dropIndex(['id_transaccion']);
-            $table->dropIndex('idx_kardex_producto_bodega');
+            $table->dropIndex(['timestamp']);
+            $table->dropIndex(['tipo_movimiento']);
+            $table->dropIndex(['id_detalle']);
         });
 
         Schema::table('bitacora', function (Blueprint $table) {
             $table->dropIndex(['id_usuario']);
-            $table->dropIndex(['accion']);
-            $table->dropIndex(['fecha']);
             $table->dropIndex('idx_bitacora_usuario_fecha');
         });
 
