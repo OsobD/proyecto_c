@@ -22,11 +22,11 @@ Route::post('/logout', function () {
 Route::middleware('auth')->group(function () {
     // Ruta raíz redirige al dashboard
     Route::get('/', function () {
-        return redirect('/dashboard');
+        return redirect('/inicio');
     });
 
-    // Dashboard
-    Route::get('/dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
+    // Dashboard (ahora /inicio)
+    Route::get('/inicio', \App\Livewire\Dashboard::class)->name('dashboard');
 
     // Hub Principal
     Route::get('/hub', HubPrincipal::class)->name('hub.principal');
@@ -40,23 +40,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/traslados', \App\Livewire\TrasladosHub::class)->name('traslados');
     Route::get('/traslados/nuevo', \App\Livewire\FormularioTraslado::class)->name('traslados.nuevo');
     Route::get('/traslados/historial', \App\Livewire\HistorialTraslados::class)->name('traslados.historial');
-    // Requisiciones
-    Route::get('/requisiciones', \App\Livewire\ListaRequisiciones::class)->name('requisiciones');
-    Route::get('/requisiciones/nueva', \App\Livewire\FormularioRequisicion::class)->name('requisiciones.create');
-    Route::get('/requisiciones/{tipo}/{id}', \App\Livewire\DetalleRequisicion::class)->name('requisiciones.ver');
+    // Requisiciones (ahora bajo /traslados/requisicion)
+    Route::get('/traslados/requisicion', \App\Livewire\ListaRequisiciones::class)->name('requisiciones');
+    Route::get('/traslados/requisicion/nueva', \App\Livewire\FormularioRequisicion::class)->name('requisiciones.create');
+    Route::get('/traslados/requisicion/{tipo}/{id}', \App\Livewire\DetalleRequisicion::class)->name('requisiciones.ver');
 
-    // Rutas de Devoluciones
-    Route::get('/devoluciones', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');
-    Route::get('/devoluciones/historial', \App\Livewire\HistorialDevoluciones::class)->name('devoluciones.historial');
+    // Rutas de Devoluciones (ahora bajo /traslados/devolucion)
+    Route::get('/traslados/devolucion', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');
+    Route::get('/traslados/devolucion/historial', \App\Livewire\HistorialDevoluciones::class)->name('devoluciones.historial');
 
     // Rutas de Productos
     Route::get('/productos', \App\Livewire\GestionProductos::class)->name('productos');
     Route::get('/productos/categorias', \App\Livewire\GestionCategorias::class)->name('productos.categorias');
 
-    // Rutas de Bodegas y Responsabilidad
-    Route::get('/bodegas', \App\Livewire\GestionBodegas::class)->name('bodegas');
+    // Rutas de Bodegas y Responsabilidad (ahora bajo /almacenes)
+    Route::get('/almacenes/bodegas', \App\Livewire\GestionBodegas::class)->name('bodegas');
     Route::get('/personas', \App\Livewire\GestionPersonas::class)->name('personas');
-    Route::get('/tarjetas-responsabilidad', \App\Livewire\GestionTarjetasResponsabilidad::class)->name('tarjetas.responsabilidad');
+    Route::get('/almacenes/tarjetas', \App\Livewire\GestionTarjetasResponsabilidad::class)->name('tarjetas.responsabilidad');
 
     // Otras rutas
     Route::get('/usuarios', \App\Livewire\GestionUsuarios::class)->name('usuarios');

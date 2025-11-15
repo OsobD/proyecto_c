@@ -11,25 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Verificar si las columnas existen antes de intentar eliminarlas
+        // Eliminar foreign keys y columnas de la tabla devolucion
         if (Schema::hasColumn('devolucion', 'id_tipo_devolucion') || Schema::hasColumn('devolucion', 'id_razon_devolucion')) {
             Schema::table('devolucion', function (Blueprint $table) {
-                // Eliminar foreign keys primero si existen
-                $foreignKeys = Schema::getConnection()
-                    ->getDoctrineSchemaManager()
-                    ->listTableForeignKeys('devolucion');
-
-                foreach ($foreignKeys as $foreignKey) {
-                    if (in_array($foreignKey->getName(), ['devolucion_id_tipo_devolucion_foreign', 'devolucion_id_razon_devolucion_foreign'])) {
-                        $table->dropForeign($foreignKey->getName());
-                    }
-                }
-
-                // Eliminar columnas si existen
+                // Eliminar foreign keys si existen (Laravel 11+ compatible)
                 if (Schema::hasColumn('devolucion', 'id_tipo_devolucion')) {
+                    try {
+                        $table->dropForeign(['id_tipo_devolucion']);
+                    } catch (\Exception $e) {
+                        // Foreign key no existe, continuar
+                    }
                     $table->dropColumn('id_tipo_devolucion');
                 }
+
                 if (Schema::hasColumn('devolucion', 'id_razon_devolucion')) {
+                    try {
+                        $table->dropForeign(['id_razon_devolucion']);
+                    } catch (\Exception $e) {
+                        // Foreign key no existe, continuar
+                    }
                     $table->dropColumn('id_razon_devolucion');
                 }
             });

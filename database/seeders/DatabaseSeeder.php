@@ -16,7 +16,8 @@ class DatabaseSeeder extends Seeder
      * 2. Catálogos base (categorías, bodegas, regímenes)
      * 3. Tipos de transacción (crítico para sistema de lotes)
      * 4. Tipos de entrada y salida (subtipos)
-     * 5. Proveedores de prueba (opcional)
+     * 5. Lotes especiales (lotes de ajuste)
+     * 6. Proveedores de prueba (opcional)
      */
     public function run(): void
     {
@@ -44,18 +45,12 @@ class DatabaseSeeder extends Seeder
             TipoSalidaSeeder::class,       // Venta, Uso Interno, Merma, etc.
         ]);
 
-        // 5. Tipos y Razones de Devolución
-        $this->call([
-            TipoDevolucionSeeder::class,   // Normal, Equipo No Registrado, Insumos No Utilizados
-            RazonDevolucionSeeder::class,  // Término laboral, Mal estado, etc.
-        ]);
-
-        // 6. Lotes Especiales
+        // 5. Lotes Especiales
         $this->call([
             LoteAjusteSeeder::class,       // Lotes de ajuste por bodega (para equipo no registrado)
         ]);
 
-        // 7. Datos de Prueba (OPCIONAL - comentar en producción)
+        // 6. Datos de Prueba (OPCIONAL - comentar en producción)
         $this->call([
             ProveedorSeeder::class,        // Proveedores de ejemplo
         ]);
@@ -71,8 +66,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('  • 3 Regímenes tributarios');
         $this->command->info('  • 4 Tipos de entrada');
         $this->command->info('  • 6 Tipos de salida');
-        $this->command->info('  • 3 Tipos de devolución');
-        $this->command->info('  • 6 Razones de devolución');
         $this->command->info('  • Lotes de ajuste por bodega');
         $this->command->info('  • 2 Proveedores de prueba');
         $this->command->info('==================================================');
