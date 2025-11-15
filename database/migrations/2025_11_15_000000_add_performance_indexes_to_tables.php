@@ -117,12 +117,11 @@ return new class extends Migration
 
         // 8. PRODUCTO - HIGH: Search operations (usado en múltiples componentes)
         // Impacto: 5-10x más rápido
+        // NOTA: producto.id ya es primary key (string), producto.descripcion es TEXT (no indexable)
         Schema::table('producto', function (Blueprint $table) {
-            $table->index('nombre');
-            $table->index('codigo');
             $table->index('id_categoria');
             $table->index('activo');
-            // Índice compuesto para búsquedas de productos activos
+            // Índice compuesto para búsquedas de productos activos por categoría
             $table->index(['activo', 'id_categoria'], 'idx_producto_activo_categoria');
         });
 
@@ -137,8 +136,9 @@ return new class extends Migration
         // Impacto: 3-5x más rápido
         Schema::table('proveedor', function (Blueprint $table) {
             $table->index('nombre');
-            $table->index('nit');
-            $table->index('id_regimen_tributario');
+            // NOTA: nit ya es unique, no necesita índice adicional
+            $table->index('id_regimen'); // Columna correcta: id_regimen, no id_regimen_tributario
+            $table->index('activo');
         });
 
         // ========================================
@@ -309,8 +309,8 @@ return new class extends Migration
 
         Schema::table('proveedor', function (Blueprint $table) {
             $table->dropIndex(['nombre']);
-            $table->dropIndex(['nit']);
-            $table->dropIndex(['id_regimen_tributario']);
+            $table->dropIndex(['id_regimen']);
+            $table->dropIndex(['activo']);
         });
 
         Schema::table('bodega', function (Blueprint $table) {
@@ -319,8 +319,6 @@ return new class extends Migration
         });
 
         Schema::table('producto', function (Blueprint $table) {
-            $table->dropIndex(['nombre']);
-            $table->dropIndex(['codigo']);
             $table->dropIndex(['id_categoria']);
             $table->dropIndex(['activo']);
             $table->dropIndex('idx_producto_activo_categoria');
