@@ -176,9 +176,9 @@ return new class extends Migration
         });
 
         // 16. TARJETA_RESPONSABILIDAD - MEDIUM: Filtering
+        // NOTA: tarjeta_responsabilidad NO tiene id_bodega, solo id_persona
         Schema::table('tarjeta_responsabilidad', function (Blueprint $table) {
             $table->index('id_persona');
-            $table->index('id_bodega');
             $table->index('activo');
             $table->index(['activo', 'id_persona'], 'idx_tarjeta_activo_persona');
         });
@@ -277,7 +277,6 @@ return new class extends Migration
 
         Schema::table('tarjeta_responsabilidad', function (Blueprint $table) {
             $table->dropIndex(['id_persona']);
-            $table->dropIndex(['id_bodega']);
             $table->dropIndex(['activo']);
             $table->dropIndex('idx_tarjeta_activo_persona');
         });
