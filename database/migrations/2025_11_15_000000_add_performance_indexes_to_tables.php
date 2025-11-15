@@ -184,11 +184,12 @@ return new class extends Migration
         });
 
         // 17. ENTRADA - MEDIUM: Date filtering
+        // NOTA: entrada NO tiene id_tipo, solo fecha, id_bodega, id_usuario, id_tarjeta
         Schema::table('entrada', function (Blueprint $table) {
             $table->index('fecha');
             $table->index('id_bodega');
-            $table->index('id_tipo');
             $table->index('id_usuario');
+            $table->index('id_tarjeta');
         });
 
         // 18. BITACORA - MEDIUM: Audit queries
@@ -271,8 +272,8 @@ return new class extends Migration
         Schema::table('entrada', function (Blueprint $table) {
             $table->dropIndex(['fecha']);
             $table->dropIndex(['id_bodega']);
-            $table->dropIndex(['id_tipo']);
             $table->dropIndex(['id_usuario']);
+            $table->dropIndex(['id_tarjeta']);
         });
 
         Schema::table('tarjeta_responsabilidad', function (Blueprint $table) {
