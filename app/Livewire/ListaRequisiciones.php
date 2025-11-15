@@ -29,6 +29,12 @@ class ListaRequisiciones extends Component
     /** @var string Dirección de ordenamiento (asc, desc) */
     public $sortDirection = 'desc';
 
+    /** @var bool Controla visibilidad del modal de detalle */
+    public $showModalVer = false;
+
+    /** @var array|null Requisición seleccionada para ver */
+    public $requisicionSeleccionada = null;
+
     /**
      * Reinicia la paginación cuando cambia la búsqueda
      */
@@ -147,6 +153,85 @@ class ListaRequisiciones extends Component
         }
 
         return $requisiciones->values();
+    }
+
+    /**
+     * Muestra el detalle de una requisición en modal
+     */
+    public function verDetalle($id, $tipo)
+    {
+        try {
+            if ($tipo === 'salida') {
+                $requisicion = Salida::with(['persona', 'bodega', 'detalles.producto', 'detalles.lote'])
+                    ->findOrFail($id);
+
+                $this->requisicionSeleccionada = [
+                    'tipo' => 'Salida',
+                    'tipo_nombre' => 'Salida - Productos No Consumibles',
+                    'tipo_color' => 'blue',
+                    'correlativo' => $requisicion->ubicacion,
+                    'fecha' => $requisicion->fecha->format('d/m/Y H:i'),
+                    'persona' => $requisicion->persona
+                        ? $requisicion->persona->nombres . ' ' . $requisicion->persona->apellidos
+                        : 'N/A',
+                    'bodega' => $requisicion->bodega ? $requisicion->bodega->nombre : 'N/A',
+                    'total' => $requisicion->total,
+                    'observaciones' => $requisicion->descripcion,
+                    'productos' => $requisicion->detalles->map(function($detalle) {
+                        return [
+                            'codigo' => $detalle->producto->id,
+                            'descripcion' => $detalle->producto->descripcion,
+                            'lote' => $detalle->id_lote,
+                            'cantidad' => $detalle->cantidad,
+                            'precio' => $detalle->precio_salida,
+                            'subtotal' => $detalle->cantidad * $detalle->precio_salida,
+                            'es_consumible' => $detalle->producto->es_consumible ?? false,
+                        ];
+                    })->toArray(),
+                ];
+            } else {
+                $requisicion = Traslado::with(['persona', 'bodegaOrigen', 'detalles.producto', 'detalles.lote'])
+                    ->findOrFail($id);
+
+                $this->requisicionSeleccionada = [
+                    'tipo' => 'Traslado',
+                    'tipo_nombre' => 'Traslado - Productos Consumibles',
+                    'tipo_color' => 'amber',
+                    'correlativo' => $requisicion->no_requisicion ?? $requisicion->correlativo,
+                    'fecha' => $requisicion->fecha->format('d/m/Y H:i'),
+                    'persona' => $requisicion->persona
+                        ? $requisicion->persona->nombres . ' ' . $requisicion->persona->apellidos
+                        : 'N/A',
+                    'bodega' => $requisicion->bodegaOrigen ? $requisicion->bodegaOrigen->nombre : 'N/A',
+                    'total' => $requisicion->total,
+                    'observaciones' => $requisicion->observaciones,
+                    'productos' => $requisicion->detalles->map(function($detalle) {
+                        return [
+                            'codigo' => $detalle->producto->id,
+                            'descripcion' => $detalle->producto->descripcion,
+                            'lote' => $detalle->id_lote,
+                            'cantidad' => $detalle->cantidad,
+                            'precio' => $detalle->precio_traslado,
+                            'subtotal' => $detalle->cantidad * $detalle->precio_traslado,
+                            'es_consumible' => $detalle->producto->es_consumible ?? false,
+                        ];
+                    })->toArray(),
+                ];
+            }
+
+            $this->showModalVer = true;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al cargar el detalle: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cierra el modal de detalle
+     */
+    public function closeModalVer()
+    {
+        $this->showModalVer = false;
+        $this->requisicionSeleccionada = null;
     }
 
     public function render()

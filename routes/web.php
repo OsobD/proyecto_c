@@ -43,9 +43,7 @@ Route::middleware('auth')->group(function () {
     // Requisiciones
     Route::get('/requisiciones', \App\Livewire\ListaRequisiciones::class)->name('requisiciones');
     Route::get('/requisiciones/nueva', \App\Livewire\FormularioRequisicion::class)->name('requisiciones.create');
-    Route::get('/requisiciones/{tipo}/{id}', function($tipo, $id) {
-        return view('requisiciones.detalle', ['tipo' => $tipo, 'id' => $id]);
-    })->name('requisiciones.ver');
+    Route::get('/requisiciones/{tipo}/{id}', \App\Livewire\DetalleRequisicion::class)->name('requisiciones.ver');
 
     // Rutas de Devoluciones
     Route::get('/devoluciones', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');
