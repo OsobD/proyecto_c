@@ -61,6 +61,9 @@ class FormularioRequisicion extends Component
     /** @var string|null Correlativo de la requisición */
     public $correlativo = null;
 
+    /** @var string|null Número de serie de la requisición */
+    public $numeroSerie = null;
+
     /** @var string|null Observaciones de la requisición */
     public $observaciones = null;
 

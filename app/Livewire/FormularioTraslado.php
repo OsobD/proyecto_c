@@ -66,6 +66,9 @@ class FormularioTraslado extends Component
     /** @var string Número correlativo del traslado */
     public $correlativo = '';
 
+    /** @var string Número de serie del traslado */
+    public $numeroSerie = '';
+
     /** @var string Observaciones del traslado */
     public $observaciones = '';
 
