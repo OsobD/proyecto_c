@@ -471,6 +471,12 @@ class FormularioTraslado extends Component
      */
     public function guardarTraslado()
     {
+        \Log::info('=== Iniciando guardarTraslado ===');
+        \Log::info('Usuario autenticado: ' . (auth()->check() ? 'Sí (ID: ' . auth()->id() . ')' : 'No'));
+        \Log::info('selectedOrigen: ' . json_encode($this->selectedOrigen));
+        \Log::info('selectedDestino: ' . json_encode($this->selectedDestino));
+        \Log::info('Productos: ' . count($this->productosSeleccionados));
+
         try {
             DB::beginTransaction();
 
@@ -478,9 +484,13 @@ class FormularioTraslado extends Component
             $usuario = auth()->user();
 
             if (!$usuario) {
+                \Log::error('ERROR: Usuario no autenticado');
                 session()->flash('error', 'Debe iniciar sesión para registrar un traslado.');
+                $this->closeModalConfirmacion();
                 return;
             }
+
+            \Log::info('Usuario encontrado - ID: ' . $usuario->id);
 
             // Obtener o crear tarjeta de responsabilidad para la persona seleccionada
             // En traslados entre bodegas no hay persona, solo en requisiciones
