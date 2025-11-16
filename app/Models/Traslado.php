@@ -61,15 +61,15 @@ class Traslado extends Model
         return $this->bodegaOrigen();
     }
 
-    public function tarjetaProducto()
+    public function tarjetaResponsabilidad()
     {
-        return $this->belongsTo(TarjetaProducto::class, 'id_tarjeta');
+        return $this->belongsTo(TarjetaResponsabilidad::class, 'id_tarjeta');
     }
 
     // Alias para compatibilidad
     public function tarjeta()
     {
-        return $this->tarjetaProducto();
+        return $this->tarjetaResponsabilidad();
     }
 
     public function detalles()
