@@ -82,18 +82,9 @@
                     <label class="block text-sm font-medium text-gray-700">Empleado Destino:</label>
                     <div class="relative">
                         @if($selectedDestino)
-                            <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <div class="flex items-center gap-2">
-                                    <span>{{ $selectedDestino['nombre'] }}</span>
-                                    @if($selectedDestino['tiene_tarjeta'])
-                                        <span class="bg-green-200 text-green-800 py-1 px-2 rounded-full text-xs">Con Tarjeta</span>
-                                    @else
-                                        <span class="bg-gray-200 text-gray-800 py-1 px-2 rounded-full text-xs">Sin Tarjeta</span>
-                                    @endif
-                                </div>
-                                <button type="button" wire:click.prevent="clearDestino" class="text-gray-400 hover:text-gray-600">
-                                    ×
-                                </button>
+                            <div wire:click="clearDestino" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
+                                <span class="font-medium">{{ $selectedDestino['nombre'] }}</span>
+                                <span class="text-gray-400 text-xl">⟲</span>
                             </div>
                         @else
                             <div class="relative" x-data="{ open: @entangle('showDestinoDropdown') }">
@@ -108,17 +99,12 @@
                                 <div x-show="open"
                                      x-transition
                                      @click.away="open = false"
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                     <ul>
                                         @foreach ($this->destinoResults as $result)
                                             <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['persona_id'] }}, {{ $result['tarjeta_id'] ?? 'null' }}, {{ $result['tiene_tarjeta'] ? 'true' : 'false' }})"
-                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center justify-between">
-                                                <span>{{ $result['nombre'] }}</span>
-                                                @if($result['tiene_tarjeta'])
-                                                    <span class="bg-green-200 text-green-800 py-1 px-2 rounded-full text-xs">Con Tarjeta</span>
-                                                @else
-                                                    <span class="bg-gray-200 text-gray-800 py-1 px-2 rounded-full text-xs">Sin Tarjeta</span>
-                                                @endif
+                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                {{ $result['nombre'] }}
                                             </li>
                                         @endforeach
                                     </ul>
@@ -131,15 +117,33 @@
 
             </div>
 
-            {{-- Correlativo --}}
-            <div class="mt-6">
-                <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
-                <input
-                    type="text"
-                    id="correlativo"
-                    wire:model="correlativo"
-                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Ingrese el correlativo...">
+            {{-- Información de requisición --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                    <label for="numero_serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
+                    <input
+                        type="text"
+                        id="numero_serie"
+                        wire:model="numeroSerie"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: ABC123">
+                    @error('numeroSerie')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
+                    <input
+                        type="text"
+                        id="correlativo"
+                        wire:model="correlativo"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: 001">
+                    @error('correlativo')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             {{-- Observaciones --}}

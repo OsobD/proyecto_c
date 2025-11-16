@@ -117,24 +117,30 @@
             </div>
 
             {{-- Correlativo y Número de Serie --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                    <label for="numero_serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
+                    <input
+                        type="text"
+                        id="numero_serie"
+                        wire:model="no_serie"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: ABC123">
+                    @error('no_serie')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
                 <div>
                     <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
                     <input
                         type="text"
                         id="correlativo"
                         wire:model="correlativo"
-                        class="mt-1 block w-full px-3 py-1.5 text-sm border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ej: DEV-001">
-                </div>
-                <div>
-                    <label for="no_serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
-                    <input
-                        type="text"
-                        id="no_serie"
-                        wire:model="no_serie"
-                        class="mt-1 block w-full px-3 py-1.5 text-sm border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ej: A001">
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: 001">
+                    @error('correlativo')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
@@ -190,68 +196,59 @@
             {{-- Lista de Productos Seleccionados --}}
             <div class="mt-8">
                 <h2 class="text-lg font-semibold text-gray-800">Productos a Devolver</h2>
-                @if(count($productosSeleccionados) > 0)
-                    <div class="overflow-x-auto mt-4">
-                        <table class="min-w-full bg-white">
-                            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                <tr>
-                                    <th class="py-3 px-6 text-left">Código</th>
-                                    <th class="py-3 px-6 text-left">Descripción</th>
-                                    <th class="py-3 px-6 text-right">Precio Unit.</th>
-                                    <th class="py-3 px-6 text-center">Cantidad</th>
-                                    <th class="py-3 px-6 text-right">Total</th>
-                                    <th class="py-3 px-6 text-center">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 text-sm font-light">
-                                @foreach($productosSeleccionados as $index => $producto)
-                                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                        <td class="py-3 px-6 text-left font-mono">#{{ $producto['id'] }}</td>
-                                        <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
-                                        <td class="py-3 px-6 text-right">
-                                            Q{{ number_format($producto['precio'], 2) }}
-                                        </td>
-                                        <td class="py-3 px-6 text-center">
-                                            <input
-                                                type="number"
-                                                wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
-                                                wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
-                                                min="1"
-                                                class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                        </td>
-                                        <td class="py-3 px-6 text-right font-semibold">
-                                            Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
-                                        </td>
-                                        <td class="py-3 px-6 text-center">
-                                            <button
-                                                type="button"
-                                                wire:click="eliminarProducto('{{ $producto['id'] }}')"
-                                                class="text-red-600 hover:text-red-800">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="bg-gray-50">
-                                <tr>
-                                    <td colspan="4" class="py-3 px-6 text-right font-bold text-gray-700">Total de la Devolución:</td>
-                                    <td class="py-3 px-6 text-right font-bold text-lg text-gray-800">
-                                        Q{{ number_format($this->subtotal, 2) }}
+                <div class="overflow-x-auto mt-4">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <tr>
+                                <th class="py-3 px-6 text-left">Código</th>
+                                <th class="py-3 px-6 text-left">Descripción</th>
+                                <th class="py-3 px-6 text-right">Precio Unit.</th>
+                                <th class="py-3 px-6 text-center">Cantidad</th>
+                                <th class="py-3 px-6 text-right">Total</th>
+                                <th class="py-3 px-6 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm font-light">
+                            @foreach($productosSeleccionados as $index => $producto)
+                                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                    <td class="py-3 px-6 text-left font-mono">#{{ $producto['id'] }}</td>
+                                    <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
+                                    <td class="py-3 px-6 text-right">
+                                        Q{{ number_format($producto['precio'], 2) }}
                                     </td>
+                                    <td class="py-3 px-6 text-center">
+                                        <input
+                                            type="number"
+                                            wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
+                                            wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
+                                            min="1"
+                                            class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    </td>
+                                    <td class="py-3 px-6 text-right font-semibold">
+                                        Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
+                                    </td>
+                                    <td class="py-3 px-6 text-center">
+                                        <button
+                                            type="button"
+                                            wire:click="eliminarProducto('{{ $producto['id'] }}')"
+                                            class="text-red-600 hover:text-red-800">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            @if(count($productosSeleccionados) > 0)
+                                <tr class="bg-gray-100 font-bold">
+                                    <td colspan="4" class="py-4 px-6 text-right text-gray-800 uppercase">Total de la Devolución:</td>
+                                    <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format($this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                @else
-                    <div class="mt-4 text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                        <p class="text-gray-500">No hay productos agregados</p>
-                        <p class="text-gray-400 text-sm mt-2">Busque y seleccione productos para agregar a la devolución</p>
-                    </div>
-                @endif
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {{-- Botones de Acción --}}

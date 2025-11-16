@@ -102,6 +102,35 @@
 
             </div>
 
+            {{-- Información de traslado --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                    <label for="numero_serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
+                    <input
+                        type="text"
+                        id="numero_serie"
+                        wire:model="numeroSerie"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: ABC123">
+                    @error('numeroSerie')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
+                    <input
+                        type="text"
+                        id="correlativo"
+                        wire:model="correlativo"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: 001">
+                    @error('correlativo')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
             {{-- Observaciones --}}
             <div class="mt-6 p-6 bg-gray-50 rounded-lg">
                 <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones:</label>
