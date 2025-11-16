@@ -545,7 +545,7 @@ class FormularioTraslado extends Component
                         'descripcion' => "Traslado a {$this->selectedDestino['nombre']} - {$producto->descripcion}",
                         'cantidad' => $cantidadAUsar,
                         'id_lote' => $lote->id,
-                        'id_tipo_transaccion' => $tipoTraslado->id ?? null,
+                        'id_tipo_transaccion' => $tipoTraslado?->id,
                         'id_traslado' => $traslado->id,
                     ]);
 
@@ -577,7 +577,7 @@ class FormularioTraslado extends Component
                         'descripcion' => "Traslado desde {$this->selectedOrigen['nombre']} - {$producto->descripcion}",
                         'cantidad' => $cantidadAUsar,
                         'id_lote' => $loteDestino->id,
-                        'id_tipo_transaccion' => $tipoTraslado->id ?? null,
+                        'id_tipo_transaccion' => $tipoTraslado?->id,
                         'id_traslado' => $traslado->id,
                     ]);
 
