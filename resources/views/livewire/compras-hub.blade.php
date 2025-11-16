@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 font-medium">Compras este Mes</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $estadisticas['total_mes'] }}</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $this->estadisticas['total_mes'] }}</p>
                 </div>
                 <div class="bg-eemq-horizon-100 p-3 rounded-full">
                     <svg class="w-8 h-8 text-eemq-horizon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 font-medium">Monto Total</p>
-                    <p class="text-2xl xl:text-3xl font-bold text-gray-800 mt-1">Q{{ number_format($estadisticas['monto_total_mes'], 2) }}</p>
+                    <p class="text-2xl xl:text-3xl font-bold text-gray-800 mt-1">Q{{ number_format($this->estadisticas['monto_total_mes'], 2) }}</p>
                 </div>
                 <div class="bg-eemq-horizon-50 p-3 rounded-full">
                     <svg class="w-8 h-8 text-eemq-horizon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 font-medium">Proveedores Activos</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $estadisticas['proveedores_activos'] }}</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $this->estadisticas['proveedores_activos'] }}</p>
                 </div>
                 <div class="bg-eemq-chambray-50 p-3 rounded-full">
                     <svg class="w-8 h-8 text-eemq-chambray" fill="none" stroke="currentColor" viewBox="0 0 24 24">

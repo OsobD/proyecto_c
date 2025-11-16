@@ -15,15 +15,13 @@ class Persona extends Model
     protected $fillable = [
         'nombres',
         'apellidos',
+        'dpi',
         'telefono',
         'correo',
-        'fecha_nacimiento',
-        'genero',
         'estado',
     ];
 
     protected $casts = [
-        'fecha_nacimiento' => 'date',
         'estado' => 'boolean',
     ];
 
@@ -51,10 +49,9 @@ class Persona extends Model
         return [
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
+            'dpi' => 'required|string|size:13|unique:persona,dpi' . ($id ? ",$id" : ''),
             'telefono' => 'nullable|string|max:20',
             'correo' => 'nullable|email|max:255',
-            'fecha_nacimiento' => 'nullable|date',
-            'genero' => 'nullable|string|in:M,F',
             'estado' => 'nullable|boolean',
         ];
     }

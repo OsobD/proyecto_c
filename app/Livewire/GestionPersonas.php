@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Persona;
 use App\Models\Bitacora;
+use App\Models\TarjetaResponsabilidad;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
@@ -21,28 +22,26 @@ class GestionPersonas extends Component
     public $personaId;
     public $nombres;
     public $apellidos;
+    public $dpi;
     public $telefono;
     public $correo;
-    public $fecha_nacimiento;
-    public $genero;
 
     protected $paginationTheme = 'bootstrap';
 
     protected $rules = [
         'nombres' => 'required|string|max:255',
         'apellidos' => 'required|string|max:255',
+        'dpi' => 'required|string|size:13',
         'telefono' => 'nullable|string|max:20',
         'correo' => 'nullable|email|max:255',
-        'fecha_nacimiento' => 'nullable|date',
-        'genero' => 'nullable|in:M,F',
     ];
 
     protected $messages = [
         'nombres.required' => 'Los nombres son obligatorios.',
         'apellidos.required' => 'Los apellidos son obligatorios.',
+        'dpi.required' => 'El DPI es obligatorio.',
+        'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
         'correo.email' => 'El correo debe ser una dirección válida.',
-        'fecha_nacimiento.date' => 'La fecha de nacimiento debe ser válida.',
-        'genero.in' => 'El género debe ser Masculino o Femenino.',
     ];
 
     public function updatingSearch()
@@ -88,10 +87,9 @@ class GestionPersonas extends Component
         $this->personaId = $persona->id;
         $this->nombres = $persona->nombres;
         $this->apellidos = $persona->apellidos;
+        $this->dpi = $persona->dpi;
         $this->telefono = $persona->telefono;
         $this->correo = $persona->correo;
-        $this->fecha_nacimiento = $persona->fecha_nacimiento;
-        $this->genero = $persona->genero;
 
         $this->editMode = true;
         $this->showModal = true;
@@ -99,7 +97,15 @@ class GestionPersonas extends Component
 
     public function save()
     {
-        $this->validate();
+        // Validar DPI único solo si es nueva persona o si cambió el DPI
+        $dpiRules = $this->rules;
+        if ($this->editMode) {
+            $dpiRules['dpi'] = 'required|string|size:13|unique:persona,dpi,' . $this->personaId;
+        } else {
+            $dpiRules['dpi'] = 'required|string|size:13|unique:persona,dpi';
+        }
+
+        $this->validate($dpiRules);
 
         try {
             if ($this->editMode) {
@@ -107,10 +113,9 @@ class GestionPersonas extends Component
                 $persona->update([
                     'nombres' => $this->nombres,
                     'apellidos' => $this->apellidos,
+                    'dpi' => $this->dpi,
                     'telefono' => $this->telefono,
                     'correo' => $this->correo,
-                    'fecha_nacimiento' => $this->fecha_nacimiento,
-                    'genero' => $this->genero,
                 ]);
 
                 // Registrar en bitácora
@@ -125,14 +130,23 @@ class GestionPersonas extends Component
 
                 $mensaje = 'Persona actualizada correctamente.';
             } else {
+                // Crear persona
                 $persona = Persona::create([
                     'nombres' => $this->nombres,
                     'apellidos' => $this->apellidos,
+                    'dpi' => $this->dpi,
                     'telefono' => $this->telefono,
                     'correo' => $this->correo,
-                    'fecha_nacimiento' => $this->fecha_nacimiento,
-                    'genero' => $this->genero,
                     'estado' => true,
+                ]);
+
+                // Crear tarjeta de responsabilidad automáticamente
+                TarjetaResponsabilidad::create([
+                    'nombre' => "{$this->nombres} {$this->apellidos}",
+                    'fecha_creacion' => now(),
+                    'total' => 0,
+                    'id_persona' => $persona->id,
+                    'activo' => true,
                 ]);
 
                 // Registrar en bitácora
@@ -140,12 +154,12 @@ class GestionPersonas extends Component
                     'accion' => 'Crear',
                     'modelo' => 'Persona',
                     'modelo_id' => $persona->id,
-                    'descripcion' => "Persona creada: {$persona->nombres} {$persona->apellidos}",
+                    'descripcion' => "Persona creada: {$persona->nombres} {$persona->apellidos} (con tarjeta de responsabilidad)",
                     'id_usuario' => Auth::id(),
                     'created_at' => now(),
                 ]);
 
-                $mensaje = 'Persona creada correctamente.';
+                $mensaje = 'Persona y tarjeta de responsabilidad creadas correctamente.';
             }
 
             $this->closeModal();
@@ -219,10 +233,9 @@ class GestionPersonas extends Component
         $this->personaId = null;
         $this->nombres = '';
         $this->apellidos = '';
+        $this->dpi = '';
         $this->telefono = '';
         $this->correo = '';
-        $this->fecha_nacimiento = '';
-        $this->genero = '';
         $this->resetErrorBag();
     }
 }

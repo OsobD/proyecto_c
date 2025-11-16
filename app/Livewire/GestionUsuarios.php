@@ -6,6 +6,7 @@ use App\Models\Usuario;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Bitacora;
+use App\Models\TarjetaResponsabilidad;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -41,10 +42,9 @@ class GestionUsuarios extends Component
     // Datos de Persona
     public $nombres = '';
     public $apellidos = '';
+    public $dpi = '';
     public $telefono = '';
     public $correo = '';
-    public $fecha_nacimiento = '';
-    public $genero = '';
 
     // Datos de Usuario
     public $nombre_usuario = '';
@@ -75,13 +75,17 @@ class GestionUsuarios extends Component
     {
         $usuarioIdRule = $this->editMode ? 'unique:usuario,nombre_usuario,' . $this->usuarioId : 'unique:usuario,nombre_usuario';
 
+        // Validar DPI único según el modo
+        $dpiRule = $this->editMode && !empty($this->usuarioId)
+            ? 'required|string|size:13|unique:persona,dpi,' . Usuario::find($this->usuarioId)?->id_persona
+            : 'required|string|size:13|unique:persona,dpi';
+
         return [
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'telefono' => 'required|string|max:20',
-            'correo' => 'required|email|max:255',
-            'fecha_nacimiento' => 'required|date',
-            'genero' => 'required|in:M,F',
+            'dpi' => $dpiRule,
+            'telefono' => 'nullable|string|max:20',
+            'correo' => 'nullable|email|max:255',
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
             'rolId' => 'required|exists:rol,id',
         ];
@@ -93,11 +97,11 @@ class GestionUsuarios extends Component
     protected $messages = [
         'nombres.required' => 'Los nombres son obligatorios.',
         'apellidos.required' => 'Los apellidos son obligatorios.',
-        'telefono.required' => 'El teléfono es obligatorio.',
-        'correo.required' => 'El correo electrónico es obligatorio.',
+        'dpi.required' => 'El DPI es obligatorio.',
+        'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
+        'dpi.unique' => 'Este DPI ya está registrado.',
+        'telefono.string' => 'El teléfono debe ser un texto válido.',
         'correo.email' => 'El correo debe ser una dirección válida.',
-        'fecha_nacimiento.required' => 'La fecha de nacimiento es obligatoria.',
-        'genero.required' => 'El género es obligatorio.',
         'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
         'rolId.required' => 'Debe seleccionar un rol.',
@@ -288,19 +292,27 @@ class GestionUsuarios extends Component
             $persona = Persona::create([
                 'nombres' => $this->nombres,
                 'apellidos' => $this->apellidos,
+                'dpi' => $this->dpi,
                 'telefono' => $this->telefono,
                 'correo' => $this->correo,
-                'fecha_nacimiento' => $this->fecha_nacimiento,
-                'genero' => $this->genero,
                 'estado' => true,
             ]);
 
-            // 2. Generar contraseña si no existe
+            // 2. Crear tarjeta de responsabilidad para la persona
+            TarjetaResponsabilidad::create([
+                'nombre' => "{$this->nombres} {$this->apellidos}",
+                'fecha_creacion' => now(),
+                'total' => 0,
+                'id_persona' => $persona->id,
+                'activo' => true,
+            ]);
+
+            // 3. Generar contraseña si no existe
             if (empty($this->passwordGenerada)) {
                 $this->generarPassword();
             }
 
-            // 3. Crear registro de usuario
+            // 4. Crear registro de usuario
             $usuario = Usuario::create([
                 'nombre_usuario' => $this->nombre_usuario,
                 'contrasena' => Hash::make($this->passwordGenerada),
@@ -309,12 +321,12 @@ class GestionUsuarios extends Component
                 'estado' => true,
             ]);
 
-            // 4. Registrar en bitácora
+            // 5. Registrar en bitácora
             Bitacora::create([
                 'accion' => 'crear',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario creado: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})",
+                'descripcion' => "Usuario, persona y tarjeta creados: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})",
                 'id_usuario' => auth()->id() ?? 1,
                 'created_at' => now(),
             ]);
@@ -356,10 +368,9 @@ class GestionUsuarios extends Component
         // Cargar datos de persona
         $this->nombres = $usuario->persona->nombres;
         $this->apellidos = $usuario->persona->apellidos;
+        $this->dpi = $usuario->persona->dpi;
         $this->telefono = $usuario->persona->telefono;
         $this->correo = $usuario->persona->correo;
-        $this->fecha_nacimiento = $usuario->persona->fecha_nacimiento?->format('Y-m-d');
-        $this->genero = $usuario->persona->genero;
 
         // Cargar datos de usuario
         $this->nombre_usuario = $usuario->nombre_usuario;
@@ -395,10 +406,9 @@ class GestionUsuarios extends Component
             $persona->update([
                 'nombres' => $this->nombres,
                 'apellidos' => $this->apellidos,
+                'dpi' => $this->dpi,
                 'telefono' => $this->telefono,
                 'correo' => $this->correo,
-                'fecha_nacimiento' => $this->fecha_nacimiento,
-                'genero' => $this->genero,
             ]);
 
             // Actualizar Usuario
@@ -445,10 +455,9 @@ class GestionUsuarios extends Component
     {
         $this->nombres = '';
         $this->apellidos = '';
+        $this->dpi = '';
         $this->telefono = '';
         $this->correo = '';
-        $this->fecha_nacimiento = '';
-        $this->genero = '';
         $this->nombre_usuario = '';
         $this->rolId = '';
         $this->contrasena = '';

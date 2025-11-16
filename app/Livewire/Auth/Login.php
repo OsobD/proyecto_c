@@ -31,7 +31,7 @@ class Login extends Component
         if (Auth::attempt(['nombre_usuario' => $this->nombre_usuario, 'password' => $this->password], $this->remember)) {
             request()->session()->regenerate();
 
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/inicio');
         }
 
         $this->addError('nombre_usuario', 'Las credenciales no coinciden con nuestros registros.');
