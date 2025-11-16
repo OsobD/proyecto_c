@@ -415,11 +415,7 @@ class FormularioRequisicion extends Component
             }
         }
 
-        // Validar que el destino tenga tarjeta activa
-        if (!$this->selectedDestino['tiene_tarjeta']) {
-            session()->flash('error', 'El empleado seleccionado no tiene una tarjeta de responsabilidad activa.');
-            return;
-        }
+        // Nota: No validamos si tiene tarjeta porque se crea automáticamente si no existe
 
         // Validar que ningún producto exceda el stock disponible
         foreach ($this->productosSeleccionados as $producto) {
@@ -498,7 +494,7 @@ class FormularioRequisicion extends Component
                     'observaciones' => $this->observaciones,
                     'estado' => 'Completado',
                     'activo' => true,
-                    'id_persona' => $this->selectedPersona['id'],
+                    'id_persona' => $this->selectedDestino['persona_id'],
                     'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
                     'id_bodega_destino' => $this->selectedOrigen['bodega_id'], // Misma bodega (salida lógica)
                     'id_usuario' => $userId,

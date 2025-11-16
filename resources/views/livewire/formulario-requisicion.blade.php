@@ -344,16 +344,12 @@
                             <p class="font-semibold">{{ $selectedDestino['nombre'] ?? 'N/A' }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Correlativo:</p>
-                            <p class="font-semibold">{{ $correlativo ?? 'N/A' }}</p>
+                            <p class="text-sm text-gray-600">Número de Serie:</p>
+                            <p class="font-semibold">{{ $numeroSerie ?: 'N/A' }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Estado Tarjeta:</p>
-                            @if($selectedDestino && $selectedDestino['tiene_tarjeta'])
-                                <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">Con Tarjeta Activa</span>
-                            @else
-                                <span class="bg-gray-200 text-gray-800 py-1 px-3 rounded-full text-xs font-semibold">Sin Tarjeta</span>
-                            @endif
+                            <p class="text-sm text-gray-600">Correlativo:</p>
+                            <p class="font-semibold">{{ $correlativo ?? 'N/A' }}</p>
                         </div>
                     </div>
                     @if($observaciones)
