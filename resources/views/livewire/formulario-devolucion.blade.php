@@ -74,7 +74,7 @@
                                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                                     <ul>
                                         @forelse ($this->origenResults as $result)
-                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
+                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ json_encode($result['tarjetas'] ?? []) }})"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                                 {{ $result['nombre'] }}
                                             </li>

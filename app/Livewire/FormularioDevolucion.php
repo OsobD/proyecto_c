@@ -155,15 +155,19 @@ class FormularioDevolucion extends Component
         return $results;
     }
 
-    public function selectOrigen($id, $nombre, $tipo)
+    public function selectOrigen($id, $nombre, $tipo, $tarjetas = [])
     {
         $this->selectedOrigen = [
             'id' => $id,
             'nombre' => $nombre,
-            'tipo' => $tipo
+            'tipo' => $tipo,
+            'tarjetas' => $tarjetas
         ];
         $this->searchOrigen = '';
         $this->showOrigenDropdown = false;
+
+        // Limpiar productos seleccionados cuando cambia el origen
+        $this->productosSeleccionados = [];
     }
 
     public function selectDestino($id, $nombre, $tipo)
