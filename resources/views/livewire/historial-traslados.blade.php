@@ -103,13 +103,13 @@
         {{-- Leyenda --}}
         <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 flex gap-6 text-sm">
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
                     No Consumibles
                 </span>
                 <span class="text-gray-600">Se agregan a tarjeta de responsabilidad</span>
             </div>
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold">
                     Consumibles
                 </span>
                 <span class="text-gray-600">Solo registro de retiro (sin tarjeta)</span>
@@ -152,7 +152,7 @@
                             </td>
                             <td class="py-3 px-6 text-left">
                                 @if(isset($traslado['tipo_badge']) && isset($traslado['tipo_color']))
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $traslado['tipo_color'] }}-100 text-{{ $traslado['tipo_color'] }}-800">
+                                    <span class="bg-{{ $traslado['tipo_color'] }}-200 text-{{ $traslado['tipo_color'] }}-800 py-1 px-3 rounded-full text-xs font-semibold">
                                         {{ $traslado['tipo_badge'] }}
                                     </span>
                                 @endif
