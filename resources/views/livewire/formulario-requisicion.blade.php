@@ -42,26 +42,22 @@
                     <label class="block text-sm font-medium text-gray-700">Bodega Origen:</label>
                     <div class="relative">
                         @if($selectedOrigen)
-                            <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <span>{{ $selectedOrigen['nombre'] }}</span>
-                                <button type="button" wire:click.prevent="clearOrigen" class="text-gray-400 hover:text-gray-600">
-                                    ×
-                                </button>
+                            <div wire:click="clearOrigen" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
+                                <span class="font-medium">{{ $selectedOrigen['nombre'] }}</span>
+                                <span class="text-gray-400 text-xl">⟲</span>
                             </div>
                         @else
-                            <div class="relative" x-data="{ open: @entangle('showOrigenDropdown') }">
+                            <div class="relative" x-data="{ open: @entangle('showOrigenDropdown').live }" @click.outside="open = false">
                                 <input
                                     type="text"
                                     wire:model.live.debounce.300ms="searchOrigen"
                                     @click="open = true"
-                                    @click.outside="open = false"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
                                     placeholder="Buscar bodega origen..."
                                 >
                                 <div x-show="open"
                                      x-transition
-                                     @click.away="open = false"
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                     <ul>
                                         @foreach ($this->origenResults as $result)
                                             <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['bodega_id'] }})"

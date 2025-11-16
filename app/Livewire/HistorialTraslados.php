@@ -138,7 +138,7 @@ class HistorialTraslados extends Component
 
         // Cargar Traslados - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Traslado') {
-            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario'])
+            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario', 'tarjeta.persona'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
@@ -146,6 +146,9 @@ class HistorialTraslados extends Component
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             })
                             ->orWhereHas('bodegaDestino', function($q) {
+                                $q->where('nombre', 'like', '%' . $this->search . '%');
+                            })
+                            ->orWhereHas('tarjeta.persona', function($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             });
                     });
@@ -163,6 +166,9 @@ class HistorialTraslados extends Component
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
                 ->map(function($traslado) {
+                    // Si tiene tarjeta asociada, es una requisición a una persona
+                    $esRequisicion = $traslado->id_tarjeta && $traslado->tarjeta && $traslado->tarjeta->persona;
+
                     return [
                         'id' => $traslado->id,
                         'tipo' => 'Traslado',
@@ -171,7 +177,9 @@ class HistorialTraslados extends Component
                         'tipo_color' => 'amber',
                         'correlativo' => $traslado->correlativo ?? 'TRA-' . $traslado->id,
                         'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
-                        'destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
+                        'destino' => $esRequisicion
+                            ? ($traslado->tarjeta->persona->nombre ?? 'N/A')
+                            : ($traslado->bodegaDestino->nombre ?? 'N/A'),
                         'usuario' => $traslado->usuario ? $traslado->usuario->name : 'Sistema',
                         'fecha' => $traslado->fecha->format('Y-m-d'),
                         'fecha_sort' => $traslado->fecha, // Para ordenamiento
