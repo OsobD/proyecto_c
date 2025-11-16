@@ -37,19 +37,8 @@
 
     <div class="bg-white p-6 rounded-lg shadow-md">
         <form wire:submit.prevent="save">
-            {{-- Correlativo --}}
-            <div class="mb-6">
-                <label for="correlativo" class="block text-sm font-medium text-gray-700">Número de Correlativo:</label>
-                <input
-                    type="text"
-                    id="correlativo"
-                    wire:model="correlativo"
-                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Ej: DEV-2025-001">
-            </div>
-
             {{-- Origen y Destino --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {{-- Origen --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Origen (Persona que devuelve):</label>
@@ -74,7 +63,7 @@
                                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                                     <ul>
                                         @forelse ($this->origenResults as $result)
-                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}')"
+                                            <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ json_encode($result['tarjetas'] ?? []) }})"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                                 {{ $result['nombre'] }}
                                             </li>
@@ -124,6 +113,28 @@
                             </div>
                         @endif
                     </div>
+                </div>
+            </div>
+
+            {{-- Correlativo y Número de Serie --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                    <label for="correlativo" class="block text-sm font-medium text-gray-700">Correlativo:</label>
+                    <input
+                        type="text"
+                        id="correlativo"
+                        wire:model="correlativo"
+                        class="mt-1 block w-full px-3 py-1.5 text-sm border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Ej: DEV-001">
+                </div>
+                <div>
+                    <label for="no_serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
+                    <input
+                        type="text"
+                        id="no_serie"
+                        wire:model="no_serie"
+                        class="mt-1 block w-full px-3 py-1.5 text-sm border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Ej: A001">
                 </div>
             </div>
 

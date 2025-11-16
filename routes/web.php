@@ -40,13 +40,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/traslados', \App\Livewire\TrasladosHub::class)->name('traslados');
     Route::get('/traslados/nuevo', \App\Livewire\FormularioTraslado::class)->name('traslados.nuevo');
     Route::get('/traslados/historial', \App\Livewire\HistorialTraslados::class)->name('traslados.historial');
+
     // Requisiciones (ahora bajo /traslados/requisicion)
-    Route::get('/traslados/requisicion', \App\Livewire\ListaRequisiciones::class)->name('requisiciones');
+    // Redirect de la ruta vieja a la nueva para compatibilidad
+    Route::get('/traslados/requisicion', function () {
+        return redirect()->route('requisiciones.create');
+    })->name('requisiciones');
     Route::get('/traslados/requisicion/nueva', \App\Livewire\FormularioRequisicion::class)->name('requisiciones.create');
     Route::get('/traslados/requisicion/{tipo}/{id}', \App\Livewire\DetalleRequisicion::class)->name('requisiciones.ver');
 
     // Rutas de Devoluciones (ahora bajo /traslados/devolucion)
-    Route::get('/traslados/devolucion', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');
+    Route::get('/traslados/devolucion/nueva', \App\Livewire\FormularioDevolucion::class)->name('devoluciones');
     Route::get('/traslados/devolucion/historial', \App\Livewire\HistorialDevoluciones::class)->name('devoluciones.historial');
 
     // Rutas de Productos

@@ -13,6 +13,7 @@ class TarjetaResponsabilidad extends Model
     protected $table = 'tarjeta_responsabilidad';
 
     protected $fillable = [
+        'nombre',
         'fecha_creacion',
         'total',
         'id_persona',

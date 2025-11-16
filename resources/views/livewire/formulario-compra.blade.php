@@ -24,11 +24,9 @@
                 <label class="block text-sm font-medium text-gray-700">Bodega Destino</label>
                 <div class="relative">
                     @if($selectedBodega)
-                        <div class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                        <div wire:click="clearBodega" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
                             <span class="font-medium">{{ $selectedBodega['nombre'] }}</span>
-                            <button type="button" wire:click.prevent="clearBodega" class="text-gray-400 hover:text-gray-600 text-xl">
-                                ×
-                            </button>
+                            <span class="text-gray-400 text-xl">⟲</span>
                         </div>
                     @else
                         <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }" @click.outside="open = false">
@@ -64,14 +62,12 @@
                 <label class="block text-sm font-medium text-gray-700">Proveedor</label>
                 <div class="relative">
                     @if($selectedProveedor)
-                        <div class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
+                        <div wire:click="clearProveedor" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
                             <div class="flex flex-col gap-0.5 justify-center">
                                 <span class="font-medium">{{ $selectedProveedor['nombre'] }}</span>
                                 <span class="text-xs text-gray-500 mt-0.5">NIT: {{ $selectedProveedor['nit'] }}</span>
                             </div>
-                            <button type="button" wire:click.prevent="clearProveedor" class="text-gray-400 hover:text-gray-600 text-xl">
-                                ×
-                            </button>
+                            <span class="text-gray-400 text-xl">⟲</span>
                         </div>
                     @else
                         <div class="relative" x-data="{ open: @entangle('showProveedorDropdown').live }" @click.outside="open = false">
@@ -116,7 +112,7 @@
                         type="text"
                         id="numero_factura"
                         wire:model="numeroFactura"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
                         placeholder="Ej: 12345678">
                     @error('numeroFactura')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -129,8 +125,8 @@
                         type="text"
                         id="numero_serie"
                         wire:model="numeroSerie"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ej: A">
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
+                        placeholder="Ej: ABC123">
                     @error('numeroSerie')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -142,7 +138,7 @@
                         type="text"
                         id="correlativo"
                         wire:model="correlativo"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
                         placeholder="Ej: 001">
                     @error('correlativo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -158,7 +154,7 @@
                     step="0.01"
                     id="precio_factura"
                     wire:model.live="precioFactura"
-                    class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
                     placeholder="Ingrese el total de la factura para verificación">
                 <p class="text-xs text-gray-500 mt-1">
                     Ingrese el monto total que aparece en la factura física para verificar que coincida con el cálculo del sistema
@@ -194,9 +190,9 @@
                          class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                         <ul>
                             @foreach ($this->productoResults as $producto)
-                                <li wire:click.prevent="selectProducto({{ $producto['id'] }})"
+                                <li @click.stop="$wire.selectProducto('{{ $producto['id'] }}'); open = false"
                                     class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
-                                    <span class="font-mono text-gray-500 mr-2">{{ $producto['codigo'] }}</span>
+                                    <span class="font-mono text-gray-500 mr-2">#{{ $producto['codigo'] }}</span>
                                     <span>{{ $producto['descripcion'] }}</span>
                                 </li>
                             @endforeach

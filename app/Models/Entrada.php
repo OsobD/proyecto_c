@@ -15,6 +15,8 @@ class Entrada extends Model
         'fecha',
         'total',
         'descripcion',
+        'correlativo',
+        'no_serie',
         'id_usuario',
         'id_tarjeta',
         'id_bodega',

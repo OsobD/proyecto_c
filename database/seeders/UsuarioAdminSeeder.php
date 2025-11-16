@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Usuario;
 use App\Models\Persona;
 use App\Models\Rol;
+use App\Models\TarjetaResponsabilidad;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioAdminSeeder extends Seeder
@@ -23,11 +24,19 @@ class UsuarioAdminSeeder extends Seeder
         $persona = Persona::create([
             'nombres' => 'Administrador',
             'apellidos' => 'del Sistema',
+            'dpi' => '0000000000000',
             'telefono' => '0000-0000',
             'correo' => 'admin@eemq.com',
-            'fecha_nacimiento' => now()->subYears(30),
-            'genero' => 'M',
             'estado' => true,
+        ]);
+
+        // Crear tarjeta de responsabilidad para el administrador
+        TarjetaResponsabilidad::create([
+            'nombre' => 'Administrador del Sistema',
+            'fecha_creacion' => now(),
+            'total' => 0,
+            'id_persona' => $persona->id,
+            'activo' => true,
         ]);
 
         // Crear usuario administrador
