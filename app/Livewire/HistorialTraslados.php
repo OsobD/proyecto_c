@@ -88,7 +88,7 @@ class HistorialTraslados extends Component
 
         // Cargar Requisiciones (Salidas tipo "Uso Interno") - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Requisición') {
-            $salidas = Salida::with(['bodega', 'persona', 'tipo', 'usuario'])
+            $salidas = Salida::with(['bodega', 'persona', 'tipo', 'usuario', 'detallesSalida.producto'])
                 ->whereHas('tipo', function($q) {
                     $q->where('nombre', 'Salida por Uso Interno');
                 })
@@ -113,12 +113,39 @@ class HistorialTraslados extends Component
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
                 ->map(function($salida) {
+                    // Determinar tipo de productos
+                    $detalles = $salida->detallesSalida;
+                    $tieneConsumibles = false;
+                    $tieneNoConsumibles = false;
+
+                    foreach ($detalles as $detalle) {
+                        if ($detalle->producto) {
+                            if ($detalle->producto->es_consumible) {
+                                $tieneConsumibles = true;
+                            } else {
+                                $tieneNoConsumibles = true;
+                            }
+                        }
+                    }
+
+                    // Determinar badge y color
+                    if ($tieneConsumibles && $tieneNoConsumibles) {
+                        $tipoBadge = 'Ambos';
+                        $tipoColor = 'purple';
+                    } elseif ($tieneNoConsumibles) {
+                        $tipoBadge = 'No Consumibles';
+                        $tipoColor = 'blue';
+                    } else {
+                        $tipoBadge = 'Consumibles';
+                        $tipoColor = 'amber';
+                    }
+
                     return [
                         'id' => $salida->id,
                         'tipo' => 'Requisición',
                         'tipo_clase' => 'salida',
-                        'tipo_badge' => 'No Consumibles',
-                        'tipo_color' => 'blue',
+                        'tipo_badge' => $tipoBadge,
+                        'tipo_color' => $tipoColor,
                         'correlativo' => $salida->ubicacion ?? 'REQ-' . $salida->id,
                         'origen' => $salida->bodega->nombre ?? 'N/A',
                         'destino' => $salida->persona ?
@@ -138,7 +165,7 @@ class HistorialTraslados extends Component
 
         // Cargar Traslados - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Traslado') {
-            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario', 'tarjeta.persona'])
+            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario', 'tarjeta.persona', 'detalles.producto'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
@@ -169,12 +196,39 @@ class HistorialTraslados extends Component
                     // Si tiene tarjeta asociada, es una requisición a una persona
                     $esRequisicion = $traslado->id_tarjeta && $traslado->tarjeta && $traslado->tarjeta->persona;
 
+                    // Determinar tipo de productos
+                    $detalles = $traslado->detalles;
+                    $tieneConsumibles = false;
+                    $tieneNoConsumibles = false;
+
+                    foreach ($detalles as $detalle) {
+                        if ($detalle->producto) {
+                            if ($detalle->producto->es_consumible) {
+                                $tieneConsumibles = true;
+                            } else {
+                                $tieneNoConsumibles = true;
+                            }
+                        }
+                    }
+
+                    // Determinar badge y color
+                    if ($tieneConsumibles && $tieneNoConsumibles) {
+                        $tipoBadge = 'Ambos';
+                        $tipoColor = 'purple';
+                    } elseif ($tieneNoConsumibles) {
+                        $tipoBadge = 'No Consumibles';
+                        $tipoColor = 'blue';
+                    } else {
+                        $tipoBadge = 'Consumibles';
+                        $tipoColor = 'amber';
+                    }
+
                     return [
                         'id' => $traslado->id,
-                        'tipo' => 'Traslado',
-                        'tipo_clase' => 'traslado',
-                        'tipo_badge' => 'Consumibles',
-                        'tipo_color' => 'amber',
+                        'tipo' => $esRequisicion ? 'Requisición' : 'Traslado',
+                        'tipo_clase' => $esRequisicion ? 'requisicion' : 'traslado',
+                        'tipo_badge' => $tipoBadge,
+                        'tipo_color' => $tipoColor,
                         'correlativo' => $traslado->correlativo ?? 'TRA-' . $traslado->id,
                         'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
                         'destino' => $esRequisicion

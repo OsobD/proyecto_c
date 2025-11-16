@@ -66,6 +66,12 @@ class Traslado extends Model
         return $this->belongsTo(TarjetaProducto::class, 'id_tarjeta');
     }
 
+    // Alias para compatibilidad
+    public function tarjeta()
+    {
+        return $this->tarjetaProducto();
+    }
+
     public function detalles()
     {
         return $this->hasMany(DetalleTraslado::class, 'id_traslado');

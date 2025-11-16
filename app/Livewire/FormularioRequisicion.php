@@ -490,7 +490,7 @@ class FormularioRequisicion extends Component
                     'correlativo' => $this->correlativo,
                     'no_requisicion' => $this->correlativo,
                     'total' => $productosConsumibles->sum(fn($p) => $p['cantidad'] * $p['precio']),
-                    'descripcion' => 'Requisición de productos consumibles',
+                    'descripcion' => $this->observaciones ?: 'Requisición de productos consumibles',
                     'observaciones' => $this->observaciones,
                     'estado' => 'Completado',
                     'activo' => true,
@@ -522,7 +522,7 @@ class FormularioRequisicion extends Component
                 $salida = Salida::create([
                     'fecha' => now(),
                     'total' => $productosNoConsumibles->sum(fn($p) => $p['cantidad'] * $p['precio']),
-                    'descripcion' => 'Requisición de productos no consumibles',
+                    'descripcion' => $this->observaciones ?: 'Requisición de productos no consumibles',
                     'ubicacion' => $this->correlativo,
                     'id_usuario' => $userId,
                     'id_tarjeta' => null,
