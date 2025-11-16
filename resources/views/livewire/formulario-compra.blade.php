@@ -190,7 +190,7 @@
                          class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                         <ul>
                             @foreach ($this->productoResults as $producto)
-                                <li @mousedown.prevent="$wire.selectProducto({{ $producto['id'] }})"
+                                <li @click.stop="$wire.selectProducto({{ $producto['id'] }}); open = false"
                                     class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
                                     <span class="font-mono text-gray-500 mr-2">#{{ $producto['codigo'] }}</span>
                                     <span>{{ $producto['descripcion'] }}</span>
