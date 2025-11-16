@@ -42,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/traslados/historial', \App\Livewire\HistorialTraslados::class)->name('traslados.historial');
 
     // Requisiciones (ahora bajo /traslados/requisicion)
+    // Redirect de la ruta vieja a la nueva para compatibilidad
+    Route::get('/traslados/requisicion', function () {
+        return redirect()->route('requisiciones.create');
+    })->name('requisiciones');
     Route::get('/traslados/requisicion/nueva', \App\Livewire\FormularioRequisicion::class)->name('requisiciones.create');
     Route::get('/traslados/requisicion/{tipo}/{id}', \App\Livewire\DetalleRequisicion::class)->name('requisiciones.ver');
 
