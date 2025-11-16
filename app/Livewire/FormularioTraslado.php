@@ -477,6 +477,11 @@ class FormularioTraslado extends Component
             // Obtener el usuario actual
             $usuario = auth()->user();
 
+            if (!$usuario) {
+                session()->flash('error', 'Debe iniciar sesión para registrar un traslado.');
+                return;
+            }
+
             // Obtener o crear tarjeta de responsabilidad para la persona seleccionada
             // En traslados entre bodegas no hay persona, solo en requisiciones
             $tarjetaResponsabilidad = null;
@@ -516,6 +521,12 @@ class FormularioTraslado extends Component
             foreach ($this->productosSeleccionados as $productoData) {
                 $cantidadRestante = $productoData['cantidad'];
                 $producto = Producto::find($productoData['id']);
+
+                if (!$producto) {
+                    DB::rollBack();
+                    session()->flash('error', "Producto con ID {$productoData['id']} no encontrado.");
+                    return;
+                }
 
                 // Obtener lotes ordenados por FIFO
                 $lotes = Lote::where('id_producto', $producto->id)
