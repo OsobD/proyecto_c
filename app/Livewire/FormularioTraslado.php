@@ -478,8 +478,9 @@ class FormularioTraslado extends Component
             $usuario = auth()->user();
 
             // Obtener o crear tarjeta de responsabilidad para la persona seleccionada
+            // En traslados entre bodegas no hay persona, solo en requisiciones
             $tarjetaResponsabilidad = null;
-            if ($this->selectedPersona) {
+            if ($this->selectedPersona && isset($this->selectedPersona['id'])) {
                 $tarjetaResponsabilidad = TarjetaResponsabilidad::firstOrCreate(
                     [
                         'id_persona' => $this->selectedPersona['id'],
