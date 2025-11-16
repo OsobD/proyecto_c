@@ -14,6 +14,8 @@ class Devolucion extends Model
     protected $fillable = [
         'fecha',
         'no_formulario',
+        'correlativo',
+        'no_serie',
         'foto',
         'total',
         'id_usuario',

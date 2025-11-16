@@ -69,6 +69,9 @@ class FormularioDevolucion extends Component
     /** @var string Correlativo de la devolución */
     public $correlativo = '';
 
+    /** @var string Número de serie de la devolución */
+    public $no_serie = '';
+
     /**
      * Inicializa el componente cargando datos de la base de datos
      *
@@ -334,6 +337,7 @@ class FormularioDevolucion extends Component
             'selectedOrigen' => 'required',
             'productosSeleccionados' => 'required|min:1',
             'correlativo' => 'nullable|string|max:255',
+            'no_serie' => 'nullable|string|max:255',
             'motivo' => 'nullable|string|max:1000',
         ], [
             'selectedDestino.required' => 'Debe seleccionar una bodega de destino',
@@ -353,7 +357,9 @@ class FormularioDevolucion extends Component
             // Crear devolución
             $devolucion = Devolucion::create([
                 'fecha' => now(),
-                'no_formulario' => $this->correlativo,
+                'no_formulario' => null,
+                'correlativo' => $this->correlativo,
+                'no_serie' => $this->no_serie,
                 'total' => $total,
                 'id_usuario' => Auth::id(),
                 'id_tarjeta' => null,
