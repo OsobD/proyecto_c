@@ -129,13 +129,8 @@
                         type="text"
                         id="numero_serie"
                         wire:model="numeroSerie"
-<<<<<<< HEAD
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Ej: ABC123">
-=======
                         class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
-                        placeholder="Ej: A">
->>>>>>> 078efb81320bcd2534fcbf28e61fb5d00c5e3168
+                        placeholder="Ej: ABC123">
                     @error('numeroSerie')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
