@@ -156,7 +156,7 @@
                          class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                         <ul>
                             @forelse ($this->productoResults as $producto)
-                                <li wire:click.prevent="selectProducto({{ $producto['id'] }})"
+                                <li wire:click.prevent="selectProducto('{{ $producto['id'] }}')"
                                     class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center justify-between">
                                         <div>
@@ -220,7 +220,7 @@
                                         <input
                                             type="number"
                                             wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
-                                            wire:change="actualizarCantidad({{ $producto['id'] }}, $event.target.value)"
+                                            wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
                                             min="1"
                                             max="{{ $producto['cantidad_disponible'] }}"
                                             class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -230,7 +230,7 @@
                                     <td class="py-3 px-6 text-center">
                                         <button
                                             type="button"
-                                            wire:click="eliminarProducto({{ $producto['id'] }})"
+                                            wire:click="eliminarProducto('{{ $producto['id'] }}')"
                                             class="text-red-600 hover:text-red-800 font-medium">
                                             Eliminar
                                         </button>
