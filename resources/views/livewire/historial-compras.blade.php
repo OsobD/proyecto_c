@@ -110,6 +110,7 @@
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
                         <th class="py-3 px-6 text-left">Factura</th>
+                        <th class="py-3 px-6 text-left">Correlativo</th>
                         <th class="py-3 px-6 text-left">Serie</th>
                         <th class="py-3 px-6 text-left">Proveedor</th>
                         <th class="py-3 px-6 text-left">Fecha</th>
@@ -124,6 +125,7 @@
                         <tr class="border-b border-gray-200 hover:bg-gray-50 {{ !$compra->activo ? 'opacity-50' : '' }}">
                             <td class="py-3 px-6 text-left font-medium">{{ $compra->no_factura ?? 'N/A' }}</td>
                             <td class="py-3 px-6 text-left">{{ $compra->correlativo ?? 'N/A' }}</td>
+                            <td class="py-3 px-6 text-left">{{ $compra->no_serie ?? 'N/A' }}</td>
                             <td class="py-3 px-6 text-left">{{ $compra->proveedor->nombre ?? 'Sin proveedor' }}</td>
                             <td class="py-3 px-6 text-left">{{ $compra->fecha->format('d/m/Y') }}</td>
                             <td class="py-3 px-6 text-center">
@@ -165,7 +167,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-8 text-center text-gray-500">
+                            <td colspan="9" class="py-8 text-center text-gray-500">
                                 No se encontraron compras con los filtros seleccionados.
                             </td>
                         </tr>
@@ -222,8 +224,12 @@
                                 <p class="font-semibold">{{ $compraSeleccionada['numero_factura'] ?? 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-600">Correlativo / Serie:</p>
+                                <p class="text-sm text-gray-600">Correlativo:</p>
                                 <p class="font-semibold">{{ $compraSeleccionada['correlativo'] ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Número de Serie:</p>
+                                <p class="font-semibold">{{ $compraSeleccionada['no_serie'] ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Fecha de Compra:</p>
@@ -333,8 +339,12 @@
                                 <p class="font-semibold">{{ $compraSeleccionada['numero_factura'] ?? 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-600">Correlativo / Serie:</p>
+                                <p class="text-sm text-gray-600">Correlativo:</p>
                                 <p class="font-semibold">{{ $compraSeleccionada['correlativo'] ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Número de Serie:</p>
+                                <p class="font-semibold">{{ $compraSeleccionada['no_serie'] ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Fecha de Compra:</p>
