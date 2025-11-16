@@ -72,6 +72,9 @@ class FormularioDevolucion extends Component
     /** @var string Número de serie de la devolución */
     public $no_serie = '';
 
+    /** @var bool Controla modal de confirmación */
+    public $showModalConfirmacion = false;
+
     /**
      * Inicializa el componente cargando datos de la base de datos
      *
@@ -445,6 +448,44 @@ class FormularioDevolucion extends Component
             'id_lote' => $idLote,
             'cantidad' => $producto['cantidad'],
         ]);
+    }
+
+    /**
+     * Abre el modal de confirmación
+     *
+     * @return void
+     */
+    public function abrirModalConfirmacion()
+    {
+        // Validar que haya origen seleccionado
+        if (!$this->selectedOrigen) {
+            session()->flash('error', 'Debe seleccionar el origen (persona que devuelve).');
+            return;
+        }
+
+        // Validar que haya destino seleccionado
+        if (!$this->selectedDestino) {
+            session()->flash('error', 'Debe seleccionar el destino (bodega).');
+            return;
+        }
+
+        // Validar que haya productos seleccionados
+        if (empty($this->productosSeleccionados)) {
+            session()->flash('error', 'Debe agregar al menos un producto a la devolución.');
+            return;
+        }
+
+        $this->showModalConfirmacion = true;
+    }
+
+    /**
+     * Cierra el modal de confirmación
+     *
+     * @return void
+     */
+    public function closeModalConfirmacion()
+    {
+        $this->showModalConfirmacion = false;
     }
 
     /**

@@ -31,14 +31,12 @@
                     <label class="block text-sm font-medium text-gray-700">Bodega Origen:</label>
                     <div class="relative">
                         @if($selectedOrigen)
-                            <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <span>{{ $selectedOrigen['nombre'] }}</span>
-                                <button type="button" wire:click.prevent="clearOrigen" class="text-gray-400 hover:text-gray-600">
-                                    ×
-                                </button>
+                            <div wire:click="clearOrigen" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
+                                <span class="font-medium">{{ $selectedOrigen['nombre'] }}</span>
+                                <span class="text-gray-400 text-xl">⟲</span>
                             </div>
                         @else
-                            <div class="relative" x-data="{ open: @entangle('showOrigenDropdown') }" @click.outside="open = false">
+                            <div class="relative" x-data="{ open: @entangle('showOrigenDropdown').live }" @click.outside="open = false">
                                 <input
                                     type="text"
                                     wire:model.live.debounce.300ms="searchOrigen"
@@ -48,7 +46,7 @@
                                 >
                                 <div x-show="open"
                                      x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                     <ul>
                                         @foreach ($this->origenResults as $result)
                                             <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['bodega_id'] }})"
@@ -68,14 +66,12 @@
                     <label class="block text-sm font-medium text-gray-700">Bodega Destino:</label>
                     <div class="relative">
                         @if($selectedDestino)
-                            <div class="flex items-center justify-between mt-1 w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm">
-                                <span>{{ $selectedDestino['nombre'] }}</span>
-                                <button type="button" wire:click.prevent="clearDestino" class="text-gray-400 hover:text-gray-600">
-                                    ×
-                                </button>
+                            <div wire:click="clearDestino" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
+                                <span class="font-medium">{{ $selectedDestino['nombre'] }}</span>
+                                <span class="text-gray-400 text-xl">⟲</span>
                             </div>
                         @else
-                            <div class="relative" x-data="{ open: @entangle('showDestinoDropdown') }" @click.outside="open = false">
+                            <div class="relative" x-data="{ open: @entangle('showDestinoDropdown').live }" @click.outside="open = false">
                                 <input
                                     type="text"
                                     wire:model.live.debounce.300ms="searchDestino"
@@ -85,7 +81,7 @@
                                 >
                                 <div x-show="open"
                                      x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                     <ul>
                                         @foreach ($this->destinoResults as $result)
                                             <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['bodega_id'] }})"
@@ -210,11 +206,11 @@
                                     </td>
                                     <td class="py-3 px-6 text-center">
                                         @if($producto['es_consumible'] ?? false)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                            <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
                                                 Consumible
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
                                                 No Consumible
                                             </span>
                                         @endif
@@ -345,11 +341,11 @@
                                             <td class="py-2 px-4 text-sm">{{ $producto['descripcion'] }}</td>
                                             <td class="py-2 px-4 text-sm text-center">
                                                 @if($producto['es_consumible'] ?? false)
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                    <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
                                                         Consumible
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
                                                         No Consumible
                                                     </span>
                                                 @endif
