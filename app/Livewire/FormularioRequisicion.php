@@ -593,6 +593,7 @@ class FormularioRequisicion extends Component
                 'selectedDestino',
                 'productosSeleccionados',
                 'correlativo',
+                'numeroSerie',
                 'observaciones',
                 'searchOrigen',
                 'searchDestino',
@@ -602,6 +603,9 @@ class FormularioRequisicion extends Component
             return redirect()->route('traslados');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Cerrar modal y mostrar error
+            $this->showModalConfirmacion = false;
 
             \Log::error('Error al registrar requisición: ' . $e->getMessage(), [
                 'exception' => $e,
