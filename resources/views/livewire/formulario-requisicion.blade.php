@@ -219,11 +219,11 @@
                                     <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
                                     <td class="py-3 px-6 text-center">
                                         @if($producto['es_consumible'] ?? false)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                            <span class="bg-amber-100 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold">
                                                 Consumible
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
                                                 No Consumible
                                             </span>
                                         @endif
@@ -379,11 +379,11 @@
                                         <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
                                         <td class="py-2 px-3 text-center">
                                             @if($producto['es_consumible'] ?? false)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                <span class="bg-amber-100 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold">
                                                     Consumible
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
                                                     No Consumible
                                                 </span>
                                             @endif
