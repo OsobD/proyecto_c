@@ -548,9 +548,9 @@ class FormularioRequisicion extends Component
                     $totalTarjeta += $this->procesarProductoNoConsumible($producto, $salida, $tarjeta);
                 }
 
-                // Actualizar total de la tarjeta
+                // Actualizar total de la tarjeta sin triggear eventos
                 $tarjeta->total += $totalTarjeta;
-                $tarjeta->save();
+                $tarjeta->saveQuietly();
             }
 
             // Registrar en bitácora
