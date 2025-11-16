@@ -150,9 +150,9 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="py-3 px-6 text-left">
+                            <td class="py-3 px-6 text-left whitespace-nowrap">
                                 @if(isset($traslado['tipo_badge']) && isset($traslado['tipo_color']))
-                                    <span class="bg-{{ $traslado['tipo_color'] }}-200 text-{{ $traslado['tipo_color'] }}-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                    <span class="bg-{{ $traslado['tipo_color'] }}-200 text-{{ $traslado['tipo_color'] }}-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
                                         {{ $traslado['tipo_badge'] }}
                                     </span>
                                 @endif
