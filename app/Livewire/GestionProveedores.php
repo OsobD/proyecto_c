@@ -40,26 +40,17 @@ class GestionProveedores extends Component
     public $editingId = null;
 
     // Campos del formulario de proveedor
-    /** @var string Nombre del proveedor */
-    public $nombre = '';
-
     /** @var string NIT del proveedor */
     public $nit = '';
-
-    /** @var string Dirección del proveedor */
-    public $direccion = '';
-
-    /** @var string Teléfono del proveedor */
-    public $telefono = '';
-
-    /** @var string Email del proveedor */
-    public $email = '';
 
     /** @var string|int ID del régimen tributario seleccionado */
     public $regimenTributarioId = '';
 
     /** @var string|null Nombre del régimen seleccionado para mostrar en el dropdown */
     public $selectedRegimen = null;
+
+    /** @var string Nombre del proveedor */
+    public $nombre = '';
 
     /**
      * Renderiza la vista del componente con datos desde BD
@@ -117,13 +108,10 @@ class GestionProveedores extends Component
 
         if ($proveedor) {
             $this->editingId = $id;
-            $this->nombre = $proveedor->nombre;
             $this->nit = $proveedor->nit;
-            $this->direccion = $proveedor->direccion ?? '';
-            $this->telefono = $proveedor->telefono ?? '';
-            $this->email = $proveedor->email ?? '';
             $this->regimenTributarioId = $proveedor->id_regimen_tributario;
             $this->selectedRegimen = $proveedor->regimenTributario->nombre ?? null;
+            $this->nombre = $proveedor->nombre;
             $this->showModal = true;
         }
     }
@@ -139,12 +127,9 @@ class GestionProveedores extends Component
     public function guardarProveedor()
     {
         $rules = [
-            'nombre' => 'required|min:3|max:255',
             'nit' => 'required|min:1|max:50',
             'regimenTributarioId' => 'required|exists:regimen_tributario,id',
-            'direccion' => 'nullable|max:255',
-            'telefono' => 'nullable|max:50',
-            'email' => 'nullable|email|max:255',
+            'nombre' => 'required|min:3|max:255',
         ];
 
         // Si estamos creando, validar que el NIT no exista
@@ -153,25 +138,21 @@ class GestionProveedores extends Component
         }
 
         $this->validate($rules, [
-            'nombre.required' => 'El nombre del proveedor es obligatorio.',
-            'nombre.min' => 'El nombre debe tener al menos 3 caracteres.',
             'nit.required' => 'El NIT es obligatorio.',
             'nit.unique' => 'Este NIT ya está registrado.',
             'regimenTributarioId.required' => 'Debe seleccionar un régimen tributario.',
             'regimenTributarioId.exists' => 'El régimen tributario seleccionado no existe.',
-            'email.email' => 'Debe ingresar un email válido.',
+            'nombre.required' => 'El nombre del proveedor es obligatorio.',
+            'nombre.min' => 'El nombre debe tener al menos 3 caracteres.',
         ]);
 
         if ($this->editingId) {
             // Actualizar proveedor existente
             $proveedor = Proveedor::find($this->editingId);
             if ($proveedor) {
-                $proveedor->nombre = $this->nombre;
                 $proveedor->nit = $this->nit;
-                $proveedor->direccion = $this->direccion;
-                $proveedor->telefono = $this->telefono;
-                $proveedor->email = $this->email;
                 $proveedor->id_regimen_tributario = $this->regimenTributarioId;
+                $proveedor->nombre = $this->nombre;
                 $proveedor->save();
 
                 session()->flash('message', 'Proveedor actualizado exitosamente.');
@@ -179,12 +160,9 @@ class GestionProveedores extends Component
         } else {
             // Crear nuevo proveedor
             Proveedor::create([
-                'nombre' => $this->nombre,
                 'nit' => $this->nit,
-                'direccion' => $this->direccion,
-                'telefono' => $this->telefono,
-                'email' => $this->email,
                 'id_regimen_tributario' => $this->regimenTributarioId,
+                'nombre' => $this->nombre,
                 'activo' => true,
             ]);
 
@@ -255,13 +233,10 @@ class GestionProveedores extends Component
     private function resetForm()
     {
         $this->editingId = null;
-        $this->nombre = '';
         $this->nit = '';
-        $this->direccion = '';
-        $this->telefono = '';
-        $this->email = '';
         $this->regimenTributarioId = '';
         $this->selectedRegimen = null;
+        $this->nombre = '';
         $this->showRegimenDropdown = false;
         $this->resetErrorBag();
     }

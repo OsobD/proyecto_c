@@ -141,12 +141,12 @@
          :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
          wire:click.self="closeModal"
          wire:ignore.self>
-        <div class="relative p-6 border w-full max-w-lg shadow-lg rounded-lg bg-white"
+        <div class="relative p-6 border w-full max-w-sm shadow-lg rounded-lg bg-white"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900">
-                    {{ $editingId ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
+                    {{ $editingId ? 'Editar Proveedor' : 'Crear Nuevo Proveedor' }}
                 </h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@
                     @enderror
                 </div>
 
-                {{-- Régimen Tributario --}}
+                {{-- Régimen --}}
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700">
                         Régimen
@@ -230,55 +230,6 @@
                     @enderror
                 </div>
 
-                {{-- Dirección --}}
-                <div class="mb-6">
-                    <label for="direccion" class="block text-sm font-medium text-gray-700">
-                        Dirección
-                    </label>
-                    <input
-                        type="text"
-                        id="direccion"
-                        wire:model="direccion"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('direccion') border-red-500 @enderror"
-                        placeholder="Ej: Calle 123, Ciudad">
-                    @error('direccion')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Teléfono --}}
-                <div class="mb-6">
-                    <label for="telefono" class="block text-sm font-medium text-gray-700">
-                        Teléfono
-                    </label>
-                    <input
-                        type="text"
-                        id="telefono"
-                        wire:model="telefono"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('telefono') border-red-500 @enderror"
-                        placeholder="Ej: +593 999 999 999">
-                    @error('telefono')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Email --}}
-                <div class="mb-6">
-                    <label for="email" class="block text-sm font-medium text-gray-700">
-                        Email
-                    </label>
-                    <input
-                        type="email"
-                        id="email"
-                        wire:model="email"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('email') border-red-500 @enderror"
-                        placeholder="Ej: contacto@proveedor.com">
-                    @error('email')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Botones --}}
                 <div class="flex justify-between mt-6">
                     <button
                         type="button"
@@ -289,7 +240,7 @@
                     <button
                         type="submit"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
-                        {{ $editingId ? 'Actualizar' : 'Guardar' }}
+                        {{ $editingId ? 'Actualizar' : 'Crear' }}
                     </button>
                 </div>
             </form>
