@@ -19,6 +19,7 @@ class Devolucion extends Model
         'foto',
         'total',
         'id_usuario',
+        'id_persona',
         'id_tarjeta',
         'id_bodega',
         'id_traslado',
@@ -68,18 +69,8 @@ class Devolucion extends Model
         return $this->hasMany(Transaccion::class, 'id_devolucion');
     }
 
-    // Obtener la persona que devuelve (a través de tarjeta_producto -> tarjeta_responsabilidad -> persona)
-    public function getPersonaAttribute()
+    public function persona()
     {
-        if (!$this->id_tarjeta) {
-            return null;
-        }
-
-        $tarjetaProducto = TarjetaProducto::find($this->id_tarjeta);
-        if (!$tarjetaProducto || !$tarjetaProducto->tarjetaResponsabilidad) {
-            return null;
-        }
-
-        return $tarjetaProducto->tarjetaResponsabilidad->persona;
+        return $this->belongsTo(Persona::class, 'id_persona');
     }
 }

@@ -142,7 +142,7 @@ class TrasladosHub extends Component
             });
 
         // Obtener devoluciones recientes
-        $devolucionesRecientes = Devolucion::with(['bodega', 'detalles.producto'])
+        $devolucionesRecientes = Devolucion::with(['bodega', 'persona', 'detalles.producto'])
             ->orderBy('fecha', 'desc')
             ->limit(3)
             ->get()
@@ -152,7 +152,9 @@ class TrasladosHub extends Component
                     'tipo' => 'Devolución',
                     'tipo_clase' => 'devolucion',
                     'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
-                    'origen' => 'Devolución',
+                    'origen' => $devolucion->persona
+                        ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
+                        : 'N/A',
                     'destino' => $devolucion->bodega->nombre ?? 'N/A',
                     'fecha' => $devolucion->fecha->format('Y-m-d'),
                     'total' => $devolucion->total,
@@ -241,13 +243,15 @@ class TrasladosHub extends Component
                     break;
 
                 case 'devolucion':
-                    $devolucion = Devolucion::with(['bodega', 'detalles.producto', 'detalles.lote'])
+                    $devolucion = Devolucion::with(['bodega', 'persona', 'detalles.producto', 'detalles.lote'])
                         ->findOrFail($id);
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
                         'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
-                        'origen' => 'Devolución',
+                        'origen' => $devolucion->persona
+                            ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
+                            : 'N/A',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'fecha' => $devolucion->fecha->format('d/m/Y'),
                         'total' => $devolucion->total,

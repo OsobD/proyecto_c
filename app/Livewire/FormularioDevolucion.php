@@ -358,6 +358,12 @@ class FormularioDevolucion extends Component
             // Obtener bodega destino
             $bodegaId = (int)str_replace('B', '', $this->selectedDestino['id']);
 
+            // Obtener persona origen (quien devuelve)
+            $personaId = null;
+            if ($this->selectedOrigen && $this->selectedOrigen['tipo'] === 'Persona') {
+                $personaId = (int)str_replace('P', '', $this->selectedOrigen['id']);
+            }
+
             // Calcular total
             $total = $this->subtotal;
 
@@ -369,6 +375,7 @@ class FormularioDevolucion extends Component
                 'no_serie' => $this->no_serie,
                 'total' => $total,
                 'id_usuario' => Auth::id(),
+                'id_persona' => $personaId,
                 'id_tarjeta' => null,
                 'id_bodega' => $bodegaId,
             ]);

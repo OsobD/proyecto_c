@@ -261,12 +261,16 @@ class HistorialTraslados extends Component
 
         // Cargar Devoluciones - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Devolución') {
-            $devoluciones = Devolucion::with(['bodega', 'usuario'])
+            $devoluciones = Devolucion::with(['bodega', 'persona', 'usuario'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
                         $query->where('no_formulario', 'like', '%' . $this->search . '%')
                             ->orWhereHas('bodega', function($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
+                            })
+                            ->orWhereHas('persona', function($q) {
+                                $q->where('nombres', 'like', '%' . $this->search . '%')
+                                  ->orWhere('apellidos', 'like', '%' . $this->search . '%');
                             });
                     });
                 })
@@ -285,7 +289,9 @@ class HistorialTraslados extends Component
                         'tipo' => 'Devolución',
                         'tipo_clase' => 'devolucion',
                         'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
-                        'origen' => 'Devolución',
+                        'origen' => $devolucion->persona
+                            ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
+                            : 'N/A',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'usuario' => $devolucion->usuario ? $devolucion->usuario->name : 'Sistema',
                         'fecha' => $devolucion->fecha->format('Y-m-d'),
@@ -466,13 +472,15 @@ class HistorialTraslados extends Component
                     break;
 
                 case 'devolucion':
-                    $devolucion = Devolucion::with(['bodega', 'detalles.producto', 'detalles.lote'])
+                    $devolucion = Devolucion::with(['bodega', 'persona', 'detalles.producto', 'detalles.lote'])
                         ->findOrFail($id);
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
                         'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
-                        'origen' => 'Devolución',
+                        'origen' => $devolucion->persona
+                            ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
+                            : 'N/A',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'fecha' => $devolucion->fecha->format('d/m/Y'),
                         'total' => $devolucion->total,
