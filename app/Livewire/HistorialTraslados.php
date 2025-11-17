@@ -56,6 +56,16 @@ class HistorialTraslados extends Component
     }
 
     /**
+     * Se ejecuta cuando cambia el items por página
+     *
+     * @return void
+     */
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
+    /**
      * Limpia todos los filtros
      *
      * @return void
@@ -389,13 +399,20 @@ class HistorialTraslados extends Component
     /**
      * Muestra el detalle de un movimiento
      *
-     * @param int $id
-     * @param string $tipo
+     * @param int|array $id ID o array de IDs si está agrupado
+     * @param string|array $tipo Tipo o array de tipos si está agrupado
+     * @param string|null $correlativo Correlativo para requisiciones agrupadas
      * @return void
      */
-    public function verDetalle($id, $tipo)
+    public function verDetalle($id, $tipo, $correlativo = null)
     {
         try {
+            // Si es un movimiento agrupado (arrays), cargar todos los productos
+            if (is_array($id) && is_array($tipo)) {
+                $this->verDetalleAgrupado($id, $tipo, $correlativo);
+                return;
+            }
+
             switch ($tipo) {
                 case 'salida':
                     $salida = Salida::with(['bodega', 'persona', 'detallesSalida.producto', 'detallesSalida.lote'])
@@ -477,6 +494,106 @@ class HistorialTraslados extends Component
             $this->showModalVer = true;
         } catch (\Exception $e) {
             session()->flash('error', 'Error al cargar el detalle: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Muestra el detalle de una requisición agrupada (combina consumibles + no consumibles)
+     *
+     * @param array $ids Array de IDs
+     * @param array $tipos Array de tipos ('salida', 'traslado', etc.)
+     * @param string $correlativo Correlativo de la requisición
+     * @return void
+     */
+    private function verDetalleAgrupado($ids, $tipos, $correlativo)
+    {
+        $productos = collect();
+        $totalCombinado = 0;
+        $info = null;
+
+        foreach ($ids as $index => $id) {
+            $tipoActual = $tipos[$index];
+
+            switch ($tipoActual) {
+                case 'salida':
+                    $salida = Salida::with(['bodega', 'persona', 'detallesSalida.producto', 'detallesSalida.lote'])
+                        ->find($id);
+
+                    if ($salida) {
+                        if (!$info) {
+                            $info = [
+                                'tipo' => 'Requisición',
+                                'correlativo' => $correlativo,
+                                'origen' => $salida->bodega->nombre ?? 'N/A',
+                                'destino' => $salida->persona ?
+                                    trim($salida->persona->nombres . ' ' . $salida->persona->apellidos) : 'N/A',
+                                'fecha' => $salida->fecha->format('d/m/Y'),
+                                'observaciones' => $salida->descripcion,
+                            ];
+                        }
+
+                        $totalCombinado += $salida->total;
+
+                        $productosSalida = $salida->detallesSalida->map(function($detalle) {
+                            return [
+                                'codigo' => $detalle->producto->id,
+                                'descripcion' => $detalle->producto->descripcion,
+                                'cantidad' => $detalle->cantidad,
+                                'precio' => $detalle->precio_salida,
+                                'subtotal' => $detalle->cantidad * $detalle->precio_salida,
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
+                            ];
+                        });
+
+                        $productos = $productos->concat($productosSalida);
+                    }
+                    break;
+
+                case 'traslado':
+                case 'requisicion':
+                    $traslado = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona', 'detallesTraslado.producto', 'detallesTraslado.lote'])
+                        ->find($id);
+
+                    if ($traslado) {
+                        if (!$info) {
+                            $info = [
+                                'tipo' => 'Requisición',
+                                'correlativo' => $correlativo,
+                                'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
+                                'destino' => $traslado->persona ?
+                                    trim(($traslado->persona->nombres ?? '') . ' ' . ($traslado->persona->apellidos ?? '')) :
+                                    ($traslado->bodegaDestino->nombre ?? 'N/A'),
+                                'fecha' => $traslado->fecha->format('d/m/Y'),
+                                'observaciones' => $traslado->observaciones,
+                            ];
+                        }
+
+                        $totalCombinado += $traslado->total;
+
+                        $productosTraslado = $traslado->detallesTraslado->map(function($detalle) {
+                            return [
+                                'codigo' => $detalle->producto->id,
+                                'descripcion' => $detalle->producto->descripcion,
+                                'cantidad' => $detalle->cantidad,
+                                'precio' => $detalle->lote->precio_ingreso ?? 0,
+                                'subtotal' => $detalle->cantidad * ($detalle->lote->precio_ingreso ?? 0),
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
+                            ];
+                        });
+
+                        $productos = $productos->concat($productosTraslado);
+                    }
+                    break;
+            }
+        }
+
+        if ($info) {
+            $this->movimientoSeleccionado = array_merge($info, [
+                'total' => $totalCombinado,
+                'productos' => $productos->toArray(),
+            ]);
+
+            $this->showModalVer = true;
         }
     }
 

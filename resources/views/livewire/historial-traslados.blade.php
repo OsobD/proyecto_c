@@ -96,8 +96,22 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800">
-                Traslados encontrados: <span class="text-blue-600">{{ $this->trasladosFiltrados->count() }}</span>
+                Traslados encontrados: <span class="text-blue-600">{{ $this->trasladosFiltrados->total() }}</span>
             </h2>
+            <div class="flex items-center gap-2">
+                <label for="perPage" class="text-sm font-medium text-gray-700">Mostrar:</label>
+                <select
+                    id="perPage"
+                    wire:model.live="perPage"
+                    class="py-2 px-3 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="text-sm text-gray-700">por página</span>
+            </div>
         </div>
 
         {{-- Leyenda --}}
@@ -180,10 +194,17 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <x-action-button
-                                        type="view"
-                                        title="Ver detalle"
-                                        wire:click="verDetalle({{ $traslado['id'] }}, '{{ $traslado['tipo_clase'] }}')" />
+                                    @if(isset($traslado['agrupado']) && $traslado['agrupado'])
+                                        <x-action-button
+                                            type="view"
+                                            title="Ver detalle"
+                                            wire:click="verDetalle({{ json_encode($traslado['ids_agrupados']) }}, {{ json_encode($traslado['tipos_agrupados']) }}, '{{ $traslado['correlativo'] }}')" />
+                                    @else
+                                        <x-action-button
+                                            type="view"
+                                            title="Ver detalle"
+                                            wire:click="verDetalle({{ $traslado['id'] }}, '{{ $traslado['tipo_clase'] }}')" />
+                                    @endif
                                 </div>
                             </td>
                         </tr>
