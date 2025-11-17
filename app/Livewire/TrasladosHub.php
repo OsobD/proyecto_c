@@ -151,7 +151,9 @@ class TrasladosHub extends Component
                     'id' => $devolucion->id,
                     'tipo' => 'Devolución',
                     'tipo_clase' => 'devolucion',
-                    'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                    'tipo_badge' => 'No Consumibles',
+                    'tipo_color' => 'blue',
+                    'correlativo' => $devolucion->correlativo ?? 'DEV-' . $devolucion->id,
                     'origen' => $devolucion->persona
                         ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
                         : 'N/A',
@@ -248,7 +250,7 @@ class TrasladosHub extends Component
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
-                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                        'correlativo' => $devolucion->correlativo ?? 'DEV-' . $devolucion->id,
                         'origen' => $devolucion->persona
                             ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
                             : 'N/A',

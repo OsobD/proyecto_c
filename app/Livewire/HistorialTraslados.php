@@ -264,7 +264,8 @@ class HistorialTraslados extends Component
             $devoluciones = Devolucion::with(['bodega', 'persona', 'usuario'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
-                        $query->where('no_formulario', 'like', '%' . $this->search . '%')
+                        $query->where('correlativo', 'like', '%' . $this->search . '%')
+                            ->orWhere('no_formulario', 'like', '%' . $this->search . '%')
                             ->orWhereHas('bodega', function($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             })
@@ -288,7 +289,9 @@ class HistorialTraslados extends Component
                         'id' => $devolucion->id,
                         'tipo' => 'Devolución',
                         'tipo_clase' => 'devolucion',
-                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                        'tipo_badge' => 'No Consumibles',
+                        'tipo_color' => 'blue',
+                        'correlativo' => $devolucion->correlativo ?? 'DEV-' . $devolucion->id,
                         'origen' => $devolucion->persona
                             ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
                             : 'N/A',
@@ -477,7 +480,7 @@ class HistorialTraslados extends Component
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
-                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
+                        'correlativo' => $devolucion->correlativo ?? 'DEV-' . $devolucion->id,
                         'origen' => $devolucion->persona
                             ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
                             : 'N/A',
