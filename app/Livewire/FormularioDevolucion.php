@@ -410,60 +410,80 @@ class FormularioDevolucion extends Component
      */
     private function procesarProductoDevolucion($devolucion, $producto, $bodegaId, $personaId = null)
     {
-        // Si hay persona origen, quitar de su tarjeta de responsabilidad
+        $lotesDevueltos = [];
+
+        // Si hay persona origen, quitar de su tarjeta y obtener los lotes
         if ($personaId) {
-            $this->quitarDeTarjeta($personaId, $producto['id'], $producto['cantidad']);
+            $lotesDevueltos = $this->quitarDeTarjeta($personaId, $producto['id'], $producto['cantidad']);
         }
 
-        // Buscar lote del producto en la bodega destino
-        // Aplicar PEPS: el lote más antiguo primero
-        $lote = Lote::where('id_producto', $producto['id'])
-            ->where('id_bodega', $bodegaId)
-            ->where('estado', true)
-            ->orderBy('fecha_ingreso', 'asc')
-            ->first();
+        // Si se obtuvieron lotes de la tarjeta, devolver cantidad a esos lotes originales
+        if (!empty($lotesDevueltos)) {
+            foreach ($lotesDevueltos as $loteDevuelto) {
+                // Devolver la cantidad al lote original
+                $lote = Lote::find($loteDevuelto['id_lote']);
+                if ($lote) {
+                    $lote->cantidad += $loteDevuelto['cantidad'];
+                    $lote->save();
 
-        if ($lote) {
-            // Sumar cantidad devuelta al lote existente
-            $lote->cantidad += $producto['cantidad'];
-            $lote->save();
-
-            $idLote = $lote->id;
+                    // Crear detalle de devolución por cada lote
+                    DetalleDevolucion::create([
+                        'id_devolucion' => $devolucion->id,
+                        'id_producto' => $producto['id'],
+                        'id_lote' => $lote->id,
+                        'cantidad' => $loteDevuelto['cantidad'],
+                    ]);
+                }
+            }
         } else {
-            // Si no existe lote, crear uno nuevo
-            $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Devolución']);
-            $transaccion = Transaccion::create([
-                'fecha' => now(),
-                'descripcion' => 'Lote creado por devolución' . ($this->motivo ? ' - ' . $this->motivo : ''),
-                'id_tipo_transaccion' => $tipoTransaccion->id,
-            ]);
+            // Si no hay lotes de tarjeta, buscar lote en bodega destino (caso raro)
+            $lote = Lote::where('id_producto', $producto['id'])
+                ->where('id_bodega', $bodegaId)
+                ->where('estado', true)
+                ->orderBy('fecha_ingreso', 'asc')
+                ->first();
 
-            $lote = Lote::create([
-                'cantidad' => $producto['cantidad'],
-                'cantidad_inicial' => $producto['cantidad'],
-                'fecha_ingreso' => now(),
-                'precio_ingreso' => $producto['precio'],
-                'observaciones' => 'Lote creado por devolución' . ($this->motivo ? ': ' . $this->motivo : ''),
+            if ($lote) {
+                $lote->cantidad += $producto['cantidad'];
+                $lote->save();
+                $idLote = $lote->id;
+            } else {
+                // Crear lote nuevo solo si es absolutamente necesario
+                $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Devolución']);
+                $transaccion = Transaccion::create([
+                    'fecha' => now(),
+                    'descripcion' => 'Lote creado por devolución' . ($this->motivo ? ' - ' . $this->motivo : ''),
+                    'id_tipo_transaccion' => $tipoTransaccion->id,
+                ]);
+
+                $lote = Lote::create([
+                    'cantidad' => $producto['cantidad'],
+                    'cantidad_inicial' => $producto['cantidad'],
+                    'fecha_ingreso' => now(),
+                    'precio_ingreso' => $producto['precio'],
+                    'observaciones' => 'Lote creado por devolución' . ($this->motivo ? ': ' . $this->motivo : ''),
+                    'id_producto' => $producto['id'],
+                    'id_bodega' => $bodegaId,
+                    'estado' => true,
+                    'id_transaccion' => $transaccion->id,
+                ]);
+
+                $idLote = $lote->id;
+            }
+
+            DetalleDevolucion::create([
+                'id_devolucion' => $devolucion->id,
                 'id_producto' => $producto['id'],
-                'id_bodega' => $bodegaId,
-                'estado' => true,
-                'id_transaccion' => $transaccion->id,
+                'id_lote' => $idLote,
+                'cantidad' => $producto['cantidad'],
             ]);
-
-            $idLote = $lote->id;
         }
-
-        // Crear detalle de devolución
-        DetalleDevolucion::create([
-            'id_devolucion' => $devolucion->id,
-            'id_producto' => $producto['id'],
-            'id_lote' => $idLote,
-            'cantidad' => $producto['cantidad'],
-        ]);
     }
 
     /**
-     * Quita productos de la tarjeta de responsabilidad de una persona
+     * Quita productos de la tarjeta de responsabilidad y devuelve los lotes originales
+     *
+     * @return array Array de lotes con ['id_lote' => int, 'cantidad' => int]
      */
     private function quitarDeTarjeta($personaId, $productoId, $cantidad)
     {
@@ -473,7 +493,7 @@ class FormularioDevolucion extends Component
             ->first();
 
         if (!$tarjeta) {
-            return; // No tiene tarjeta activa
+            return []; // No tiene tarjeta activa
         }
 
         // Buscar registros de tarjeta_producto para este producto
@@ -484,12 +504,33 @@ class FormularioDevolucion extends Component
             ->limit($cantidad)
             ->get();
 
-        // Eliminar los registros encontrados
+        $lotesDevueltos = [];
+
+        // Eliminar los registros y recopilar los lotes
         foreach ($tarjetaProductos as $tp) {
+            // Guardar info del lote antes de eliminar
+            $lotesDevueltos[] = [
+                'id_lote' => $tp->id_lote,
+                'cantidad' => 1 // Cada registro de tarjeta_producto representa 1 unidad
+            ];
+
+            // Eliminar el registro de tarjeta_producto
             DB::table('tarjeta_producto')
                 ->where('id', $tp->id)
                 ->delete();
         }
+
+        // Agrupar por lote para consolidar cantidades
+        $lotesAgrupados = [];
+        foreach ($lotesDevueltos as $lote) {
+            if (isset($lotesAgrupados[$lote['id_lote']])) {
+                $lotesAgrupados[$lote['id_lote']]['cantidad']++;
+            } else {
+                $lotesAgrupados[$lote['id_lote']] = $lote;
+            }
+        }
+
+        return array_values($lotesAgrupados);
     }
 
     /**
