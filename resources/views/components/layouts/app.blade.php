@@ -56,9 +56,6 @@
                              x-cloak
                              x-transition
                              class="absolute left-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                            <a href="{{ route('traslados') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-gray-100 font-semibold' : '' }}">
-                                Inicio
-                            </a>
                             <a href="{{ route('traslados.nuevo') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('traslados.nuevo') ? 'bg-gray-100 font-semibold' : '' }}">
                                 Nuevo Traslado
                             </a>
@@ -70,6 +67,9 @@
                             </a>
                             <a href="{{ route('traslados.historial') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('traslados.historial') ? 'bg-gray-100 font-semibold' : '' }}">
                                 Historial
+                            </a>
+                            <a href="{{ route('traslados') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Inicio
                             </a>
                         </div>
                     </div>
