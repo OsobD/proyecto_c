@@ -114,20 +114,25 @@ class TrasladosHub extends Component
             });
 
         // Obtener traslados recientes
-        $trasladosRecientes = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'detallesTraslado.producto'])
+        $trasladosRecientes = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona', 'detallesTraslado.producto'])
             ->orderBy('fecha', 'desc')
             ->limit(3)
             ->get()
             ->map(function($traslado) {
+                // Si tiene persona asociada, es una requisición
+                $esRequisicion = $traslado->id_persona && $traslado->persona;
+
                 return [
                     'id' => $traslado->id,
-                    'tipo' => 'Traslado',
-                    'tipo_clase' => 'traslado',
+                    'tipo' => $esRequisicion ? 'Requisición' : 'Traslado',
+                    'tipo_clase' => $esRequisicion ? 'requisicion' : 'traslado',
                     'tipo_badge' => 'Consumibles',
                     'tipo_color' => 'amber',
                     'correlativo' => $traslado->correlativo ?? 'TRA-' . $traslado->id,
                     'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
-                    'destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
+                    'destino' => $esRequisicion
+                        ? trim(($traslado->persona->nombres ?? '') . ' ' . ($traslado->persona->apellidos ?? ''))
+                        : ($traslado->bodegaDestino->nombre ?? 'N/A'),
                     'fecha' => $traslado->fecha->format('Y-m-d'),
                     'total' => $traslado->total,
                     'productos_count' => $traslado->detallesTraslado->count(),
@@ -206,14 +211,19 @@ class TrasladosHub extends Component
                     break;
 
                 case 'traslado':
-                    $traslado = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'detallesTraslado.producto', 'detallesTraslado.lote'])
+                case 'requisicion':
+                    $traslado = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona', 'detallesTraslado.producto', 'detallesTraslado.lote'])
                         ->findOrFail($id);
 
+                    $esRequisicion = $traslado->id_persona && $traslado->persona;
+
                     $this->movimientoSeleccionado = [
-                        'tipo' => 'Traslado',
+                        'tipo' => $esRequisicion ? 'Requisición' : 'Traslado',
                         'correlativo' => $traslado->correlativo ?? 'TRA-' . $traslado->id,
                         'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
-                        'destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
+                        'destino' => $esRequisicion
+                            ? trim(($traslado->persona->nombres ?? '') . ' ' . ($traslado->persona->apellidos ?? ''))
+                            : ($traslado->bodegaDestino->nombre ?? 'N/A'),
                         'fecha' => $traslado->fecha->format('d/m/Y'),
                         'total' => $traslado->total,
                         'observaciones' => $traslado->observaciones,

@@ -284,25 +284,21 @@
     </div>
 
     {{-- Modal de Confirmación --}}
-    @if($showModalConfirmacion)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-             x-data="{ show: @entangle('showModalConfirmacion') }"
-             x-show="show"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0">
+    <div x-data="{
+            show: @entangle('showModalConfirmacion').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModalConfirmacion">
 
-            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
-                 @click.away="$wire.closeModalConfirmacion()"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 transform scale-95"
-                 x-transition:enter-end="opacity-100 transform scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 transform scale-100"
-                 x-transition:leave-end="opacity-0 transform scale-95">
+        <div class="relative p-6 border w-full max-w-4xl shadow-xl rounded-lg bg-white max-h-[90vh] overflow-y-auto"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
 
                 <div class="p-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Confirmar Devolución</h2>
@@ -411,5 +407,5 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 </div>
