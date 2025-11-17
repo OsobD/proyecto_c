@@ -418,8 +418,9 @@
          x-show="show || animatingOut"
          x-init="$watch('show', value => { if (!value) animatingOut = true; })"
          @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
+         style="z-index: 9999 !important;"
+         :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
          wire:click.self="closeModalLotes">
         <div class="relative p-6 border w-full max-w-2xl shadow-lg rounded-lg bg-white"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
