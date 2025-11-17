@@ -507,7 +507,7 @@ class FormularioTraslado extends Component
                 'total' => $this->subtotal,
                 'descripcion' => null,
                 'observaciones' => $this->observaciones,
-                'estado' => 'Pendiente',
+                'estado' => 'Completado',
                 'activo' => true,
                 'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
                 'id_bodega_destino' => $this->selectedDestino['bodega_id'],
