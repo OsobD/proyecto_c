@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('correlativo'); // Para agrupar por requisición (REQ-001)
             $table->date('fecha');
             $table->unsignedBigInteger('id_persona');
-            $table->unsignedBigInteger('id_producto');
+            $table->string('id_producto'); // STRING porque producto.id es tipo string (PROD-001)
             $table->unsignedBigInteger('id_lote')->nullable();
             $table->integer('cantidad');
             $table->double('precio_unitario');
