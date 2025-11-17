@@ -67,4 +67,19 @@ class Devolucion extends Model
     {
         return $this->hasMany(Transaccion::class, 'id_devolucion');
     }
+
+    // Obtener la persona que devuelve (a través de tarjeta_producto -> tarjeta_responsabilidad -> persona)
+    public function getPersonaAttribute()
+    {
+        if (!$this->id_tarjeta) {
+            return null;
+        }
+
+        $tarjetaProducto = TarjetaProducto::find($this->id_tarjeta);
+        if (!$tarjetaProducto || !$tarjetaProducto->tarjetaResponsabilidad) {
+            return null;
+        }
+
+        return $tarjetaProducto->tarjetaResponsabilidad->persona;
+    }
 }
