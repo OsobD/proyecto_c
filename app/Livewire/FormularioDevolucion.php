@@ -382,7 +382,7 @@ class FormularioDevolucion extends Component
 
             // Procesar productos
             foreach ($this->productosSeleccionados as $producto) {
-                $this->procesarProductoDevolucion($devolucion, $producto, $bodegaId);
+                $this->procesarProductoDevolucion($devolucion, $producto, $bodegaId, $personaId);
             }
 
             // Crear transacción
@@ -408,8 +408,13 @@ class FormularioDevolucion extends Component
     /**
      * Procesa un producto de la devolución
      */
-    private function procesarProductoDevolucion($devolucion, $producto, $bodegaId)
+    private function procesarProductoDevolucion($devolucion, $producto, $bodegaId, $personaId = null)
     {
+        // Si hay persona origen, quitar de su tarjeta de responsabilidad
+        if ($personaId) {
+            $this->quitarDeTarjeta($personaId, $producto['id'], $producto['cantidad']);
+        }
+
         // Buscar lote del producto en la bodega destino
         // Aplicar PEPS: el lote más antiguo primero
         $lote = Lote::where('id_producto', $producto['id'])
@@ -455,6 +460,36 @@ class FormularioDevolucion extends Component
             'id_lote' => $idLote,
             'cantidad' => $producto['cantidad'],
         ]);
+    }
+
+    /**
+     * Quita productos de la tarjeta de responsabilidad de una persona
+     */
+    private function quitarDeTarjeta($personaId, $productoId, $cantidad)
+    {
+        // Obtener tarjeta activa de la persona
+        $tarjeta = TarjetaResponsabilidad::where('id_persona', $personaId)
+            ->where('activo', true)
+            ->first();
+
+        if (!$tarjeta) {
+            return; // No tiene tarjeta activa
+        }
+
+        // Buscar registros de tarjeta_producto para este producto
+        $tarjetaProductos = DB::table('tarjeta_producto')
+            ->where('id_tarjeta', $tarjeta->id)
+            ->where('id_producto', $productoId)
+            ->orderBy('id', 'asc')
+            ->limit($cantidad)
+            ->get();
+
+        // Eliminar los registros encontrados
+        foreach ($tarjetaProductos as $tp) {
+            DB::table('tarjeta_producto')
+                ->where('id', $tp->id)
+                ->delete();
+        }
     }
 
     /**
