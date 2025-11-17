@@ -156,7 +156,65 @@
             </div>
 
             <form wire:submit.prevent="guardarProveedor">
-                {{-- Nombre --}}
+                {{-- NIT --}}
+                <div class="mb-6">
+                    <label for="nit" class="block text-sm font-medium text-gray-700">
+                        NIT (Número de Identificación Tributaria)
+                    </label>
+                    <input
+                        type="text"
+                        id="nit"
+                        wire:model="nit"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nit') border-red-500 @enderror"
+                        placeholder="Ej: 12345678-9">
+                    @error('nit')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Régimen Tributario --}}
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Régimen
+                    </label>
+                    <div class="relative">
+                        @if($selectedRegimen)
+                            <div class="flex items-center justify-between mt-1 w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm @error('regimenTributarioId') border-red-500 @enderror">
+                                <span>{{ $selectedRegimen }}</span>
+                                <button type="button" wire:click.prevent="clearRegimen" class="text-gray-400 hover:text-gray-600">
+                                    ×
+                                </button>
+                            </div>
+                        @else
+                            <div class="relative" x-data="{ open: @entangle('showRegimenDropdown').live }" @click.outside="open = false">
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    class="mt-1 w-full px-4 py-3 text-left border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('regimenTributarioId') border-red-500 @enderror">
+                                    <span class="text-gray-500">Seleccione un régimen</span>
+                                </button>
+                                <div x-show="open"
+                                     x-transition
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                    <ul>
+                                        @foreach($regimenesTributarios as $regimen)
+                                            <li wire:click.prevent="selectRegimen({{ $regimen->id }}, '{{ $regimen->nombre }}')"
+                                                @click="open = false"
+                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                {{ $regimen->nombre }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    @error('regimenTributarioId')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Nombre del Proveedor --}}
                 <div class="mb-6">
                     <label for="nombre" class="block text-sm font-medium text-gray-700">
                         Nombre del Proveedor
@@ -166,43 +224,8 @@
                         id="nombre"
                         wire:model="nombre"
                         class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nombre') border-red-500 @enderror"
-                        placeholder="Ej: Distribuidora XYZ">
+                        placeholder="Ej: Ferretería San José">
                     @error('nombre')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- NIT --}}
-                <div class="mb-6">
-                    <label for="nit" class="block text-sm font-medium text-gray-700">
-                        NIT
-                    </label>
-                    <input
-                        type="text"
-                        id="nit"
-                        wire:model="nit"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nit') border-red-500 @enderror"
-                        placeholder="Ej: 123456789-0">
-                    @error('nit')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Régimen Tributario --}}
-                <div class="mb-6">
-                    <label for="regimenTributarioId" class="block text-sm font-medium text-gray-700">
-                        Régimen Tributario
-                    </label>
-                    <select
-                        id="regimenTributarioId"
-                        wire:model="regimenTributarioId"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('regimenTributarioId') border-red-500 @enderror">
-                        <option value="">Seleccione un régimen</option>
-                        @foreach ($regimenesTributarios as $regimen)
-                            <option value="{{ $regimen->id }}">{{ $regimen->nombre }}</option>
-                        @endforeach
-                    </select>
-                    @error('regimenTributarioId')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>

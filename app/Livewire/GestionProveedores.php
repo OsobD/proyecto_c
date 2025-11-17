@@ -33,6 +33,9 @@ class GestionProveedores extends Component
     /** @var bool Controla visibilidad del modal de proveedor */
     public $showModal = false;
 
+    /** @var bool Controla visibilidad del dropdown de régimen */
+    public $showRegimenDropdown = false;
+
     /** @var string|null ID del proveedor en edición (null = modo creación) */
     public $editingId = null;
 
@@ -54,6 +57,9 @@ class GestionProveedores extends Component
 
     /** @var string|int ID del régimen tributario seleccionado */
     public $regimenTributarioId = '';
+
+    /** @var string|null Nombre del régimen seleccionado para mostrar en el dropdown */
+    public $selectedRegimen = null;
 
     /**
      * Renderiza la vista del componente con datos desde BD
@@ -117,6 +123,7 @@ class GestionProveedores extends Component
             $this->telefono = $proveedor->telefono ?? '';
             $this->email = $proveedor->email ?? '';
             $this->regimenTributarioId = $proveedor->id_regimen_tributario;
+            $this->selectedRegimen = $proveedor->regimenTributario->nombre ?? null;
             $this->showModal = true;
         }
     }
@@ -205,6 +212,31 @@ class GestionProveedores extends Component
     }
 
     /**
+     * Selecciona un régimen tributario del dropdown
+     *
+     * @param int $regimenId ID del régimen tributario
+     * @param string $regimenNombre Nombre del régimen tributario
+     * @return void
+     */
+    public function selectRegimen($regimenId, $regimenNombre)
+    {
+        $this->regimenTributarioId = $regimenId;
+        $this->selectedRegimen = $regimenNombre;
+        $this->showRegimenDropdown = false;
+    }
+
+    /**
+     * Limpia la selección de régimen tributario
+     *
+     * @return void
+     */
+    public function clearRegimen()
+    {
+        $this->regimenTributarioId = '';
+        $this->selectedRegimen = null;
+    }
+
+    /**
      * Cierra el modal principal de proveedor
      *
      * @return void
@@ -229,6 +261,8 @@ class GestionProveedores extends Component
         $this->telefono = '';
         $this->email = '';
         $this->regimenTributarioId = '';
+        $this->selectedRegimen = null;
+        $this->showRegimenDropdown = false;
         $this->resetErrorBag();
     }
 }
