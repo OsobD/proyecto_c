@@ -66,6 +66,13 @@ class GestionUsuarios extends Component
     public $showFilterRolDropdown = false;
     public $selectedFilterRol = null;
 
+    // Propiedades para selección de persona existente
+    public $modoCreacionPersona = true; // true = crear nueva, false = seleccionar existente
+    public $searchPersona = '';
+    public $showPersonaDropdown = false;
+    public $selectedPersona = null;
+    public $personaId = null;
+
     protected $paginationTheme = 'tailwind';
 
     /**
@@ -75,20 +82,29 @@ class GestionUsuarios extends Component
     {
         $usuarioIdRule = $this->editMode ? 'unique:usuario,nombre_usuario,' . $this->usuarioId : 'unique:usuario,nombre_usuario';
 
-        // Validar DPI único según el modo
-        $dpiRule = $this->editMode && !empty($this->usuarioId)
-            ? 'required|string|size:13|unique:persona,dpi,' . Usuario::find($this->usuarioId)?->id_persona
-            : 'required|string|size:13|unique:persona,dpi';
-
-        return [
-            'nombres' => 'required|string|max:255',
-            'apellidos' => 'required|string|max:255',
-            'dpi' => $dpiRule,
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:255',
+        $rules = [
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
             'rolId' => 'required|exists:rol,id',
         ];
+
+        // Si estamos en modo creación de persona nueva, validar campos de persona
+        if ($this->modoCreacionPersona) {
+            // Validar DPI único según el modo
+            $dpiRule = $this->editMode && !empty($this->usuarioId)
+                ? 'required|string|size:13|unique:persona,dpi,' . Usuario::find($this->usuarioId)?->id_persona
+                : 'required|string|size:13|unique:persona,dpi';
+
+            $rules['nombres'] = 'required|string|max:255';
+            $rules['apellidos'] = 'required|string|max:255';
+            $rules['dpi'] = $dpiRule;
+            $rules['telefono'] = 'nullable|string|max:20';
+            $rules['correo'] = 'nullable|email|max:255';
+        } else {
+            // Si estamos seleccionando persona existente, validar que se haya seleccionado
+            $rules['personaId'] = 'required|exists:persona,id';
+        }
+
+        return $rules;
     }
 
     /**
@@ -106,6 +122,8 @@ class GestionUsuarios extends Component
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
         'rolId.required' => 'Debe seleccionar un rol.',
         'rolId.exists' => 'El rol seleccionado no es válido.',
+        'personaId.required' => 'Debe seleccionar una persona.',
+        'personaId.exists' => 'La persona seleccionada no es válida.',
     ];
 
     /**
@@ -248,6 +266,85 @@ class GestionUsuarios extends Component
     }
 
     /**
+     * Actualiza cuando cambia la búsqueda de persona
+     */
+    public function updatedSearchPersona()
+    {
+        $this->showPersonaDropdown = true;
+    }
+
+    /**
+     * Obtiene personas filtradas para el autocompletado
+     * Solo muestra personas activas que NO tienen usuario asignado
+     */
+    public function getPersonaResultsProperty()
+    {
+        $query = Persona::where('estado', true)
+            ->whereDoesntHave('usuario'); // Solo personas sin usuario
+
+        if (!empty($this->searchPersona)) {
+            $search = $this->searchPersona;
+            $query->where(function ($q) use ($search) {
+                $q->where('nombres', 'like', '%' . $search . '%')
+                  ->orWhere('apellidos', 'like', '%' . $search . '%')
+                  ->orWhere('dpi', 'like', '%' . $search . '%');
+            });
+        }
+
+        return $query->orderBy('nombres')->limit(10)->get();
+    }
+
+    /**
+     * Selecciona una persona del autocompletado
+     */
+    public function selectPersona($id)
+    {
+        $persona = Persona::find($id);
+        if ($persona) {
+            $this->selectedPersona = [
+                'id' => $persona->id,
+                'nombre_completo' => "{$persona->nombres} {$persona->apellidos}",
+                'dpi' => $persona->dpi,
+            ];
+            $this->personaId = $persona->id;
+            $this->showPersonaDropdown = false;
+            $this->searchPersona = '';
+        }
+    }
+
+    /**
+     * Limpia la selección de persona
+     */
+    public function clearPersona()
+    {
+        $this->selectedPersona = null;
+        $this->personaId = null;
+    }
+
+    /**
+     * Cambia entre modo crear persona nueva y seleccionar existente
+     */
+    public function toggleModoCreacionPersona()
+    {
+        $this->modoCreacionPersona = !$this->modoCreacionPersona;
+
+        // Limpiar campos según el modo
+        if ($this->modoCreacionPersona) {
+            // Si cambiamos a modo crear nueva, limpiar selección de persona
+            $this->clearPersona();
+        } else {
+            // Si cambiamos a modo seleccionar existente, limpiar campos de persona
+            $this->nombres = '';
+            $this->apellidos = '';
+            $this->dpi = '';
+            $this->telefono = '';
+            $this->correo = '';
+        }
+
+        $this->resetValidation();
+    }
+
+    /**
      * Abre el modal para crear nuevo usuario
      */
     public function abrirModal()
@@ -288,24 +385,53 @@ class GestionUsuarios extends Component
         try {
             DB::beginTransaction();
 
-            // 1. Crear la Persona
-            $persona = Persona::create([
-                'nombres' => $this->nombres,
-                'apellidos' => $this->apellidos,
-                'dpi' => $this->dpi,
-                'telefono' => $this->telefono,
-                'correo' => $this->correo,
-                'estado' => true,
-            ]);
+            // Determinar qué persona usar
+            if ($this->modoCreacionPersona) {
+                // 1. Crear nueva persona
+                $persona = Persona::create([
+                    'nombres' => $this->nombres,
+                    'apellidos' => $this->apellidos,
+                    'dpi' => $this->dpi,
+                    'telefono' => $this->telefono,
+                    'correo' => $this->correo,
+                    'estado' => true,
+                ]);
 
-            // 2. Crear tarjeta de responsabilidad para la persona
-            TarjetaResponsabilidad::create([
-                'nombre' => "{$this->nombres} {$this->apellidos}",
-                'fecha_creacion' => now(),
-                'total' => 0,
-                'id_persona' => $persona->id,
-                'activo' => true,
-            ]);
+                // 2. Crear tarjeta de responsabilidad para la persona nueva
+                TarjetaResponsabilidad::create([
+                    'nombre' => "{$this->nombres} {$this->apellidos}",
+                    'fecha_creacion' => now(),
+                    'total' => 0,
+                    'id_persona' => $persona->id,
+                    'activo' => true,
+                ]);
+
+                $descripcion = "Usuario y persona nuevos creados: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})";
+            } else {
+                // 1. Usar persona existente
+                $persona = Persona::findOrFail($this->personaId);
+
+                // Validar que la persona no tenga ya un usuario asignado
+                if ($persona->usuario) {
+                    session()->flash('error', 'Esta persona ya tiene un usuario asignado.');
+                    DB::rollBack();
+                    return;
+                }
+
+                // Verificar si la persona ya tiene tarjeta de responsabilidad
+                if (!$persona->tarjetasResponsabilidad()->exists()) {
+                    // 2. Crear tarjeta de responsabilidad si no existe
+                    TarjetaResponsabilidad::create([
+                        'nombre' => "{$persona->nombres} {$persona->apellidos}",
+                        'fecha_creacion' => now(),
+                        'total' => 0,
+                        'id_persona' => $persona->id,
+                        'activo' => true,
+                    ]);
+                }
+
+                $descripcion = "Usuario creado para persona existente: {$this->nombre_usuario} ({$persona->nombres} {$persona->apellidos})";
+            }
 
             // 3. Generar contraseña si no existe
             if (empty($this->passwordGenerada)) {
@@ -326,7 +452,7 @@ class GestionUsuarios extends Component
                 'accion' => 'crear',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario, persona y tarjeta creados: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})",
+                'descripcion' => $descripcion,
                 'id_usuario' => auth()->id() ?? 1,
                 'created_at' => now(),
             ]);
@@ -468,6 +594,13 @@ class GestionUsuarios extends Component
         $this->selectedRol = null;
         $this->searchRol = '';
         $this->showRolDropdown = false;
+
+        // Resetear campos de persona existente
+        $this->modoCreacionPersona = true;
+        $this->searchPersona = '';
+        $this->showPersonaDropdown = false;
+        $this->selectedPersona = null;
+        $this->personaId = null;
     }
 
     /**
