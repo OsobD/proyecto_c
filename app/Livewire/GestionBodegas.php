@@ -35,22 +35,23 @@ class GestionBodegas extends Component
 
     // Control de expansión de productos por bodega
     public $bodegaIdProductosExpandido = null;
-    public $searchProducto = '';
 
-    // Control del modal de lotes
-    public $showModalLote = false;
-    public $editingLoteId = null;
+    // Control del modal de producto
+    public $showModalProducto = false;
+    public $editingProductoId = null;
 
-    // Campos del formulario de lote
-    public $loteProductoId = '';
-    public $loteCantidad = '';
-    public $lotePrecioIngreso = '';
-    public $loteFechaIngreso = '';
-    public $loteObservaciones = '';
+    // Campos del formulario de producto
+    public $codigo = '';
+    public $descripcion = '';
+    public $categoriaId = '';
+    public $esConsumible = false;
 
-    // Dropdown de productos
-    public $showProductoDropdown = false;
-    public $selectedProducto = null;
+    // Control del sub-modal de categoría
+    public $showSubModalCategoria = false;
+    public $nuevaCategoriaNombre = '';
+    public $searchCategoria = '';
+    public $showCategoriaDropdown = false;
+    public $selectedCategoria = null;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -68,9 +69,9 @@ class GestionBodegas extends Component
         $this->resetPage();
     }
 
-    public function updatingSearchProducto()
+    public function updatingSearchCategoria()
     {
-        $this->showProductoDropdown = !empty($this->searchProducto);
+        $this->showCategoriaDropdown = !empty($this->searchCategoria);
     }
 
     public function render()
@@ -221,265 +222,180 @@ class GestionBodegas extends Component
     public function toggleProductos($id)
     {
         $this->bodegaIdProductosExpandido = $this->bodegaIdProductosExpandido === $id ? null : $id;
-        $this->searchProducto = '';
-        $this->selectedProducto = null;
     }
 
     /**
-     * Obtiene los productos activos filtrados para el dropdown
+     * Abre el modal para crear un nuevo producto
      */
-    public function getProductoResultsProperty()
+    public function abrirModalProducto()
     {
-        if (empty($this->searchProducto)) {
+        $this->resetFormProducto();
+        $this->showModalProducto = true;
+    }
+
+    /**
+     * Obtiene las categorías activas filtradas para el dropdown
+     */
+    public function getCategoriaResultsProperty()
+    {
+        if (empty($this->searchCategoria)) {
             return [];
         }
 
-        $search = strtolower(trim($this->searchProducto));
+        $search = strtolower(trim($this->searchCategoria));
 
-        return Producto::with('categoria')
-            ->where('activo', true)
-            ->where(function($query) use ($search) {
-                $query->where(DB::raw('LOWER(id)'), 'like', "%{$search}%")
-                      ->orWhere(DB::raw('LOWER(descripcion)'), 'like', "%{$search}%");
-            })
+        return Categoria::where('activo', true)
+            ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%")
             ->limit(6)
             ->get()
-            ->map(function($producto) {
+            ->map(function($categoria) {
                 return [
-                    'id' => $producto->id,
-                    'codigo' => $producto->id,
-                    'descripcion' => $producto->descripcion,
-                    'categoria' => $producto->categoria->nombre ?? 'Sin categoría',
+                    'id' => $categoria->id,
+                    'nombre' => $categoria->nombre,
                 ];
             })
             ->toArray();
     }
 
     /**
-     * Selecciona un producto del dropdown
+     * Selecciona una categoría del dropdown
      */
-    public function selectProducto($productoId)
+    public function selectCategoria($categoriaId)
     {
-        $producto = Producto::with('categoria')->find($productoId);
+        $categoria = Categoria::find($categoriaId);
 
-        if ($producto) {
-            $this->selectedProducto = [
-                'id' => $producto->id,
-                'codigo' => $producto->id,
-                'descripcion' => $producto->descripcion,
-                'categoria' => $producto->categoria->nombre ?? 'Sin categoría',
+        if ($categoria) {
+            $this->selectedCategoria = [
+                'id' => $categoria->id,
+                'nombre' => $categoria->nombre,
             ];
 
-            $this->loteProductoId = $producto->id;
-            $this->searchProducto = '';
-            $this->showProductoDropdown = false;
+            $this->categoriaId = $categoria->id;
+            $this->searchCategoria = '';
+            $this->showCategoriaDropdown = false;
         }
     }
 
     /**
-     * Limpia la selección de producto
+     * Limpia la selección de categoría
      */
-    public function clearProducto()
+    public function clearCategoria()
     {
-        $this->selectedProducto = null;
-        $this->loteProductoId = '';
-        $this->searchProducto = '';
+        $this->selectedCategoria = null;
+        $this->categoriaId = '';
+        $this->searchCategoria = '';
     }
 
     /**
-     * Abre el modal para crear un nuevo lote en la bodega
+     * Abre el sub-modal para crear nueva categoría
      */
-    public function abrirModalCrearLote($bodegaId)
+    public function abrirSubModalCategoria()
     {
-        $this->resetFormLote();
-        $this->bodegaId = $bodegaId;
-        $this->loteFechaIngreso = now()->format('Y-m-d');
-        $this->showModalLote = true;
+        $this->nuevaCategoriaNombre = '';
+        $this->showSubModalCategoria = true;
     }
 
     /**
-     * Abre el modal para editar un lote existente
+     * Guarda una nueva categoría desde el sub-modal
      */
-    public function editarLote($loteId)
-    {
-        $lote = Lote::with('producto')->find($loteId);
-
-        if ($lote) {
-            $this->editingLoteId = $loteId;
-            $this->bodegaId = $lote->id_bodega;
-            $this->loteProductoId = $lote->id_producto;
-            $this->loteCantidad = $lote->cantidad;
-            $this->lotePrecioIngreso = $lote->precio_ingreso;
-            $this->loteFechaIngreso = $lote->fecha_ingreso ? $lote->fecha_ingreso->format('Y-m-d') : '';
-            $this->loteObservaciones = $lote->observaciones ?? '';
-
-            // Establecer el producto seleccionado
-            $this->selectedProducto = [
-                'id' => $lote->producto->id,
-                'codigo' => $lote->producto->id,
-                'descripcion' => $lote->producto->descripcion,
-                'categoria' => $lote->producto->categoria->nombre ?? 'Sin categoría',
-            ];
-
-            $this->showModalLote = true;
-        }
-    }
-
-    /**
-     * Guarda un lote (crear o actualizar)
-     */
-    public function guardarLote()
+    public function guardarNuevaCategoria()
     {
         $this->validate([
-            'loteProductoId' => 'required|exists:producto,id',
-            'loteCantidad' => 'required|integer|min:0',
-            'lotePrecioIngreso' => 'required|numeric|min:0',
-            'loteFechaIngreso' => 'required|date',
+            'nuevaCategoriaNombre' => 'required|min:3|max:100',
         ], [
-            'loteProductoId.required' => 'Debe seleccionar un producto.',
-            'loteProductoId.exists' => 'El producto seleccionado no existe.',
-            'loteCantidad.required' => 'La cantidad es obligatoria.',
-            'loteCantidad.integer' => 'La cantidad debe ser un número entero.',
-            'loteCantidad.min' => 'La cantidad debe ser mayor o igual a 0.',
-            'lotePrecioIngreso.required' => 'El precio de ingreso es obligatorio.',
-            'lotePrecioIngreso.numeric' => 'El precio debe ser un número.',
-            'lotePrecioIngreso.min' => 'El precio debe ser mayor o igual a 0.',
-            'loteFechaIngreso.required' => 'La fecha de ingreso es obligatoria.',
-            'loteFechaIngreso.date' => 'Debe ingresar una fecha válida.',
+            'nuevaCategoriaNombre.required' => 'El nombre de la categoría es obligatorio.',
+            'nuevaCategoriaNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+        ]);
+
+        $categoria = Categoria::create([
+            'nombre' => $this->nuevaCategoriaNombre,
+            'activo' => true,
+        ]);
+
+        $this->selectedCategoria = [
+            'id' => $categoria->id,
+            'nombre' => $categoria->nombre,
+        ];
+        $this->categoriaId = $categoria->id;
+        $this->showSubModalCategoria = false;
+        $this->nuevaCategoriaNombre = '';
+    }
+
+    /**
+     * Cierra el sub-modal de categoría
+     */
+    public function closeSubModalCategoria()
+    {
+        $this->showSubModalCategoria = false;
+        $this->nuevaCategoriaNombre = '';
+    }
+
+    /**
+     * Guarda un producto nuevo
+     */
+    public function guardarProducto()
+    {
+        $rules = [
+            'codigo' => 'required|min:1|max:50|unique:producto,id',
+            'descripcion' => 'required|min:3|max:255',
+            'categoriaId' => 'required|exists:categoria,id',
+        ];
+
+        $this->validate($rules, [
+            'codigo.required' => 'El código del producto es obligatorio.',
+            'codigo.min' => 'El código debe tener al menos 1 carácter.',
+            'codigo.unique' => 'Este código de producto ya existe.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.min' => 'La descripción debe tener al menos 3 caracteres.',
+            'categoriaId.required' => 'Debe seleccionar una categoría.',
+            'categoriaId.exists' => 'La categoría seleccionada no existe.',
         ]);
 
         try {
-            if ($this->editingLoteId) {
-                // Actualizar lote existente
-                $lote = Lote::findOrFail($this->editingLoteId);
-                $cantidadAnterior = $lote->cantidad;
-
-                $lote->update([
-                    'id_producto' => $this->loteProductoId,
-                    'cantidad' => $this->loteCantidad,
-                    'cantidad_inicial' => $lote->cantidad_inicial + ($this->loteCantidad - $cantidadAnterior),
-                    'precio_ingreso' => $this->lotePrecioIngreso,
-                    'fecha_ingreso' => $this->loteFechaIngreso,
-                    'observaciones' => $this->loteObservaciones,
-                ]);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Actualizar',
-                    'descripcion' => "Lote actualizado en bodega: {$lote->bodega->nombre} - Producto: {$lote->producto->descripcion}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
-                session()->flash('message', 'Lote actualizado correctamente.');
-            } else {
-                // Crear nuevo lote
-                $lote = Lote::create([
-                    'id_producto' => $this->loteProductoId,
-                    'id_bodega' => $this->bodegaId,
-                    'cantidad' => $this->loteCantidad,
-                    'cantidad_inicial' => $this->loteCantidad,
-                    'precio_ingreso' => $this->lotePrecioIngreso,
-                    'fecha_ingreso' => $this->loteFechaIngreso,
-                    'observaciones' => $this->loteObservaciones,
-                    'estado' => true,
-                ]);
-
-                $bodega = Bodega::find($this->bodegaId);
-                $producto = Producto::find($this->loteProductoId);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Crear',
-                    'descripcion' => "Lote creado en bodega: {$bodega->nombre} - Producto: {$producto->descripcion} - Cantidad: {$this->loteCantidad}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
-                session()->flash('message', 'Lote creado correctamente.');
-            }
-
-            $this->closeModalLote();
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar el lote: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Elimina (desactiva) un lote
-     */
-    public function eliminarLote($loteId)
-    {
-        try {
-            $lote = Lote::findOrFail($loteId);
-
-            // Verificar que el lote no tenga movimientos
-            if ($lote->cantidad != $lote->cantidad_inicial) {
-                session()->flash('error', 'No se puede desactivar un lote que tiene movimientos de inventario.');
-                return;
-            }
-
-            $lote->update(['estado' => false]);
+            Producto::create([
+                'id' => $this->codigo,
+                'descripcion' => $this->descripcion,
+                'id_categoria' => $this->categoriaId,
+                'es_consumible' => $this->esConsumible,
+                'activo' => true,
+            ]);
 
             // Registrar en bitácora
             Bitacora::create([
-                'accion' => 'Desactivar',
-                'descripcion' => "Lote desactivado en bodega: {$lote->bodega->nombre} - Producto: {$lote->producto->descripcion}",
+                'accion' => 'Crear',
+                'descripcion' => "Producto creado: {$this->codigo} - {$this->descripcion}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
             ]);
 
-            session()->flash('message', 'Lote desactivado correctamente.');
+            session()->flash('message', 'Producto creado correctamente.');
+            $this->closeModalProducto();
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al desactivar el lote: ' . $e->getMessage());
+            session()->flash('error', 'Error al crear el producto: ' . $e->getMessage());
         }
     }
 
     /**
-     * Reactiva un lote
+     * Cierra el modal de producto
      */
-    public function activarLote($loteId)
+    public function closeModalProducto()
     {
-        try {
-            $lote = Lote::findOrFail($loteId);
-            $lote->update(['estado' => true]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'Activar',
-                'descripcion' => "Lote activado en bodega: {$lote->bodega->nombre} - Producto: {$lote->producto->descripcion}",
-                'id_usuario' => Auth::id(),
-                'created_at' => now(),
-            ]);
-
-            session()->flash('message', 'Lote activado correctamente.');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al activar el lote: ' . $e->getMessage());
-        }
+        $this->showModalProducto = false;
+        $this->resetFormProducto();
     }
 
     /**
-     * Cierra el modal de lote
+     * Limpia los campos del formulario de producto
      */
-    public function closeModalLote()
+    private function resetFormProducto()
     {
-        $this->showModalLote = false;
-        $this->resetFormLote();
-    }
-
-    /**
-     * Limpia los campos del formulario de lote
-     */
-    private function resetFormLote()
-    {
-        $this->editingLoteId = null;
-        $this->loteProductoId = '';
-        $this->loteCantidad = '';
-        $this->lotePrecioIngreso = '';
-        $this->loteFechaIngreso = '';
-        $this->loteObservaciones = '';
-        $this->selectedProducto = null;
-        $this->searchProducto = '';
+        $this->editingProductoId = null;
+        $this->codigo = '';
+        $this->descripcion = '';
+        $this->categoriaId = '';
+        $this->esConsumible = false;
+        $this->selectedCategoria = null;
+        $this->searchCategoria = '';
         $this->resetErrorBag();
     }
 }

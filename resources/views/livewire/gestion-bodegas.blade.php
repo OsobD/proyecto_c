@@ -1,8 +1,8 @@
 {{--
     Vista: Gestión de Bodegas
-    Descripción: CRUD de bodegas físicas con visualización y gestión de productos (lotes)
+    Descripción: CRUD de bodegas físicas con visualización de productos (lotes)
                  por bodega. Permite crear, editar y desactivar bodegas, así como
-                 gestionar el inventario (lotes) de cada bodega.
+                 crear productos directamente desde aquí.
 --}}
 <div>
     {{-- Encabezado --}}
@@ -85,9 +85,9 @@
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">Productos en {{ $bodega->nombre }}</h3>
                                             <button
-                                                wire:click="abrirModalCrearLote({{ $bodega->id }})"
+                                                wire:click="abrirModalProducto"
                                                 class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg">
-                                                + Agregar Producto/Lote
+                                                + Nuevo Producto
                                             </button>
                                         </div>
 
@@ -119,7 +119,6 @@
                                                             <th class="py-3 px-4 text-center">Fecha Ingreso</th>
                                                             <th class="py-3 px-4 text-left">Observaciones</th>
                                                             <th class="py-3 px-4 text-center">Estado</th>
-                                                            <th class="py-3 px-4 text-center">Acciones</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="text-gray-600 text-sm">
@@ -166,31 +165,6 @@
                                                                             <span class="bg-red-200 text-red-800 py-1 px-2 rounded-full text-xs">Inactivo</span>
                                                                         @endif
                                                                     </td>
-                                                                    <td class="py-3 px-4 text-center">
-                                                                        <div class="flex items-center justify-center gap-2">
-                                                                            <button
-                                                                                wire:click="editarLote({{ $lote->id }})"
-                                                                                class="text-blue-600 hover:text-blue-800 font-medium text-xs"
-                                                                                title="Editar lote">
-                                                                                Editar
-                                                                            </button>
-                                                                            @if($lote->estado)
-                                                                                <button
-                                                                                    wire:click="eliminarLote({{ $lote->id }})"
-                                                                                    class="text-red-600 hover:text-red-800 font-medium text-xs"
-                                                                                    title="Desactivar lote">
-                                                                                    Desactivar
-                                                                                </button>
-                                                                            @else
-                                                                                <button
-                                                                                    wire:click="activarLote({{ $lote->id }})"
-                                                                                    class="text-green-600 hover:text-green-800 font-medium text-xs"
-                                                                                    title="Activar lote">
-                                                                                    Activar
-                                                                                </button>
-                                                                            @endif
-                                                                        </div>
-                                                                    </td>
                                                                 </tr>
                                                             @endforeach
                                                         @endforeach
@@ -200,7 +174,7 @@
                                         @else
                                             <div class="text-center py-8 text-gray-500">
                                                 <p>No hay productos en esta bodega.</p>
-                                                <p class="text-sm mt-2">Haz clic en "Agregar Producto/Lote" para comenzar.</p>
+                                                <p class="text-sm mt-2">Los productos aparecerán aquí cuando se registren compras.</p>
                                             </div>
                                         @endif
                                     </div>
@@ -262,9 +236,9 @@
         </div>
     @endif
 
-    {{-- Modal de Lote (Crear/Editar Producto en Bodega) --}}
+    {{-- Modal para crear nuevo producto --}}
     <div x-data="{
-            show: @entangle('showModalLote').live,
+            show: @entangle('showModalProducto').live,
             animatingOut: false
          }"
          x-show="show || animatingOut"
@@ -273,128 +247,189 @@
          @animationend="if (!show) animatingOut = false"
          class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
          :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalLote">
-        <div class="relative p-6 border w-full max-w-2xl shadow-lg rounded-lg bg-white"
+         wire:click.self="closeModalProducto"
+         wire:ignore.self>
+        <div class="relative p-6 border w-full max-w-lg shadow-lg rounded-lg bg-white"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-900">
-                    {{ $editingLoteId ? 'Editar Lote' : 'Agregar Producto/Lote a Bodega' }}
-                </h3>
-                <button wire:click="closeModalLote" class="text-gray-400 hover:text-gray-600">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Crear Nuevo Producto</h3>
+                <button wire:click="closeModalProducto" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
 
-            <form wire:submit.prevent="guardarLote">
-                {{-- Selección de Producto --}}
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700">Producto</label>
-                    <div class="relative">
-                        @if($selectedProducto)
-                            <div wire:click="clearProducto" class="flex items-center justify-between mt-1 w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors">
-                                <div class="flex flex-col gap-0.5 justify-center">
-                                    <span class="font-medium">{{ $selectedProducto['descripcion'] }}</span>
-                                    <span class="text-xs text-gray-500 mt-0.5">Código: {{ $selectedProducto['codigo'] }} | {{ $selectedProducto['categoria'] }}</span>
-                                </div>
-                                <span class="text-gray-400 text-xl">⟲</span>
-                            </div>
-                        @else
-                            <div class="relative" x-data="{ open: @entangle('showProductoDropdown').live }" @click.outside="open = false">
-                                <input
-                                    type="text"
-                                    wire:model.live.debounce.300ms="searchProducto"
-                                    @click="open = true"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm rounded-md shadow-sm"
-                                    placeholder="Buscar producto por código o descripción...">
-                                <div x-show="open"
-                                     x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
-                                    <ul>
-                                        @foreach ($this->productoResults as $producto)
-                                            <li wire:click.prevent="selectProducto('{{ $producto['id'] }}')"
-                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
-                                                <span class="font-mono text-gray-500 mr-2">#{{ $producto['codigo'] }}</span>
-                                                <span>{{ $producto['descripcion'] }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    @error('loteProductoId')
+            <form wire:submit.prevent="guardarProducto">
+                {{-- Código --}}
+                <div class="mb-4">
+                    <label for="codigo" class="block text-sm font-medium text-gray-700 mb-2">
+                        Código del Producto
+                    </label>
+                    <input
+                        type="text"
+                        id="codigo"
+                        wire:model="codigo"
+                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('codigo') border-red-500 @enderror"
+                        placeholder="Ej: PROD-001">
+                    @error('codigo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Campos del lote en grid --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label for="loteCantidad" class="block text-sm font-medium text-gray-700">Cantidad:</label>
-                        <input
-                            type="number"
-                            id="loteCantidad"
-                            wire:model="loteCantidad"
-                            min="0"
-                            class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm @error('loteCantidad') border-red-500 @enderror"
-                            placeholder="Ej: 100">
-                        @error('loteCantidad')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="lotePrecioIngreso" class="block text-sm font-medium text-gray-700">Precio de Ingreso:</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            id="lotePrecioIngreso"
-                            wire:model="lotePrecioIngreso"
-                            min="0"
-                            class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm @error('lotePrecioIngreso') border-red-500 @enderror"
-                            placeholder="Ej: 15.50">
-                        @error('lotePrecioIngreso')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="loteFechaIngreso" class="block text-sm font-medium text-gray-700">Fecha de Ingreso:</label>
-                        <input
-                            type="date"
-                            id="loteFechaIngreso"
-                            wire:model="loteFechaIngreso"
-                            class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm @error('loteFechaIngreso') border-red-500 @enderror">
-                        @error('loteFechaIngreso')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
+                {{-- Descripción --}}
+                <div class="mb-4">
+                    <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-2">
+                        Descripción
+                    </label>
+                    <textarea
+                        id="descripcion"
+                        wire:model="descripcion"
+                        rows="4"
+                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('descripcion') border-red-500 @enderror"
+                        placeholder="Ej: Basureros de plástico 50L"></textarea>
+                    @error('descripcion')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-6">
-                    <label for="loteObservaciones" class="block text-sm font-medium text-gray-700">Observaciones:</label>
-                    <textarea
-                        id="loteObservaciones"
-                        wire:model="loteObservaciones"
-                        rows="3"
-                        class="mt-1 block w-full px-3 py-2 text-base border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm"
-                        placeholder="Observaciones del lote..."></textarea>
+                {{-- Categoría --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Categoría
+                    </label>
+                    <div class="relative">
+                        @if($selectedCategoria)
+                            <div class="flex items-center justify-between w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm @error('categoriaId') border-red-500 @enderror">
+                                <span>{{ $selectedCategoria['nombre'] }}</span>
+                                <button type="button" wire:click.prevent="clearCategoria" class="text-gray-400 hover:text-gray-600">
+                                    ×
+                                </button>
+                            </div>
+                        @else
+                            <div class="relative" x-data="{ open: @entangle('showCategoriaDropdown').live }" @click.outside="open = false">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.300ms="searchCategoria"
+                                    @click="open = true"
+                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('categoriaId') border-red-500 @enderror"
+                                    placeholder="Buscar categoría...">
+                                <div x-show="open"
+                                     x-transition
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                    <ul>
+                                        @foreach (array_slice($this->categoriaResults, 0, 6) as $categoria)
+                                            <li wire:click.prevent="selectCategoria({{ $categoria['id'] }})"
+                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                {{ $categoria['nombre'] }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    <div class="border-t border-gray-200">
+                                        <button
+                                            type="button"
+                                            wire:click="abrirSubModalCategoria"
+                                            class="w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2">
+                                            <span>+</span>
+                                            <span>Crear nueva categoría</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    @error('categoriaId')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Es Consumible --}}
+                <div class="mb-4">
+                    <label class="flex items-center space-x-3">
+                        <input
+                            type="checkbox"
+                            wire:model="esConsumible"
+                            class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-gray-700">
+                            Este producto es consumible
+                        </span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1 ml-8">
+                        Marca esta opción si el producto se agota con el uso (ej: materiales, insumos)
+                    </p>
                 </div>
 
                 <div class="flex justify-between mt-6">
                     <button
                         type="button"
-                        wire:click="closeModalLote"
+                        wire:click="closeModalProducto"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
-                        {{ $editingLoteId ? 'Actualizar Lote' : 'Crear Lote' }}
+                        Crear Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Sub-modal para crear categoría al crear producto (modal anidado con z-index superior) --}}
+    <div x-data="{
+            show: @entangle('showSubModalCategoria').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
+         style="z-index: 9999 !important;"
+         :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
+         wire:click.self="closeSubModalCategoria"
+         wire:ignore.self>
+        <div class="relative p-6 border w-full max-w-sm shadow-xl rounded-lg bg-white"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Nueva Categoría</h3>
+                <button wire:click="closeSubModalCategoria" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form wire:submit.prevent="guardarNuevaCategoria">
+                <div class="mb-6">
+                    <label for="nuevaCategoriaNombre" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre de la Categoría
+                    </label>
+                    <input
+                        type="text"
+                        id="nuevaCategoriaNombre"
+                        wire:model="nuevaCategoriaNombre"
+                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nuevaCategoriaNombre') border-red-500 @enderror"
+                        placeholder="Ej: Artículos de Limpieza">
+                    @error('nuevaCategoriaNombre')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex justify-between mt-6">
+                    <button
+                        type="button"
+                        wire:click="closeSubModalCategoria"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        Crear
                     </button>
                 </div>
             </form>
