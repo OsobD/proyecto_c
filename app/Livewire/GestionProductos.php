@@ -351,6 +351,12 @@ class GestionProductos extends Component
         $lote = Lote::find($loteId);
 
         if ($lote) {
+            // Primero cerramos cualquier modal abierto
+            $this->showModalLotes = false;
+            $this->showModalEditarLote = false;
+            $this->resetFormLote();
+
+            // Luego cargamos los datos del lote
             $this->editingLoteId = $loteId;
             $this->loteProductoId = $lote->id_producto;
             $this->loteCantidad = $lote->cantidad;
@@ -358,6 +364,8 @@ class GestionProductos extends Component
             $this->loteFechaIngreso = $lote->fecha_ingreso ? date('Y-m-d', strtotime($lote->fecha_ingreso)) : '';
             $this->loteBodegaId = $lote->id_bodega;
             $this->loteObservaciones = $lote->observaciones ?? '';
+
+            // Finalmente abrimos el modal de edición
             $this->showModalEditarLote = true;
         }
     }
@@ -386,6 +394,9 @@ class GestionProductos extends Component
             'loteBodegaId.required' => 'Debe seleccionar una bodega.',
             'loteBodegaId.exists' => 'La bodega seleccionada no existe.',
         ]);
+
+        // Guardar el ID del producto para volver a abrir su modal después
+        $productoId = $this->loteProductoId;
 
         if ($this->editingLoteId) {
             // Actualizar lote existente
@@ -422,7 +433,9 @@ class GestionProductos extends Component
             session()->flash('message', 'Lote creado exitosamente.');
         }
 
+        // Cerrar el modal de edición y volver a abrir el modal de visualización de lotes
         $this->closeModalLotes();
+        $this->productoIdLotesExpandido = $productoId;
     }
 
     /**
