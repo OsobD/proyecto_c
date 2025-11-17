@@ -77,8 +77,7 @@ class GestionProveedores extends Component
             ->orderBy('nombre')
             ->get();
 
-        $regimenesTributarios = RegimenTributario::where('activo', true)
-            ->orderBy('nombre')
+        $regimenesTributarios = RegimenTributario::orderBy('nombre')
             ->get();
 
         return view('livewire.gestion-proveedores', [
