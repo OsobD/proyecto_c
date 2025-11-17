@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\DB;
  * - Asociación de productos con categorías
  * - Creación rápida de categorías desde el mismo formulario (sub-modal)
  * - Activación/desactivación de productos (soft delete)
- * - Visualización de lotes por producto al hacer clic en el nombre
- * - CRUD completo de lotes (crear, editar, eliminar)
+ * - Visualización de lotes por producto en modal dedicado
+ * - CRUD completo de lotes (crear con modal, editar inline, activar/desactivar)
  *
  * @package App\Livewire
  * @version 2.0
@@ -42,11 +42,8 @@ class GestionProductos extends Component
     /** @var bool Controla visibilidad del sub-modal de categoría */
     public $showSubModalCategoria = false;
 
-    /** @var bool Controla visibilidad del modal de lotes */
+    /** @var bool Controla visibilidad del modal de crear lote */
     public $showModalLotes = false;
-
-    /** @var bool Controla visibilidad del modal de edición de lote */
-    public $showModalEditarLote = false;
 
     /** @var string|null ID del producto cuyos lotes están expandidos */
     public $productoIdLotesExpandido = null;
@@ -341,7 +338,7 @@ class GestionProductos extends Component
     }
 
     /**
-     * Abre el modal para editar un lote existente
+     * Activa el modo de edición inline para un lote
      *
      * @param int $loteId ID del lote a editar
      * @return void
@@ -351,12 +348,6 @@ class GestionProductos extends Component
         $lote = Lote::find($loteId);
 
         if ($lote) {
-            // Primero cerramos cualquier modal abierto
-            $this->showModalLotes = false;
-            $this->showModalEditarLote = false;
-            $this->resetFormLote();
-
-            // Luego cargamos los datos del lote
             $this->editingLoteId = $loteId;
             $this->loteProductoId = $lote->id_producto;
             $this->loteCantidad = $lote->cantidad;
@@ -364,10 +355,18 @@ class GestionProductos extends Component
             $this->loteFechaIngreso = $lote->fecha_ingreso ? date('Y-m-d', strtotime($lote->fecha_ingreso)) : '';
             $this->loteBodegaId = $lote->id_bodega;
             $this->loteObservaciones = $lote->observaciones ?? '';
-
-            // Finalmente abrimos el modal de edición
-            $this->showModalEditarLote = true;
         }
+    }
+
+    /**
+     * Cancela la edición inline de un lote
+     *
+     * @return void
+     */
+    public function cancelarEdicionLote()
+    {
+        $this->editingLoteId = null;
+        $this->resetFormLote();
     }
 
     /**
@@ -395,11 +394,11 @@ class GestionProductos extends Component
             'loteBodegaId.exists' => 'La bodega seleccionada no existe.',
         ]);
 
-        // Guardar el ID del producto para volver a abrir su modal después
-        $productoId = $this->loteProductoId;
+        // Detectar si estamos editando o creando ANTES de hacer cambios
+        $esEdicion = $this->editingLoteId !== null;
 
-        if ($this->editingLoteId) {
-            // Actualizar lote existente
+        if ($esEdicion) {
+            // Actualizar lote existente (edición inline)
             $lote = Lote::find($this->editingLoteId);
             if ($lote) {
                 $cantidadAnterior = $lote->cantidad;
@@ -418,7 +417,7 @@ class GestionProductos extends Component
                 session()->flash('message', 'Lote actualizado exitosamente.');
             }
         } else {
-            // Crear nuevo lote
+            // Crear nuevo lote desde modal
             Lote::create([
                 'id_producto' => $this->loteProductoId,
                 'cantidad' => $this->loteCantidad,
@@ -433,9 +432,15 @@ class GestionProductos extends Component
             session()->flash('message', 'Lote creado exitosamente.');
         }
 
-        // Cerrar el modal de edición y volver a abrir el modal de visualización de lotes
-        $this->closeModalLotes();
-        $this->productoIdLotesExpandido = $productoId;
+        // Si estábamos editando inline, solo salir del modo edición
+        // Si estábamos creando desde modal, cerrar el modal
+        if ($esEdicion) {
+            $this->editingLoteId = null;
+            $this->resetFormLote();
+        } else {
+            $this->showModalLotes = false;
+            $this->resetFormLote();
+        }
     }
 
     /**
@@ -476,14 +481,13 @@ class GestionProductos extends Component
     }
 
     /**
-     * Cierra el modal de lotes
+     * Cierra el modal de crear lote
      *
      * @return void
      */
     public function closeModalLotes()
     {
         $this->showModalLotes = false;
-        $this->showModalEditarLote = false;
         $this->resetFormLote();
     }
 

@@ -185,13 +185,60 @@
                                 </thead>
                                 <tbody class="text-gray-600 text-sm">
                                     @foreach($productoSeleccionado->lotes as $lote)
-                                        <tr class="border-b border-gray-200 hover:bg-gray-50 {{ $lote->estado ? '' : 'opacity-50' }}">
-                                            <td class="py-3 px-4 text-left">{{ $lote->bodega->nombre ?? 'Sin bodega' }}</td>
-                                            <td class="py-3 px-4 text-center font-semibold">{{ $lote->cantidad }}</td>
+                                        <tr class="border-b border-gray-200 {{ $editingLoteId === $lote->id ? 'bg-blue-50' : 'hover:bg-gray-50' }} {{ $lote->estado ? '' : 'opacity-50' }}">
+                                            {{-- Bodega --}}
+                                            <td class="py-3 px-4 text-left">
+                                                @if($editingLoteId === $lote->id)
+                                                    <select wire:model="loteBodegaId" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                                                        @foreach($bodegas as $bodega)
+                                                            <option value="{{ $bodega->id }}">{{ $bodega->nombre }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                @else
+                                                    {{ $lote->bodega->nombre ?? 'Sin bodega' }}
+                                                @endif
+                                            </td>
+
+                                            {{-- Cantidad Disponible --}}
+                                            <td class="py-3 px-4 text-center font-semibold">
+                                                @if($editingLoteId === $lote->id)
+                                                    <input type="number" wire:model="loteCantidad" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center" min="0">
+                                                @else
+                                                    {{ $lote->cantidad }}
+                                                @endif
+                                            </td>
+
+                                            {{-- Cantidad Inicial --}}
                                             <td class="py-3 px-4 text-center">{{ $lote->cantidad_inicial }}</td>
-                                            <td class="py-3 px-4 text-right font-semibold text-green-600">Q{{ number_format($lote->precio_ingreso, 2) }}</td>
-                                            <td class="py-3 px-4 text-left">{{ $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') : '-' }}</td>
-                                            <td class="py-3 px-4 text-left text-xs text-gray-500">{{ Str::limit($lote->observaciones ?? '-', 30) }}</td>
+
+                                            {{-- Precio Ingreso --}}
+                                            <td class="py-3 px-4 text-right font-semibold text-green-600">
+                                                @if($editingLoteId === $lote->id)
+                                                    <input type="number" wire:model="lotePrecioIngreso" step="0.01" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-right" min="0">
+                                                @else
+                                                    Q{{ number_format($lote->precio_ingreso, 2) }}
+                                                @endif
+                                            </td>
+
+                                            {{-- Fecha Ingreso --}}
+                                            <td class="py-3 px-4 text-left">
+                                                @if($editingLoteId === $lote->id)
+                                                    <input type="date" wire:model="loteFechaIngreso" class="w-32 px-2 py-1 border border-gray-300 rounded text-sm">
+                                                @else
+                                                    {{ $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') : '-' }}
+                                                @endif
+                                            </td>
+
+                                            {{-- Observaciones --}}
+                                            <td class="py-3 px-4 text-left text-xs text-gray-500">
+                                                @if($editingLoteId === $lote->id)
+                                                    <input type="text" wire:model="loteObservaciones" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Observaciones">
+                                                @else
+                                                    {{ Str::limit($lote->observaciones ?? '-', 30) }}
+                                                @endif
+                                            </td>
+
+                                            {{-- Estado --}}
                                             <td class="py-3 px-4 text-center">
                                                 @if($lote->estado)
                                                     <span class="bg-green-200 text-green-700 py-1 px-2 rounded-full text-xs font-semibold">Activo</span>
@@ -199,24 +246,43 @@
                                                     <span class="bg-gray-300 text-gray-700 py-1 px-2 rounded-full text-xs font-semibold">Inactivo</span>
                                                 @endif
                                             </td>
+
+                                            {{-- Acciones --}}
                                             <td class="py-3 px-4 text-center">
-                                                <div class="flex item-center justify-center gap-1">
-                                                    <x-action-button
-                                                        type="edit"
-                                                        wire:click="editarLote({{ $lote->id }})"
-                                                        title="Editar lote" />
-                                                    @if($lote->estado)
+                                                @if($editingLoteId === $lote->id)
+                                                    {{-- Modo edición: mostrar guardar y cancelar --}}
+                                                    <div class="flex item-center justify-center gap-1">
+                                                        <button wire:click="guardarLote" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded" title="Guardar cambios">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                        <button wire:click="cancelarEdicionLote" class="bg-gray-400 hover:bg-gray-500 text-white p-1.5 rounded" title="Cancelar">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    {{-- Modo normal: mostrar editar, activar/desactivar --}}
+                                                    <div class="flex item-center justify-center gap-1">
                                                         <x-action-button
-                                                            type="delete"
-                                                            wire:click="eliminarLote({{ $lote->id }})"
-                                                            title="Desactivar lote" />
-                                                    @else
-                                                        <x-action-button
-                                                            type="activate"
-                                                            wire:click="activarLote({{ $lote->id }})"
-                                                            title="Activar lote" />
-                                                    @endif
-                                                </div>
+                                                            type="edit"
+                                                            wire:click="editarLote({{ $lote->id }})"
+                                                            title="Editar lote" />
+                                                        @if($lote->estado)
+                                                            <x-action-button
+                                                                type="delete"
+                                                                wire:click="eliminarLote({{ $lote->id }})"
+                                                                title="Desactivar lote" />
+                                                        @else
+                                                            <x-action-button
+                                                                type="activate"
+                                                                wire:click="activarLote({{ $lote->id }})"
+                                                                title="Activar lote" />
+                                                        @endif
+                                                    </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -410,9 +476,9 @@
         </div>
     </div>
 
-    {{-- Modal Crear/Editar Lote --}}
+    {{-- Modal Crear Lote --}}
     <div x-data="{
-            show: @entangle('showModalLotes').live || @entangle('showModalEditarLote').live,
+            show: @entangle('showModalLotes').live,
             animatingOut: false
          }"
          x-show="show || animatingOut"
@@ -428,9 +494,7 @@
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-900">
-                    {{ $editingLoteId ? 'Editar Lote' : 'Crear Lote' }}
-                </h3>
+                <h3 class="text-lg font-bold text-gray-900">Crear Lote</h3>
                 <button wire:click="closeModalLotes" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -536,7 +600,7 @@
                     <button
                         type="submit"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
-                        {{ $editingLoteId ? 'Actualizar' : 'Crear' }}
+                        Crear
                     </button>
                 </div>
             </form>
