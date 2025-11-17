@@ -55,9 +55,12 @@ class ComprasHub extends Component
             ->selectRaw('COUNT(*) as total, SUM(total) as monto_total')
             ->first();
 
+        // Calcular monto sin IVA (dividir entre 1.12 para quitar el 12% de IVA)
+        $montoSinIva = ($comprasMes->monto_total ?? 0) / 1.12;
+
         return [
             'total_mes' => $comprasMes->total ?? 0,
-            'monto_total_mes' => $comprasMes->monto_total ?? 0,
+            'monto_total_mes' => $montoSinIva,
             'pendientes_revision' => 0,
             'proveedores_activos' => Proveedor::where('activo', true)->count(),
         ];
@@ -82,7 +85,7 @@ class ComprasHub extends Component
                     'numero_factura' => $compra->no_factura ?? 'N/A',
                     'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                     'fecha' => $compra->fecha->format('Y-m-d'),
-                    'monto' => $compra->total,
+                    'monto' => $compra->total / 1.12, // Calcular monto sin IVA
                     'estado' => 'Completada',
                     'activa' => $compra->activo ?? true,
                 ];
@@ -117,7 +120,7 @@ class ComprasHub extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : $compra->total,
+                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
                 'productos' => $productos,
             ];
             $this->showModalVer = true;
@@ -162,7 +165,7 @@ class ComprasHub extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : $compra->total,
+                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
                 'productos' => $productos,
             ];
             $this->showModalEditar = true;

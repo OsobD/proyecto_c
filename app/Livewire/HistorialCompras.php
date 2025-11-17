@@ -165,7 +165,7 @@ class HistorialCompras extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : $compra->total,
+                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
                 'productos' => $productos,
             ];
             $this->showModalVer = true;
@@ -211,7 +211,7 @@ class HistorialCompras extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : $compra->total,
+                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
                 'productos' => $productos,
             ];
             $this->showModalEditar = true;

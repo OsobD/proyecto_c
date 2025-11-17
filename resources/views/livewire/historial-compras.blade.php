@@ -72,7 +72,7 @@
                     type="date"
                     id="fecha_inicio"
                     wire:model.live="fechaInicio"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    class="block w-full py-3 px-4 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
             </div>
 
             <div>
@@ -81,7 +81,7 @@
                     type="date"
                     id="fecha_fin"
                     wire:model.live="fechaFin"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    class="block w-full py-3 px-4 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
             </div>
 
             <div class="flex items-end">
@@ -115,7 +115,7 @@
                         <th class="py-3 px-6 text-left">Proveedor</th>
                         <th class="py-3 px-6 text-left">Fecha</th>
                         <th class="py-3 px-6 text-center">Productos</th>
-                        <th class="py-3 px-6 text-right">Monto</th>
+                        <th class="py-3 px-6 text-right">Monto (sin IVA)</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
@@ -133,7 +133,7 @@
                                     {{ $compra->detalles->count() }}
                                 </span>
                             </td>
-                            <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra->total, 2) }}</td>
+                            <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra->total / 1.12, 2) }}</td>
                             <td class="py-3 px-6 text-center">
                                 <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
                                     Completada
@@ -276,7 +276,7 @@
                     {{-- Total --}}
                     <div class="bg-blue-50 p-4 rounded-md">
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-800">Total de la Compra:</span>
+                            <span class="text-lg font-semibold text-gray-800">Total de la Compra (sin IVA):</span>
                             <span class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total'] ?? 0, 2) }}</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
@@ -412,7 +412,7 @@
                     {{-- Total actualizado --}}
                     <div class="bg-blue-50 p-4 rounded-md">
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-800">Total de la Compra:</span>
+                            <span class="text-lg font-semibold text-gray-800">Total de la Compra (sin IVA):</span>
                             <span class="text-2xl font-bold text-blue-600">
                                 Q{{ number_format(collect($compraSeleccionada['productos'])->sum(function($p) { return $p['cantidad'] * $p['precio']; }), 2) }}
                             </span>
