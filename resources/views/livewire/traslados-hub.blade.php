@@ -180,11 +180,21 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="py-3 px-6 text-left">
-                                @if(isset($traslado['tipo_badge']) && isset($traslado['tipo_color']))
-                                    <span class="bg-{{ $traslado['tipo_color'] }}-200 text-{{ $traslado['tipo_color'] }}-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                        {{ $traslado['tipo_badge'] }}
-                                    </span>
+                            <td class="py-3 px-6 text-left whitespace-nowrap">
+                                @if(isset($traslado['tipo_badge']))
+                                    @if($traslado['tipo_badge'] === 'Consumibles')
+                                        <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            Consumibles
+                                        </span>
+                                    @elseif($traslado['tipo_badge'] === 'No Consumibles')
+                                        <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            No Consumibles
+                                        </span>
+                                    @elseif($traslado['tipo_badge'] === 'Ambos')
+                                        <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            Ambos
+                                        </span>
+                                    @endif
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-left font-medium">{{ $traslado['correlativo'] }}</td>

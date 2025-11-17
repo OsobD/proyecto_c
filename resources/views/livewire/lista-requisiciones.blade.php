@@ -2,6 +2,7 @@
     {{-- Breadcrumbs --}}
     <x-breadcrumbs :items="[
         ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Traslados', 'url' => '/traslados'],
         ['label' => 'Requisiciones'],
     ]" />
 
