@@ -129,136 +129,179 @@
     </div>
 
     {{-- Modal para crear/editar proveedor --}}
-    @if ($showModal)
-        <div class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                {{-- Fondo oscuro --}}
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-
-                {{-- Contenedor del modal --}}
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    {{-- Encabezado del modal --}}
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900" id="modal-title">
-                                {{ $editingId ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
-                            </h3>
-                            <button
-                                wire:click="closeModal"
-                                class="text-gray-400 hover:text-gray-500">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {{-- Formulario --}}
-                        <form wire:submit.prevent="guardarProveedor">
-                            {{-- Nombre --}}
-                            <div class="mb-4">
-                                <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Nombre del Proveedor <span class="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="nombre"
-                                    wire:model="nombre"
-                                    class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Ej: Distribuidora XYZ">
-                                @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- NIT --}}
-                            <div class="mb-4">
-                                <label for="nit" class="block text-sm font-medium text-gray-700 mb-1">
-                                    NIT <span class="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="nit"
-                                    wire:model="nit"
-                                    class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Ej: 123456789-0">
-                                @error('nit') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- Régimen Tributario --}}
-                            <div class="mb-4">
-                                <label for="regimenTributarioId" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Régimen Tributario <span class="text-red-500">*</span>
-                                </label>
-                                <select
-                                    id="regimenTributarioId"
-                                    wire:model="regimenTributarioId"
-                                    class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Seleccione un régimen</option>
-                                    @foreach ($regimenesTributarios as $regimen)
-                                        <option value="{{ $regimen->id }}">{{ $regimen->nombre }}</option>
-                                    @endforeach
-                                </select>
-                                @error('regimenTributarioId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- Dirección --}}
-                            <div class="mb-4">
-                                <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Dirección
-                                </label>
-                                <input
-                                    type="text"
-                                    id="direccion"
-                                    wire:model="direccion"
-                                    class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Ej: Calle 123, Ciudad">
-                                @error('direccion') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- Teléfono --}}
-                            <div class="mb-4">
-                                <label for="telefono" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Teléfono
-                                </label>
-                                <input
-                                    type="text"
-                                    id="telefono"
-                                    wire:model="telefono"
-                                    class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Ej: +593 999 999 999">
-                                @error('telefono') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- Email --}}
-                            <div class="mb-4">
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    wire:model="email"
-                                    class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Ej: contacto@proveedor.com">
-                                @error('email') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- Botones --}}
-                            <div class="flex justify-end gap-2 mt-6">
-                                <button
-                                    type="button"
-                                    wire:click="closeModal"
-                                    class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-md">
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md">
-                                    {{ $editingId ? 'Actualizar' : 'Guardar' }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+    <div x-data="{
+            show: @entangle('showModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModal"
+         wire:ignore.self>
+        <div class="relative p-6 border w-full max-w-lg shadow-lg rounded-lg bg-white"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">
+                    {{ $editingId ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
+                </h3>
+                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
+
+            <form wire:submit.prevent="guardarProveedor">
+                {{-- Nombre --}}
+                <div class="mb-6">
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">
+                        Nombre del Proveedor
+                    </label>
+                    <input
+                        type="text"
+                        id="nombre"
+                        wire:model="nombre"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nombre') border-red-500 @enderror"
+                        placeholder="Ej: Distribuidora XYZ">
+                    @error('nombre')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- NIT --}}
+                <div class="mb-6">
+                    <label for="nit" class="block text-sm font-medium text-gray-700">
+                        NIT
+                    </label>
+                    <input
+                        type="text"
+                        id="nit"
+                        wire:model="nit"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nit') border-red-500 @enderror"
+                        placeholder="Ej: 123456789-0">
+                    @error('nit')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Régimen Tributario --}}
+                <div class="mb-6">
+                    <label for="regimenTributarioId" class="block text-sm font-medium text-gray-700">
+                        Régimen Tributario
+                    </label>
+                    <select
+                        id="regimenTributarioId"
+                        wire:model="regimenTributarioId"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('regimenTributarioId') border-red-500 @enderror">
+                        <option value="">Seleccione un régimen</option>
+                        @foreach ($regimenesTributarios as $regimen)
+                            <option value="{{ $regimen->id }}">{{ $regimen->nombre }}</option>
+                        @endforeach
+                    </select>
+                    @error('regimenTributarioId')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Dirección --}}
+                <div class="mb-6">
+                    <label for="direccion" class="block text-sm font-medium text-gray-700">
+                        Dirección
+                    </label>
+                    <input
+                        type="text"
+                        id="direccion"
+                        wire:model="direccion"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('direccion') border-red-500 @enderror"
+                        placeholder="Ej: Calle 123, Ciudad">
+                    @error('direccion')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Teléfono --}}
+                <div class="mb-6">
+                    <label for="telefono" class="block text-sm font-medium text-gray-700">
+                        Teléfono
+                    </label>
+                    <input
+                        type="text"
+                        id="telefono"
+                        wire:model="telefono"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('telefono') border-red-500 @enderror"
+                        placeholder="Ej: +593 999 999 999">
+                    @error('telefono')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Email --}}
+                <div class="mb-6">
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        id="email"
+                        wire:model="email"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('email') border-red-500 @enderror"
+                        placeholder="Ej: contacto@proveedor.com">
+                    @error('email')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Botones --}}
+                <div class="flex justify-between mt-6">
+                    <button
+                        type="button"
+                        wire:click="closeModal"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        {{ $editingId ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                </div>
+            </form>
         </div>
-    @endif
+    </div>
+
+    <style>
+        /* Animaciones de entrada y salida */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+    </style>
 </div>
