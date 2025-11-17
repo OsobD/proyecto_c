@@ -3,13 +3,18 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\Producto;
+use App\Models\Categoria;
+use App\Models\Lote;
+use App\Models\Bodega;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Componente GestionProductos
  *
  * Gestiona el CRUD completo de productos del sistema de inventario.
  * Permite crear, editar, buscar, activar/desactivar productos y visualizar
- * su historial de compras.
+ * sus lotes existentes con operaciones CRUD sobre los mismos.
  *
  * **Funcionalidades principales:**
  * - Listado de productos con búsqueda en tiempo real
@@ -17,25 +22,15 @@ use Livewire\Component;
  * - Asociación de productos con categorías
  * - Creación rápida de categorías desde el mismo formulario (sub-modal)
  * - Activación/desactivación de productos (soft delete)
- * - Visualización de historial de compras por producto
- *
- * **Estado de desarrollo:**
- * Actualmente utiliza datos mock. Pendiente integración con modelos Eloquent
- * (Producto, Categoria) y base de datos real.
+ * - Visualización de lotes por producto en modal dedicado
+ * - CRUD completo de lotes (crear con modal, editar inline, activar/desactivar)
  *
  * @package App\Livewire
- * @version 1.0
+ * @version 2.0
  * @see resources/views/livewire/gestion-productos.blade.php Vista asociada
  */
 class GestionProductos extends Component
 {
-    // Propiedades de datos
-    /** @var array Lista de productos del sistema */
-    public $productos = [];
-
-    /** @var array Lista de categorías disponibles */
-    public $categorias = [];
-
     // Propiedades de búsqueda y filtrado
     /** @var string Término de búsqueda para filtrar productos */
     public $searchProducto = '';
@@ -47,11 +42,17 @@ class GestionProductos extends Component
     /** @var bool Controla visibilidad del sub-modal de categoría */
     public $showSubModalCategoria = false;
 
-    /** @var int|null ID del producto cuyo historial está expandido */
-    public $showHistorial = null;
+    /** @var bool Controla visibilidad del modal de crear lote */
+    public $showModalLotes = false;
 
-    /** @var int|null ID del producto en edición (null = modo creación) */
+    /** @var string|null ID del producto cuyos lotes están expandidos */
+    public $productoIdLotesExpandido = null;
+
+    /** @var string|null ID del producto en edición (null = modo creación) */
     public $editingId = null;
+
+    /** @var int|null ID del lote en edición */
+    public $editingLoteId = null;
 
     // Campos del formulario de producto
     /** @var string Código único del producto */
@@ -63,117 +64,67 @@ class GestionProductos extends Component
     /** @var string|int ID de la categoría seleccionada */
     public $categoriaId = '';
 
+    /** @var bool Indica si el producto es consumible */
+    public $esConsumible = false;
+
     // Campo para crear categoría
     /** @var string Nombre de nueva categoría a crear */
     public $nuevaCategoriaNombre = '';
 
-    /**
-     * Inicializa el componente con datos mock de prueba
-     *
-     * @todo Reemplazar con consultas a BD: Producto::all() y Categoria::all()
-     * @return void
-     */
-    public function mount()
-    {
-        $this->categorias = [
-            ['id' => 1, 'nombre' => 'Herramientas', 'activo' => true],
-            ['id' => 2, 'nombre' => 'Materiales Eléctricos', 'activo' => true],
-            ['id' => 3, 'nombre' => 'Equipos de Seguridad', 'activo' => true],
-            ['id' => 4, 'nombre' => 'Suministros de Oficina', 'activo' => true],
-        ];
+    // Campos del formulario de lote
+    /** @var int Cantidad del lote */
+    public $loteCantidad = '';
 
-        $this->productos = [
-            [
-                'id' => 1,
-                'codigo' => 'PROD-001',
-                'descripcion' => 'Tornillos de acero inoxidable',
-                'categoria_id' => 1,
-                'activo' => true,
-                'historial' => [
-                    ['fecha' => '2024-01-15', 'proveedor' => 'Ferretería El Martillo', 'costo' => 15.50, 'factura' => 'F-001'],
-                    ['fecha' => '2024-02-20', 'proveedor' => 'Ferretería El Martillo', 'costo' => 16.00, 'factura' => 'F-045'],
-                ],
-            ],
-            [
-                'id' => 2,
-                'codigo' => 'PROD-002',
-                'descripcion' => 'Abrazaderas de metal',
-                'categoria_id' => 2,
-                'activo' => true,
-                'historial' => [
-                    ['fecha' => '2024-01-10', 'proveedor' => 'Suministros Industriales', 'costo' => 5.75, 'factura' => 'F-120'],
-                ],
-            ],
-            [
-                'id' => 3,
-                'codigo' => 'PROD-003',
-                'descripcion' => 'Cinta aislante',
-                'categoria_id' => 2,
-                'activo' => true,
-                'historial' => [],
-            ],
-            [
-                'id' => 4,
-                'codigo' => 'PROD-004',
-                'descripcion' => 'Guantes de seguridad',
-                'categoria_id' => 3,
-                'activo' => true,
-                'historial' => [],
-            ],
-            [
-                'id' => 5,
-                'codigo' => 'PROD-005',
-                'descripcion' => 'Fusibles de 15A',
-                'categoria_id' => 2,
-                'activo' => false,
-                'historial' => [],
-            ],
-        ];
-    }
+    /** @var float Precio de ingreso del lote */
+    public $lotePrecioIngreso = '';
+
+    /** @var string Fecha de ingreso del lote */
+    public $loteFechaIngreso = '';
+
+    /** @var int ID de la bodega del lote */
+    public $loteBodegaId = '';
+
+    /** @var string Observaciones del lote */
+    public $loteObservaciones = '';
+
+    /** @var string ID del producto al que pertenece el lote */
+    public $loteProductoId = '';
 
     /**
-     * Computed property: Retorna productos filtrados por búsqueda
+     * Renderiza la vista del componente con datos desde BD
      *
-     * Filtra por código, descripción o nombre de categoría.
-     *
-     * @return array Lista de productos que coinciden con el término de búsqueda
+     * @return \Illuminate\View\View
      */
-    public function getProductosFiltradosProperty()
+    public function render()
     {
-        if (empty($this->searchProducto)) {
-            return $this->productos;
-        }
+        // Cargar productos con sus relaciones
+        $productos = Producto::with(['categoria', 'lotes.bodega'])
+            ->when($this->searchProducto, function($query) {
+                $search = strtolower(trim($this->searchProducto));
+                $query->where(function($q) use ($search) {
+                    $q->where(DB::raw('LOWER(id)'), 'like', "%{$search}%")
+                      ->orWhere(DB::raw('LOWER(descripcion)'), 'like', "%{$search}%")
+                      ->orWhereHas('categoria', function($subQ) use ($search) {
+                          $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
+                      });
+                });
+            })
+            ->orderBy('descripcion')
+            ->get();
 
-        $search = strtolower(trim($this->searchProducto));
+        $categorias = Categoria::where('activo', true)
+            ->orderBy('nombre')
+            ->get();
 
-        return array_filter($this->productos, function($producto) use ($search) {
-            $categoriaNombre = $this->getNombreCategoria($producto['categoria_id']);
-            return str_contains(strtolower($producto['codigo']), $search) ||
-                   str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains(strtolower($categoriaNombre), $search);
-        });
-    }
+        $bodegas = Bodega::where('activo', true)
+            ->orderBy('nombre')
+            ->get();
 
-    /**
-     * Computed property: Retorna solo categorías activas
-     *
-     * @return array Categorías con estado activo = true
-     */
-    public function getCategoriasActivasProperty()
-    {
-        return array_filter($this->categorias, fn($cat) => $cat['activo']);
-    }
-
-    /**
-     * Obtiene el nombre de una categoría por su ID
-     *
-     * @param int $categoriaId ID de la categoría a buscar
-     * @return string Nombre de la categoría o 'Sin categoría' si no existe
-     */
-    public function getNombreCategoria($categoriaId)
-    {
-        $categoria = collect($this->categorias)->firstWhere('id', $categoriaId);
-        return $categoria ? $categoria['nombre'] : 'Sin categoría';
+        return view('livewire.gestion-productos', [
+            'productos' => $productos,
+            'categorias' => $categorias,
+            'bodegas' => $bodegas,
+        ]);
     }
 
     /**
@@ -192,18 +143,19 @@ class GestionProductos extends Component
      *
      * Carga los datos del producto seleccionado en el formulario.
      *
-     * @param int $id ID del producto a editar
+     * @param string $id ID del producto a editar
      * @return void
      */
     public function editarProducto($id)
     {
-        $producto = collect($this->productos)->firstWhere('id', $id);
+        $producto = Producto::find($id);
 
         if ($producto) {
             $this->editingId = $id;
-            $this->codigo = $producto['codigo'];
-            $this->descripcion = $producto['descripcion'];
-            $this->categoriaId = $producto['categoria_id'];
+            $this->codigo = $producto->id;
+            $this->descripcion = $producto->descripcion;
+            $this->categoriaId = $producto->id_categoria;
+            $this->esConsumible = $producto->es_consumible;
             $this->showModal = true;
         }
     }
@@ -218,72 +170,80 @@ class GestionProductos extends Component
      */
     public function guardarProducto()
     {
-        $this->validate([
-            'codigo' => 'required|min:3|max:50',
+        $rules = [
+            'codigo' => 'required|min:1|max:50',
             'descripcion' => 'required|min:3|max:255',
-            'categoriaId' => 'required',
-        ], [
+            'categoriaId' => 'required|exists:categoria,id',
+        ];
+
+        // Si estamos creando, validar que el código no exista
+        if (!$this->editingId) {
+            $rules['codigo'] .= '|unique:producto,id';
+        }
+
+        $this->validate($rules, [
             'codigo.required' => 'El código del producto es obligatorio.',
-            'codigo.min' => 'El código debe tener al menos 3 caracteres.',
+            'codigo.min' => 'El código debe tener al menos 1 carácter.',
+            'codigo.unique' => 'Este código de producto ya existe.',
             'descripcion.required' => 'La descripción es obligatoria.',
             'descripcion.min' => 'La descripción debe tener al menos 3 caracteres.',
             'categoriaId.required' => 'Debe seleccionar una categoría.',
+            'categoriaId.exists' => 'La categoría seleccionada no existe.',
         ]);
 
         if ($this->editingId) {
             // Actualizar producto existente
-            $this->productos = array_map(function($prod) {
-                if ($prod['id'] === $this->editingId) {
-                    $prod['codigo'] = $this->codigo;
-                    $prod['descripcion'] = $this->descripcion;
-                    $prod['categoria_id'] = (int)$this->categoriaId;
-                }
-                return $prod;
-            }, $this->productos);
+            $producto = Producto::find($this->editingId);
+            if ($producto) {
+                $producto->descripcion = $this->descripcion;
+                $producto->id_categoria = $this->categoriaId;
+                $producto->es_consumible = $this->esConsumible;
+                $producto->save();
+
+                session()->flash('message', 'Producto actualizado exitosamente.');
+            }
         } else {
             // Crear nuevo producto
-            $newId = max(array_column($this->productos, 'id')) + 1;
-            $this->productos[] = [
-                'id' => $newId,
-                'codigo' => $this->codigo,
+            Producto::create([
+                'id' => $this->codigo,
                 'descripcion' => $this->descripcion,
-                'categoria_id' => (int)$this->categoriaId,
+                'id_categoria' => $this->categoriaId,
+                'es_consumible' => $this->esConsumible,
                 'activo' => true,
-                'historial' => [],
-            ];
+            ]);
+
+            session()->flash('message', 'Producto creado exitosamente.');
         }
 
         $this->closeModal();
-        session()->flash('message', $this->editingId ? 'Producto actualizado exitosamente.' : 'Producto creado exitosamente.');
     }
 
     /**
      * Cambia el estado activo/inactivo de un producto (soft delete)
      *
-     * @param int $id ID del producto a activar/desactivar
+     * @param string $id ID del producto a activar/desactivar
      * @return void
      */
     public function toggleEstado($id)
     {
-        $this->productos = array_map(function($prod) use ($id) {
-            if ($prod['id'] === $id) {
-                $prod['activo'] = !$prod['activo'];
-            }
-            return $prod;
-        }, $this->productos);
+        $producto = Producto::find($id);
+        if ($producto) {
+            $producto->activo = !$producto->activo;
+            $producto->save();
 
-        session()->flash('message', 'Estado del producto actualizado.');
+            session()->flash('message', 'Estado del producto actualizado.');
+        }
     }
 
     /**
-     * Expande/colapsa el historial de compras de un producto
+     * Expande/colapsa los lotes de un producto
      *
-     * @param int $id ID del producto cuyo historial se desea ver
+     * @param string $id ID del producto cuyos lotes se desean ver
      * @return void
      */
-    public function toggleHistorial($id)
+    public function toggleLotes($id)
     {
-        $this->showHistorial = $this->showHistorial === $id ? null : $id;
+        $this->productoIdLotesExpandido = $this->productoIdLotesExpandido === $id ? null : $id;
     }
 
     /**
@@ -314,14 +274,12 @@ class GestionProductos extends Component
             'nuevaCategoriaNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
         ]);
 
-        $newId = max(array_column($this->categorias, 'id')) + 1;
-        $this->categorias[] = [
-            'id' => $newId,
+        $categoria = Categoria::create([
             'nombre' => $this->nuevaCategoriaNombre,
             'activo' => true,
-        ];
+        ]);
 
-        $this->categoriaId = $newId;
+        $this->categoriaId = $categoria->id;
         $this->showSubModalCategoria = false;
         $this->nuevaCategoriaNombre = '';
     }
@@ -359,16 +317,194 @@ class GestionProductos extends Component
         $this->codigo = '';
         $this->descripcion = '';
         $this->categoriaId = '';
+        $this->esConsumible = false;
         $this->resetErrorBag();
     }
 
+    // ==================== MÉTODOS PARA GESTIÓN DE LOTES ====================
+
     /**
-     * Renderiza la vista del componente
+     * Abre el modal para crear un nuevo lote
      *
-     * @return \Illuminate\View\View
+     * @param string $productoId ID del producto al que pertenecerá el lote
+     * @return void
      */
-    public function render()
+    public function abrirModalCrearLote($productoId)
     {
-        return view('livewire.gestion-productos');
+        $this->resetFormLote();
+        $this->loteProductoId = $productoId;
+        $this->loteFechaIngreso = now()->format('Y-m-d');
+        $this->showModalLotes = true;
+    }
+
+    /**
+     * Activa el modo de edición inline para un lote
+     *
+     * @param int $loteId ID del lote a editar
+     * @return void
+     */
+    public function editarLote($loteId)
+    {
+        $lote = Lote::find($loteId);
+
+        if ($lote) {
+            $this->editingLoteId = $loteId;
+            $this->loteProductoId = $lote->id_producto;
+            $this->loteCantidad = $lote->cantidad;
+            $this->lotePrecioIngreso = $lote->precio_ingreso;
+            $this->loteFechaIngreso = $lote->fecha_ingreso ? date('Y-m-d', strtotime($lote->fecha_ingreso)) : '';
+            $this->loteBodegaId = $lote->id_bodega;
+            $this->loteObservaciones = $lote->observaciones ?? '';
+        }
+    }
+
+    /**
+     * Cancela la edición inline de un lote
+     *
+     * @return void
+     */
+    public function cancelarEdicionLote()
+    {
+        $this->editingLoteId = null;
+        $this->resetFormLote();
+    }
+
+    /**
+     * Guarda un lote (crear o actualizar según editingLoteId)
+     *
+     * @return void
+     */
+    public function guardarLote()
+    {
+        $this->validate([
+            'loteCantidad' => 'required|integer|min:0',
+            'lotePrecioIngreso' => 'required|numeric|min:0',
+            'loteFechaIngreso' => 'required|date',
+            'loteBodegaId' => 'required|exists:bodega,id',
+        ], [
+            'loteCantidad.required' => 'La cantidad es obligatoria.',
+            'loteCantidad.integer' => 'La cantidad debe ser un número entero.',
+            'loteCantidad.min' => 'La cantidad debe ser mayor o igual a 0.',
+            'lotePrecioIngreso.required' => 'El precio de ingreso es obligatorio.',
+            'lotePrecioIngreso.numeric' => 'El precio debe ser un número.',
+            'lotePrecioIngreso.min' => 'El precio debe ser mayor o igual a 0.',
+            'loteFechaIngreso.required' => 'La fecha de ingreso es obligatoria.',
+            'loteFechaIngreso.date' => 'Debe ingresar una fecha válida.',
+            'loteBodegaId.required' => 'Debe seleccionar una bodega.',
+            'loteBodegaId.exists' => 'La bodega seleccionada no existe.',
+        ]);
+
+        // Detectar si estamos editando o creando ANTES de hacer cambios
+        $esEdicion = $this->editingLoteId !== null;
+
+        if ($esEdicion) {
+            // Actualizar lote existente (edición inline)
+            $lote = Lote::find($this->editingLoteId);
+            if ($lote) {
+                $cantidadAnterior = $lote->cantidad;
+                $lote->cantidad = $this->loteCantidad;
+                // Ajustar cantidad_inicial si cambió la cantidad
+                if ($cantidadAnterior != $this->loteCantidad) {
+                    $diferencia = $this->loteCantidad - $cantidadAnterior;
+                    $lote->cantidad_inicial = $lote->cantidad_inicial + $diferencia;
+                }
+                $lote->precio_ingreso = $this->lotePrecioIngreso;
+                $lote->fecha_ingreso = $this->loteFechaIngreso;
+                $lote->id_bodega = $this->loteBodegaId;
+                $lote->observaciones = $this->loteObservaciones;
+                $lote->save();
+
+                session()->flash('message', 'Lote actualizado exitosamente.');
+            }
+        } else {
+            // Crear nuevo lote desde modal
+            Lote::create([
+                'id_producto' => $this->loteProductoId,
+                'cantidad' => $this->loteCantidad,
+                'cantidad_inicial' => $this->loteCantidad,
+                'precio_ingreso' => $this->lotePrecioIngreso,
+                'fecha_ingreso' => $this->loteFechaIngreso,
+                'id_bodega' => $this->loteBodegaId,
+                'observaciones' => $this->loteObservaciones,
+                'estado' => true,
+            ]);
+
+            session()->flash('message', 'Lote creado exitosamente.');
+        }
+
+        // Si estábamos editando inline, solo salir del modo edición
+        // Si estábamos creando desde modal, cerrar el modal
+        if ($esEdicion) {
+            $this->editingLoteId = null;
+            $this->resetFormLote();
+        } else {
+            $this->showModalLotes = false;
+            $this->resetFormLote();
+        }
+    }
+
+    /**
+     * Elimina (soft delete) un lote
+     *
+     * @param int $loteId ID del lote a eliminar
+     * @return void
+     */
+    public function eliminarLote($loteId)
+    {
+        $lote = Lote::find($loteId);
+        if ($lote) {
+            // Verificar que el lote no tenga movimientos (cantidad == cantidad_inicial)
+            if ($lote->cantidad == $lote->cantidad_inicial) {
+                $lote->estado = false;
+                $lote->save();
+                session()->flash('message', 'Lote desactivado exitosamente.');
+            } else {
+                session()->flash('error', 'No se puede desactivar un lote que tiene movimientos de inventario.');
+            }
+        }
+    }
+
+    /**
+     * Reactiva un lote
+     *
+     * @param int $loteId ID del lote a reactivar
+     * @return void
+     */
+    public function activarLote($loteId)
+    {
+        $lote = Lote::find($loteId);
+        if ($lote) {
+            $lote->estado = true;
+            $lote->save();
+            session()->flash('message', 'Lote activado exitosamente.');
+        }
+    }
+
+    /**
+     * Cierra el modal de crear lote
+     *
+     * @return void
+     */
+    public function closeModalLotes()
+    {
+        $this->showModalLotes = false;
+        $this->resetFormLote();
+    }
+
+    /**
+     * Limpia los campos del formulario de lote
+     *
+     * @return void
+     */
+    private function resetFormLote()
+    {
+        $this->editingLoteId = null;
+        $this->loteProductoId = '';
+        $this->loteCantidad = '';
+        $this->lotePrecioIngreso = '';
+        $this->loteFechaIngreso = '';
+        $this->loteBodegaId = '';
+        $this->loteObservaciones = '';
+        $this->resetErrorBag();
     }
 }
