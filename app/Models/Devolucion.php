@@ -19,6 +19,7 @@ class Devolucion extends Model
         'foto',
         'total',
         'id_usuario',
+        'id_persona',
         'id_tarjeta',
         'id_bodega',
         'id_traslado',
@@ -66,5 +67,10 @@ class Devolucion extends Model
     public function transacciones()
     {
         return $this->hasMany(Transaccion::class, 'id_devolucion');
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona');
     }
 }

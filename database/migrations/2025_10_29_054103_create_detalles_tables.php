@@ -71,7 +71,7 @@ return new class extends Migration
             $table->integer('cantidad')->default(0);
             $table->decimal('precio_salida', 10, 2)->default(0);
 
-            $table->foreign('id_salida')->references('id')->on('tipo_salida')->onDelete('cascade');
+            $table->foreign('id_salida')->references('id')->on('salida')->onDelete('cascade');
             $table->foreign('id_producto')->references('id')->on('producto')->onDelete('cascade');
             $table->foreign('id_lote')->references('id')->on('lote')->onDelete('set null');
         });

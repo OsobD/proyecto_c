@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Bitacora;
 use App\Models\Bodega;
+use App\Models\ConsumiblePersona;
 use App\Models\DetalleSalida;
 use App\Models\DetalleTraslado;
 use App\Models\Lote;
@@ -60,6 +61,9 @@ class FormularioRequisicion extends Component
 
     /** @var string|null Correlativo de la requisición */
     public $correlativo = null;
+
+    /** @var string|null Número de serie de la requisición */
+    public $numeroSerie = null;
 
     /** @var string|null Observaciones de la requisición */
     public $observaciones = null;
@@ -412,11 +416,7 @@ class FormularioRequisicion extends Component
             }
         }
 
-        // Validar que el destino tenga tarjeta activa
-        if (!$this->selectedDestino['tiene_tarjeta']) {
-            session()->flash('error', 'El empleado seleccionado no tiene una tarjeta de responsabilidad activa.');
-            return;
-        }
+        // Nota: No validamos si tiene tarjeta porque se crea automáticamente si no existe
 
         // Validar que ningún producto exceda el stock disponible
         foreach ($this->productosSeleccionados as $producto) {
@@ -491,22 +491,30 @@ class FormularioRequisicion extends Component
                     'correlativo' => $this->correlativo,
                     'no_requisicion' => $this->correlativo,
                     'total' => $productosConsumibles->sum(fn($p) => $p['cantidad'] * $p['precio']),
-                    'descripcion' => 'Requisición de productos consumibles',
+                    'descripcion' => $this->observaciones ?: 'Requisición de productos consumibles',
                     'observaciones' => $this->observaciones,
                     'estado' => 'Completado',
                     'activo' => true,
-                    'id_persona' => $this->selectedPersona['id'],
                     'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
                     'id_bodega_destino' => $this->selectedOrigen['bodega_id'], // Misma bodega (salida lógica)
                     'id_usuario' => $userId,
-                    'id_tarjeta' => $tarjeta->id, // Asociar con la persona pero no agregar a tarjeta
+                    'id_persona' => $this->selectedDestino['persona_id'], // Referencia directa a la persona
+                    'id_tarjeta' => null, // No se usa tarjeta para consumibles, se usa consumible_persona
                 ]);
 
                 $registrosCreados[] = ['tipo' => 'Traslado', 'id' => $traslado->id];
 
                 // Procesar cada producto consumible
                 foreach ($productosConsumibles as $producto) {
-                    $this->procesarProductoConsumible($producto, $traslado, $tipoTraslado);
+                    $this->procesarProductoConsumible(
+                        $producto,
+                        $traslado,
+                        $tipoTraslado,
+                        $this->correlativo,
+                        $this->selectedDestino['persona_id'],
+                        $this->selectedOrigen['bodega_id'],
+                        $this->observaciones
+                    );
                 }
             }
 
@@ -524,7 +532,7 @@ class FormularioRequisicion extends Component
                 $salida = Salida::create([
                     'fecha' => now(),
                     'total' => $productosNoConsumibles->sum(fn($p) => $p['cantidad'] * $p['precio']),
-                    'descripcion' => 'Requisición de productos no consumibles',
+                    'descripcion' => $this->observaciones ?: 'Requisición de productos no consumibles',
                     'ubicacion' => $this->correlativo,
                     'id_usuario' => $userId,
                     'id_tarjeta' => null,
@@ -549,9 +557,9 @@ class FormularioRequisicion extends Component
                     $totalTarjeta += $this->procesarProductoNoConsumible($producto, $salida, $tarjeta);
                 }
 
-                // Actualizar total de la tarjeta
+                // Actualizar total de la tarjeta sin triggear eventos
                 $tarjeta->total += $totalTarjeta;
-                $tarjeta->save();
+                $tarjeta->saveQuietly();
             }
 
             // Registrar en bitácora
@@ -594,6 +602,7 @@ class FormularioRequisicion extends Component
                 'selectedDestino',
                 'productosSeleccionados',
                 'correlativo',
+                'numeroSerie',
                 'observaciones',
                 'searchOrigen',
                 'searchDestino',
@@ -603,6 +612,9 @@ class FormularioRequisicion extends Component
             return redirect()->route('traslados');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Cerrar modal y mostrar error
+            $this->showModalConfirmacion = false;
 
             \Log::error('Error al registrar requisición: ' . $e->getMessage(), [
                 'exception' => $e,
@@ -614,9 +626,9 @@ class FormularioRequisicion extends Component
     }
 
     /**
-     * Procesa un producto consumible (va a Traslado)
+     * Procesa un producto consumible (va a Traslado + ConsumiblePersona)
      */
-    private function procesarProductoConsumible($producto, $traslado, $tipoTraslado)
+    private function procesarProductoConsumible($producto, $traslado, $tipoTraslado, $correlativo, $idPersona, $idBodega, $observaciones)
     {
         $cantidadRestante = $producto['cantidad'];
         $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
@@ -636,6 +648,19 @@ class FormularioRequisicion extends Component
                 'cantidad' => $cantidadDelLote,
                 'id_lote' => $loteModel->id,
                 'precio_traslado' => $loteModel->precio_ingreso,
+            ]);
+
+            // NUEVO: Crear registro histórico en consumible_persona
+            ConsumiblePersona::create([
+                'correlativo' => $correlativo,
+                'fecha' => now(),
+                'id_persona' => $idPersona,
+                'id_producto' => $producto['id'],
+                'id_lote' => $loteModel->id,
+                'cantidad' => $cantidadDelLote,
+                'precio_unitario' => $loteModel->precio_ingreso,
+                'observaciones' => $observaciones,
+                'id_bodega' => $idBodega,
             ]);
 
             // Actualizar cantidad del lote (salida)

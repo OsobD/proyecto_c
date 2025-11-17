@@ -36,6 +36,9 @@ class HistorialTraslados extends Component
     /** @var string Filtro por estado */
     public $estadoFiltro = '';
 
+    /** @var int Items por página */
+    public $perPage = 15;
+
     /** @var bool Controla visibilidad del modal de detalle */
     public $showModalVer = false;
 
@@ -48,6 +51,16 @@ class HistorialTraslados extends Component
      * @return void
      */
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Se ejecuta cuando cambia el items por página
+     *
+     * @return void
+     */
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -77,18 +90,17 @@ class HistorialTraslados extends Component
      */
     public function getTrasladosFiltradosProperty()
     {
-        $perPage = 15;
         $page = $this->getPage();
 
         // OPTIMIZACIÓN: Solo cargamos un subconjunto razonable de cada tipo
         // en lugar de TODOS los registros
-        $limit = $perPage * ($page + 2); // Pre-cargar 2 páginas adelante para ordenamiento
+        $limit = $this->perPage * ($page + 2); // Pre-cargar 2 páginas adelante para ordenamiento
 
         $movimientos = collect();
 
         // Cargar Requisiciones (Salidas tipo "Uso Interno") - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Requisición') {
-            $salidas = Salida::with(['bodega', 'persona', 'tipo', 'usuario'])
+            $salidas = Salida::with(['bodega', 'persona', 'tipo', 'usuario', 'detallesSalida.producto'])
                 ->whereHas('tipo', function($q) {
                     $q->where('nombre', 'Salida por Uso Interno');
                 })
@@ -113,12 +125,39 @@ class HistorialTraslados extends Component
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
                 ->map(function($salida) {
+                    // Determinar tipo de productos
+                    $detalles = $salida->detallesSalida;
+                    $tieneConsumibles = false;
+                    $tieneNoConsumibles = false;
+
+                    foreach ($detalles as $detalle) {
+                        if ($detalle->producto) {
+                            if ($detalle->producto->es_consumible) {
+                                $tieneConsumibles = true;
+                            } else {
+                                $tieneNoConsumibles = true;
+                            }
+                        }
+                    }
+
+                    // Determinar badge y color
+                    if ($tieneConsumibles && $tieneNoConsumibles) {
+                        $tipoBadge = 'Ambos';
+                        $tipoColor = 'purple';
+                    } elseif ($tieneNoConsumibles) {
+                        $tipoBadge = 'No Consumibles';
+                        $tipoColor = 'blue';
+                    } else {
+                        $tipoBadge = 'Consumibles';
+                        $tipoColor = 'amber';
+                    }
+
                     return [
                         'id' => $salida->id,
                         'tipo' => 'Requisición',
                         'tipo_clase' => 'salida',
-                        'tipo_badge' => 'No Consumibles',
-                        'tipo_color' => 'blue',
+                        'tipo_badge' => $tipoBadge,
+                        'tipo_color' => $tipoColor,
                         'correlativo' => $salida->ubicacion ?? 'REQ-' . $salida->id,
                         'origen' => $salida->bodega->nombre ?? 'N/A',
                         'destino' => $salida->persona ?
@@ -138,7 +177,7 @@ class HistorialTraslados extends Component
 
         // Cargar Traslados - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Traslado') {
-            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario'])
+            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario', 'persona', 'detalles.producto'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
@@ -147,6 +186,9 @@ class HistorialTraslados extends Component
                             })
                             ->orWhereHas('bodegaDestino', function($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
+                            })
+                            ->orWhereHas('persona', function($q) {
+                                $q->whereRaw("CONCAT(nombres, ' ', apellidos) like ?", ['%' . $this->search . '%']);
                             });
                     });
                 })
@@ -163,15 +205,47 @@ class HistorialTraslados extends Component
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
                 ->map(function($traslado) {
+                    // Si tiene persona asociada, es una requisición
+                    $esRequisicion = $traslado->id_persona && $traslado->persona;
+
+                    // Determinar tipo de productos
+                    $detalles = $traslado->detalles;
+                    $tieneConsumibles = false;
+                    $tieneNoConsumibles = false;
+
+                    foreach ($detalles as $detalle) {
+                        if ($detalle->producto) {
+                            if ($detalle->producto->es_consumible) {
+                                $tieneConsumibles = true;
+                            } else {
+                                $tieneNoConsumibles = true;
+                            }
+                        }
+                    }
+
+                    // Determinar badge y color
+                    if ($tieneConsumibles && $tieneNoConsumibles) {
+                        $tipoBadge = 'Ambos';
+                        $tipoColor = 'purple';
+                    } elseif ($tieneNoConsumibles) {
+                        $tipoBadge = 'No Consumibles';
+                        $tipoColor = 'blue';
+                    } else {
+                        $tipoBadge = 'Consumibles';
+                        $tipoColor = 'amber';
+                    }
+
                     return [
                         'id' => $traslado->id,
-                        'tipo' => 'Traslado',
-                        'tipo_clase' => 'traslado',
-                        'tipo_badge' => 'Consumibles',
-                        'tipo_color' => 'amber',
+                        'tipo' => $esRequisicion ? 'Requisición' : 'Traslado',
+                        'tipo_clase' => $esRequisicion ? 'requisicion' : 'traslado',
+                        'tipo_badge' => $tipoBadge,
+                        'tipo_color' => $tipoColor,
                         'correlativo' => $traslado->correlativo ?? 'TRA-' . $traslado->id,
                         'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
-                        'destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
+                        'destino' => $esRequisicion
+                            ? trim(($traslado->persona->nombres ?? '') . ' ' . ($traslado->persona->apellidos ?? ''))
+                            : ($traslado->bodegaDestino->nombre ?? 'N/A'),
                         'usuario' => $traslado->usuario ? $traslado->usuario->name : 'Sistema',
                         'fecha' => $traslado->fecha->format('Y-m-d'),
                         'fecha_sort' => $traslado->fecha, // Para ordenamiento
@@ -187,12 +261,17 @@ class HistorialTraslados extends Component
 
         // Cargar Devoluciones - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Devolución') {
-            $devoluciones = Devolucion::with(['bodega', 'usuario'])
+            $devoluciones = Devolucion::with(['bodega', 'persona', 'usuario'])
                 ->when($this->search, function($q) {
                     $q->where(function($query) {
-                        $query->where('no_formulario', 'like', '%' . $this->search . '%')
+                        $query->where('correlativo', 'like', '%' . $this->search . '%')
+                            ->orWhere('no_formulario', 'like', '%' . $this->search . '%')
                             ->orWhereHas('bodega', function($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
+                            })
+                            ->orWhereHas('persona', function($q) {
+                                $q->where('nombres', 'like', '%' . $this->search . '%')
+                                  ->orWhere('apellidos', 'like', '%' . $this->search . '%');
                             });
                     });
                 })
@@ -210,8 +289,12 @@ class HistorialTraslados extends Component
                         'id' => $devolucion->id,
                         'tipo' => 'Devolución',
                         'tipo_clase' => 'devolucion',
-                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
-                        'origen' => 'Devolución',
+                        'tipo_badge' => 'No Consumibles',
+                        'tipo_color' => 'blue',
+                        'correlativo' => $devolucion->correlativo ?? 'DEV-' . $devolucion->id,
+                        'origen' => $devolucion->persona
+                            ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
+                            : 'N/A',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'usuario' => $devolucion->usuario ? $devolucion->usuario->name : 'Sistema',
                         'fecha' => $devolucion->fecha->format('Y-m-d'),
@@ -236,29 +319,109 @@ class HistorialTraslados extends Component
         // Ordenar por fecha descendente
         $movimientos = $movimientos->sortByDesc('fecha_sort')->values();
 
+        // NUEVO: Agrupar requisiciones por correlativo
+        $movimientos = $this->agruparRequisiciones($movimientos);
+
         // OPTIMIZACIÓN: Paginación manual para colecciones combinadas
         $total = $movimientos->count();
-        $items = $movimientos->slice(($page - 1) * $perPage, $perPage)->values();
+        $items = $movimientos->slice(($page - 1) * $this->perPage, $this->perPage)->values();
 
         return new \Illuminate\Pagination\LengthAwarePaginator(
             $items,
             $total,
-            $perPage,
+            $this->perPage,
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
     }
 
     /**
+     * Agrupa requisiciones que tengan el mismo correlativo
+     * Combina consumibles (Traslado) y no consumibles (Salida) en una sola fila
+     *
+     * @param \Illuminate\Support\Collection $movimientos
+     * @return \Illuminate\Support\Collection
+     */
+    private function agruparRequisiciones($movimientos)
+    {
+        // Agrupar por correlativo
+        $agrupados = $movimientos->groupBy('correlativo');
+        $resultado = collect();
+
+        foreach ($agrupados as $correlativo => $grupo) {
+            // Si solo hay un movimiento, no agrupar
+            if ($grupo->count() === 1) {
+                $resultado->push($grupo->first());
+                continue;
+            }
+
+            // Verificar si todos son requisiciones
+            $requisiciones = $grupo->filter(fn($m) => $m['tipo'] === 'Requisición');
+
+            // Si no hay requisiciones o solo una, no agrupar
+            if ($requisiciones->count() <= 1) {
+                foreach ($grupo as $mov) {
+                    $resultado->push($mov);
+                }
+                continue;
+            }
+
+            // Agrupar las requisiciones con el mismo correlativo
+            $primera = $requisiciones->first();
+
+            // Detectar tipos de productos en el grupo
+            $tieneConsumibles = $requisiciones->contains(fn($r) => $r['tipo_badge'] === 'Consumibles');
+            $tieneNoConsumibles = $requisiciones->contains(fn($r) => $r['tipo_badge'] === 'No Consumibles');
+
+            // Determinar badge combinado
+            if ($tieneConsumibles && $tieneNoConsumibles) {
+                $tipoBadge = 'Ambos';
+                $tipoColor = 'purple';
+            } elseif ($tieneNoConsumibles) {
+                $tipoBadge = 'No Consumibles';
+                $tipoColor = 'blue';
+            } else {
+                $tipoBadge = 'Consumibles';
+                $tipoColor = 'amber';
+            }
+
+            // Combinar conteos y totales
+            $productosCount = $requisiciones->sum('productos_count');
+            $totalCombinado = $requisiciones->sum('total');
+
+            // Crear movimiento agrupado
+            $movimientoAgrupado = $primera;
+            $movimientoAgrupado['tipo_badge'] = $tipoBadge;
+            $movimientoAgrupado['tipo_color'] = $tipoColor;
+            $movimientoAgrupado['productos_count'] = $productosCount;
+            $movimientoAgrupado['total'] = $totalCombinado;
+            $movimientoAgrupado['agrupado'] = true; // Marca para saber que está agrupado
+            $movimientoAgrupado['ids_agrupados'] = $requisiciones->pluck('id')->toArray();
+            $movimientoAgrupado['tipos_agrupados'] = $requisiciones->pluck('tipo_clase')->toArray();
+
+            $resultado->push($movimientoAgrupado);
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Muestra el detalle de un movimiento
      *
-     * @param int $id
-     * @param string $tipo
+     * @param int|array $id ID o array de IDs si está agrupado
+     * @param string|array $tipo Tipo o array de tipos si está agrupado
+     * @param string|null $correlativo Correlativo para requisiciones agrupadas
      * @return void
      */
-    public function verDetalle($id, $tipo)
+    public function verDetalle($id, $tipo, $correlativo = null)
     {
         try {
+            // Si es un movimiento agrupado (arrays), cargar todos los productos
+            if (is_array($id) && is_array($tipo)) {
+                $this->verDetalleAgrupado($id, $tipo, $correlativo);
+                return;
+            }
+
             switch ($tipo) {
                 case 'salida':
                     $salida = Salida::with(['bodega', 'persona', 'detallesSalida.producto', 'detallesSalida.lote'])
@@ -312,13 +475,15 @@ class HistorialTraslados extends Component
                     break;
 
                 case 'devolucion':
-                    $devolucion = Devolucion::with(['bodega', 'detalles.producto', 'detalles.lote'])
+                    $devolucion = Devolucion::with(['bodega', 'persona', 'detalles.producto', 'detalles.lote'])
                         ->findOrFail($id);
 
                     $this->movimientoSeleccionado = [
                         'tipo' => 'Devolución',
-                        'correlativo' => $devolucion->no_formulario ?? 'DEV-' . $devolucion->id,
-                        'origen' => 'Devolución',
+                        'correlativo' => $devolucion->correlativo ?? 'DEV-' . $devolucion->id,
+                        'origen' => $devolucion->persona
+                            ? trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''))
+                            : 'N/A',
                         'destino' => $devolucion->bodega->nombre ?? 'N/A',
                         'fecha' => $devolucion->fecha->format('d/m/Y'),
                         'total' => $devolucion->total,
@@ -340,6 +505,106 @@ class HistorialTraslados extends Component
             $this->showModalVer = true;
         } catch (\Exception $e) {
             session()->flash('error', 'Error al cargar el detalle: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Muestra el detalle de una requisición agrupada (combina consumibles + no consumibles)
+     *
+     * @param array $ids Array de IDs
+     * @param array $tipos Array de tipos ('salida', 'traslado', etc.)
+     * @param string $correlativo Correlativo de la requisición
+     * @return void
+     */
+    private function verDetalleAgrupado($ids, $tipos, $correlativo)
+    {
+        $productos = collect();
+        $totalCombinado = 0;
+        $info = null;
+
+        foreach ($ids as $index => $id) {
+            $tipoActual = $tipos[$index];
+
+            switch ($tipoActual) {
+                case 'salida':
+                    $salida = Salida::with(['bodega', 'persona', 'detallesSalida.producto', 'detallesSalida.lote'])
+                        ->find($id);
+
+                    if ($salida) {
+                        if (!$info) {
+                            $info = [
+                                'tipo' => 'Requisición',
+                                'correlativo' => $correlativo,
+                                'origen' => $salida->bodega->nombre ?? 'N/A',
+                                'destino' => $salida->persona ?
+                                    trim($salida->persona->nombres . ' ' . $salida->persona->apellidos) : 'N/A',
+                                'fecha' => $salida->fecha->format('d/m/Y'),
+                                'observaciones' => $salida->descripcion,
+                            ];
+                        }
+
+                        $totalCombinado += $salida->total;
+
+                        $productosSalida = $salida->detallesSalida->map(function($detalle) {
+                            return [
+                                'codigo' => $detalle->producto->id,
+                                'descripcion' => $detalle->producto->descripcion,
+                                'cantidad' => $detalle->cantidad,
+                                'precio' => $detalle->precio_salida,
+                                'subtotal' => $detalle->cantidad * $detalle->precio_salida,
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
+                            ];
+                        });
+
+                        $productos = $productos->concat($productosSalida);
+                    }
+                    break;
+
+                case 'traslado':
+                case 'requisicion':
+                    $traslado = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona', 'detallesTraslado.producto', 'detallesTraslado.lote'])
+                        ->find($id);
+
+                    if ($traslado) {
+                        if (!$info) {
+                            $info = [
+                                'tipo' => 'Requisición',
+                                'correlativo' => $correlativo,
+                                'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
+                                'destino' => $traslado->persona ?
+                                    trim(($traslado->persona->nombres ?? '') . ' ' . ($traslado->persona->apellidos ?? '')) :
+                                    ($traslado->bodegaDestino->nombre ?? 'N/A'),
+                                'fecha' => $traslado->fecha->format('d/m/Y'),
+                                'observaciones' => $traslado->observaciones,
+                            ];
+                        }
+
+                        $totalCombinado += $traslado->total;
+
+                        $productosTraslado = $traslado->detallesTraslado->map(function($detalle) {
+                            return [
+                                'codigo' => $detalle->producto->id,
+                                'descripcion' => $detalle->producto->descripcion,
+                                'cantidad' => $detalle->cantidad,
+                                'precio' => $detalle->lote->precio_ingreso ?? 0,
+                                'subtotal' => $detalle->cantidad * ($detalle->lote->precio_ingreso ?? 0),
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
+                            ];
+                        });
+
+                        $productos = $productos->concat($productosTraslado);
+                    }
+                    break;
+            }
+        }
+
+        if ($info) {
+            $this->movimientoSeleccionado = array_merge($info, [
+                'total' => $totalCombinado,
+                'productos' => $productos->toArray(),
+            ]);
+
+            $this->showModalVer = true;
         }
     }
 

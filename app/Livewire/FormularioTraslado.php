@@ -66,6 +66,9 @@ class FormularioTraslado extends Component
     /** @var string Número correlativo del traslado */
     public $correlativo = '';
 
+    /** @var string Número de serie del traslado */
+    public $numeroSerie = '';
+
     /** @var string Observaciones del traslado */
     public $observaciones = '';
 
@@ -328,7 +331,7 @@ class FormularioTraslado extends Component
                 $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
 
                 return [
-                    'id' => (int)$producto->id,
+                    'id' => $producto->id,
                     'descripcion' => $producto->descripcion,
                     'es_consumible' => (bool)$producto->es_consumible,
                     'precio' => (float)$precioPromedio,
@@ -348,11 +351,11 @@ class FormularioTraslado extends Component
      */
     public function selectProducto($productoId)
     {
-        $producto = collect($this->productoResults)->firstWhere('id', (int)$productoId);
+        $producto = collect($this->productoResults)->firstWhere('id', $productoId);
 
         if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
             $this->productosSeleccionados[] = [
-                'id' => (int)$producto['id'],
+                'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
                 'es_consumible' => (bool)($producto['es_consumible'] ?? false),
                 'precio' => (float)$producto['precio'],
@@ -474,9 +477,16 @@ class FormularioTraslado extends Component
             // Obtener el usuario actual
             $usuario = auth()->user();
 
+            if (!$usuario) {
+                session()->flash('error', 'Debe iniciar sesión para registrar un traslado.');
+                $this->closeModalConfirmacion();
+                return;
+            }
+
             // Obtener o crear tarjeta de responsabilidad para la persona seleccionada
+            // En traslados entre bodegas no hay persona, solo en requisiciones
             $tarjetaResponsabilidad = null;
-            if ($this->selectedPersona) {
+            if ($this->selectedPersona && isset($this->selectedPersona['id'])) {
                 $tarjetaResponsabilidad = TarjetaResponsabilidad::firstOrCreate(
                     [
                         'id_persona' => $this->selectedPersona['id'],
@@ -497,7 +507,7 @@ class FormularioTraslado extends Component
                 'total' => $this->subtotal,
                 'descripcion' => null,
                 'observaciones' => $this->observaciones,
-                'estado' => 'Pendiente',
+                'estado' => 'Completado',
                 'activo' => true,
                 'id_bodega_origen' => $this->selectedOrigen['bodega_id'],
                 'id_bodega_destino' => $this->selectedDestino['bodega_id'],
@@ -512,6 +522,12 @@ class FormularioTraslado extends Component
             foreach ($this->productosSeleccionados as $productoData) {
                 $cantidadRestante = $productoData['cantidad'];
                 $producto = Producto::find($productoData['id']);
+
+                if (!$producto) {
+                    DB::rollBack();
+                    session()->flash('error', "Producto con ID {$productoData['id']} no encontrado.");
+                    return;
+                }
 
                 // Obtener lotes ordenados por FIFO
                 $lotes = Lote::where('id_producto', $producto->id)

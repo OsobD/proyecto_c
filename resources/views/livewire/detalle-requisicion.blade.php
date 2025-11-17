@@ -2,7 +2,7 @@
     {{-- Breadcrumbs --}}
     <x-breadcrumbs :items="[
         ['label' => 'Inicio', 'url' => '/', 'icon' => true],
-        ['label' => 'Requisiciones', 'url' => route('requisiciones')],
+        ['label' => 'Traslados', 'url' => '/traslados'],
         ['label' => 'Detalle #' . $correlativo],
     ]" />
 
