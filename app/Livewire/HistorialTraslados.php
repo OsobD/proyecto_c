@@ -36,6 +36,9 @@ class HistorialTraslados extends Component
     /** @var string Filtro por estado */
     public $estadoFiltro = '';
 
+    /** @var int Items por página */
+    public $perPage = 15;
+
     /** @var bool Controla visibilidad del modal de detalle */
     public $showModalVer = false;
 
@@ -77,12 +80,11 @@ class HistorialTraslados extends Component
      */
     public function getTrasladosFiltradosProperty()
     {
-        $perPage = 15;
         $page = $this->getPage();
 
         // OPTIMIZACIÓN: Solo cargamos un subconjunto razonable de cada tipo
         // en lugar de TODOS los registros
-        $limit = $perPage * ($page + 2); // Pre-cargar 2 páginas adelante para ordenamiento
+        $limit = $this->perPage * ($page + 2); // Pre-cargar 2 páginas adelante para ordenamiento
 
         $movimientos = collect();
 
@@ -298,17 +300,90 @@ class HistorialTraslados extends Component
         // Ordenar por fecha descendente
         $movimientos = $movimientos->sortByDesc('fecha_sort')->values();
 
+        // NUEVO: Agrupar requisiciones por correlativo
+        $movimientos = $this->agruparRequisiciones($movimientos);
+
         // OPTIMIZACIÓN: Paginación manual para colecciones combinadas
         $total = $movimientos->count();
-        $items = $movimientos->slice(($page - 1) * $perPage, $perPage)->values();
+        $items = $movimientos->slice(($page - 1) * $this->perPage, $this->perPage)->values();
 
         return new \Illuminate\Pagination\LengthAwarePaginator(
             $items,
             $total,
-            $perPage,
+            $this->perPage,
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
+    }
+
+    /**
+     * Agrupa requisiciones que tengan el mismo correlativo
+     * Combina consumibles (Traslado) y no consumibles (Salida) en una sola fila
+     *
+     * @param \Illuminate\Support\Collection $movimientos
+     * @return \Illuminate\Support\Collection
+     */
+    private function agruparRequisiciones($movimientos)
+    {
+        // Agrupar por correlativo
+        $agrupados = $movimientos->groupBy('correlativo');
+        $resultado = collect();
+
+        foreach ($agrupados as $correlativo => $grupo) {
+            // Si solo hay un movimiento, no agrupar
+            if ($grupo->count() === 1) {
+                $resultado->push($grupo->first());
+                continue;
+            }
+
+            // Verificar si todos son requisiciones
+            $requisiciones = $grupo->filter(fn($m) => $m['tipo'] === 'Requisición');
+
+            // Si no hay requisiciones o solo una, no agrupar
+            if ($requisiciones->count() <= 1) {
+                foreach ($grupo as $mov) {
+                    $resultado->push($mov);
+                }
+                continue;
+            }
+
+            // Agrupar las requisiciones con el mismo correlativo
+            $primera = $requisiciones->first();
+
+            // Detectar tipos de productos en el grupo
+            $tieneConsumibles = $requisiciones->contains(fn($r) => $r['tipo_badge'] === 'Consumibles');
+            $tieneNoConsumibles = $requisiciones->contains(fn($r) => $r['tipo_badge'] === 'No Consumibles');
+
+            // Determinar badge combinado
+            if ($tieneConsumibles && $tieneNoConsumibles) {
+                $tipoBadge = 'Ambos';
+                $tipoColor = 'purple';
+            } elseif ($tieneNoConsumibles) {
+                $tipoBadge = 'No Consumibles';
+                $tipoColor = 'blue';
+            } else {
+                $tipoBadge = 'Consumibles';
+                $tipoColor = 'amber';
+            }
+
+            // Combinar conteos y totales
+            $productosCount = $requisiciones->sum('productos_count');
+            $totalCombinado = $requisiciones->sum('total');
+
+            // Crear movimiento agrupado
+            $movimientoAgrupado = $primera;
+            $movimientoAgrupado['tipo_badge'] = $tipoBadge;
+            $movimientoAgrupado['tipo_color'] = $tipoColor;
+            $movimientoAgrupado['productos_count'] = $productosCount;
+            $movimientoAgrupado['total'] = $totalCombinado;
+            $movimientoAgrupado['agrupado'] = true; // Marca para saber que está agrupado
+            $movimientoAgrupado['ids_agrupados'] = $requisiciones->pluck('id')->toArray();
+            $movimientoAgrupado['tipos_agrupados'] = $requisiciones->pluck('tipo_clase')->toArray();
+
+            $resultado->push($movimientoAgrupado);
+        }
+
+        return $resultado;
     }
 
     /**
