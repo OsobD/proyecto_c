@@ -34,6 +34,9 @@ class GestionTarjetasResponsabilidad extends Component
     // Para el acordeón de productos (similar a bodegas)
     public $tarjetaIdExpandida = null;
 
+    // Para el acordeón de productos consumibles
+    public $tarjetaIdConsumiblesExpandida = null;
+
     protected $paginationTheme = 'bootstrap';
 
     protected $rules = [
@@ -271,6 +274,18 @@ class GestionTarjetasResponsabilidad extends Component
             $this->tarjetaIdExpandida = null;
         } else {
             $this->tarjetaIdExpandida = $tarjetaId;
+        }
+    }
+
+    /**
+     * Toggle para expandir/contraer la lista de productos consumibles solicitados por una persona
+     */
+    public function toggleConsumibles($tarjetaId)
+    {
+        if ($this->tarjetaIdConsumiblesExpandida === $tarjetaId) {
+            $this->tarjetaIdConsumiblesExpandida = null;
+        } else {
+            $this->tarjetaIdConsumiblesExpandida = $tarjetaId;
         }
     }
 }
