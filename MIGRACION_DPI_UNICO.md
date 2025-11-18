@@ -9,10 +9,18 @@ Esta migración agrega un índice único al campo `dpi` en la tabla `persona` pa
 
 ## 🚀 MÉTODO RÁPIDO (Recomendado)
 
+> **Nota:** Si estás usando Docker, antepone `docker-compose exec app` a todos los comandos PHP.
+
 ### Paso 1: Limpiar Duplicados Automáticamente
 
 Ejecuta el script de limpieza que detecta y elimina automáticamente los DPIs duplicados:
 
+**Con Docker:**
+```bash
+docker-compose exec app php limpiar_dpis_duplicados.php
+```
+
+**Sin Docker:**
 ```bash
 php limpiar_dpis_duplicados.php
 ```
@@ -36,6 +44,12 @@ Puedes ejecutar la migración con: php artisan migrate
 
 ### Paso 2: Ejecutar la Migración
 
+**Con Docker:**
+```bash
+docker-compose exec app php artisan migrate
+```
+
+**Sin Docker:**
 ```bash
 php artisan migrate
 ```
