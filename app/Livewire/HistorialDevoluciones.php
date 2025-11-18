@@ -18,6 +18,7 @@ use Livewire\WithPagination;
 class HistorialDevoluciones extends Component
 {
     use WithPagination;
+    public $perPage = 10;
 
     /** @var string Término de búsqueda */
     public $search = '';
@@ -40,6 +41,16 @@ class HistorialDevoluciones extends Component
      * @return void
      */
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Se ejecuta cuando cambia el perPage
+     *
+     * @return void
+     */
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -84,7 +95,7 @@ class HistorialDevoluciones extends Component
                 $q->where('fecha', '<=', $this->fechaFin);
             })
             ->orderBy('fecha', 'desc')
-            ->paginate(15);
+            ->paginate($this->perPage);
     }
 
     /**

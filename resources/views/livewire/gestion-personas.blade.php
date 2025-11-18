@@ -34,9 +34,9 @@
 
     {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
-        {{-- Búsqueda --}}
-        <div class="mb-4">
-            <div class="relative">
+        {{-- Búsqueda y controles --}}
+        <div class="mb-4 flex justify-between items-center gap-4">
+            <div class="relative flex-1">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -46,6 +46,22 @@
                        wire:model.live.debounce.300ms="search"
                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                        placeholder="Buscar por nombre, apellido, DPI, correo o teléfono...">
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label for="perPage" class="text-sm font-medium text-gray-700 whitespace-nowrap">Mostrar:</label>
+                <select
+                    id="perPage"
+                    wire:model.live="perPage"
+                    class="py-2 px-3 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="text-sm text-gray-700 whitespace-nowrap">por página</span>
             </div>
         </div>
 

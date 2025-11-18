@@ -25,6 +25,7 @@ class GestionBodegas extends Component
     use WithPagination;
 
     public $search = '';
+    public $perPage = 10;
     public $showModal = false;
     public $editMode = false;
 
@@ -68,6 +69,11 @@ class GestionBodegas extends Component
         $this->resetPage();
     }
 
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
     public function updatingSearchCategoria()
     {
         $this->showCategoriaDropdown = !empty($this->searchCategoria);
@@ -78,7 +84,7 @@ class GestionBodegas extends Component
         $bodegas = Bodega::where('activo', true)
             ->where('nombre', 'like', '%' . $this->search . '%')
             ->orderBy('nombre', 'asc')
-            ->paginate(10);
+            ->paginate($this->perPage);
 
         return view('livewire.gestion-bodegas', [
             'bodegas' => $bodegas

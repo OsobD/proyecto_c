@@ -13,6 +13,7 @@ class GestionTarjetasResponsabilidad extends Component
     use WithPagination;
 
     public $search = '';
+    public $perPage = 10;
     public $showModal = false;
     public $editMode = false;
 
@@ -56,6 +57,11 @@ class GestionTarjetasResponsabilidad extends Component
         $this->resetPage();
     }
 
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
 
     public function render()
     {
@@ -74,7 +80,7 @@ class GestionTarjetasResponsabilidad extends Component
             })
             ->orderBy('fecha_creacion', 'desc');
 
-        $tarjetas = $queryBuilder->paginate(10);
+        $tarjetas = $queryBuilder->paginate($this->perPage);
 
         return view('livewire.gestion-tarjetas-responsabilidad', [
             'tarjetas' => $tarjetas

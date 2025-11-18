@@ -28,10 +28,25 @@
 
     {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
-        {{-- Búsqueda --}}
-        <div class="mb-4">
-            <input type="text" wire:model.live="search" class="w-full md:w-1/2 px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        {{-- Búsqueda y controles --}}
+        <div class="mb-4 flex justify-between items-center gap-4">
+            <input type="text" wire:model.live="search" class="flex-1 md:flex-none md:w-1/2 px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                    placeholder="Buscar bodega por nombre...">
+
+            <div class="flex items-center gap-2">
+                <label for="perPage" class="text-sm font-medium text-gray-700 whitespace-nowrap">Mostrar:</label>
+                <select
+                    id="perPage"
+                    wire:model.live="perPage"
+                    class="py-2 px-3 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="text-sm text-gray-700 whitespace-nowrap">por página</span>
+            </div>
         </div>
 
         {{-- Tabla --}}
@@ -79,7 +94,7 @@
 
                         {{-- Expansión de productos de la bodega --}}
                         @if($bodegaIdProductosExpandido === $bodega->id)
-                            <tr>
+                            <tr x-data x-show="true" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-2">
                                 <td colspan="4" class="bg-gray-50 p-6">
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">

@@ -13,6 +13,7 @@ class GestionPersonas extends Component
     use WithPagination;
 
     public $search = '';
+    public $perPage = 30;
     public $showModal = false;
     public $editMode = false;
     public $showAllPersonas = false; // Para mostrar inactivas también
@@ -51,6 +52,11 @@ class GestionPersonas extends Component
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -108,7 +114,7 @@ class GestionPersonas extends Component
                   ->orderBy('nombres', 'asc');
         }
 
-        $personas = $query->paginate(30);
+        $personas = $query->paginate($this->perPage);
 
         return view('livewire.gestion-personas', [
             'personas' => $personas

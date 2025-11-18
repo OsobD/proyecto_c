@@ -24,6 +24,7 @@ use Livewire\WithPagination;
 class GestionUsuarios extends Component
 {
     use WithPagination;
+    public $perPage = 10;
 
     // Propiedades de búsqueda y filtrado
     public $search = '';
@@ -128,6 +129,14 @@ class GestionUsuarios extends Component
      * Resetea la paginación cuando cambia la búsqueda
      */
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Resetea la paginación cuando cambia el perPage
+     */
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -645,7 +654,7 @@ class GestionUsuarios extends Component
             $query->orderBy('nombre_usuario', 'asc');
         }
 
-        return $query->paginate(10);
+        return $query->paginate($this->perPage);
     }
 
     /**

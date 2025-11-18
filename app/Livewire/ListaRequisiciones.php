@@ -16,6 +16,7 @@ use Livewire\WithPagination;
 class ListaRequisiciones extends Component
 {
     use WithPagination;
+    public $perPage = 10;
 
     /** @var string Término de búsqueda */
     public $search = '';
@@ -39,6 +40,14 @@ class ListaRequisiciones extends Component
      * Reinicia la paginación cuando cambia la búsqueda
      */
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Reinicia la paginación cuando cambia el perPage
+     */
+    public function updatingPerPage()
     {
         $this->resetPage();
     }

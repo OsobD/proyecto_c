@@ -9,6 +9,7 @@ use Livewire\WithPagination;
 class GestionPuestos extends Component
 {
     use WithPagination;
+    public $perPage = 15;
 
     public $showModal = false;
     public $editMode = false;
@@ -36,11 +37,21 @@ class GestionPuestos extends Component
         'nombre.max' => 'El nombre no puede tener más de 255 caracteres.',
     ];
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $puestos = Puesto::where('nombre', 'like', '%' . $this->search . '%')
             ->orderBy('nombre', 'asc')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.gestion-puestos', [
             'puestos' => $puestos
