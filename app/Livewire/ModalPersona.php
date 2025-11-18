@@ -100,7 +100,7 @@ class ModalPersona extends Component
             $this->dispatch('personaCreada', personaData: $personaData);
 
             // Mensaje de éxito
-            session()->flash('message', "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente.");
+            session()->flash('message', "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente con tarjeta de responsabilidad.");
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -130,7 +130,7 @@ class GestionPersonas extends Component
                     'created_at' => now(),
                 ]);
 
-                $mensaje = 'Persona actualizada correctamente.';
+                $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' actualizada exitosamente.";
             } else {
                 // Crear persona
                 $persona = Persona::create([
@@ -165,7 +165,7 @@ class GestionPersonas extends Component
                     'created_at' => now(),
                 ]);
 
-                $mensaje = 'Persona y tarjeta de responsabilidad creadas correctamente.';
+                $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente con tarjeta de responsabilidad.";
             }
 
             $this->closeModal();
