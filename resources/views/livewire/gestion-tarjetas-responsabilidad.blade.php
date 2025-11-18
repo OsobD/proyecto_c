@@ -50,10 +50,10 @@
                                 @if($tarjeta->persona->correo || $tarjeta->persona->telefono)
                                     <div class="text-xs text-gray-500 mt-1">
                                         @if($tarjeta->persona->correo)
-                                            <div>✉ {{ $tarjeta->persona->correo }}</div>
+                                            <div>{{ $tarjeta->persona->correo }}</div>
                                         @endif
                                         @if($tarjeta->persona->telefono)
-                                            <div>☎ {{ $tarjeta->persona->telefono }}</div>
+                                            <div>{{ $tarjeta->persona->telefono }}</div>
                                         @endif
                                     </div>
                                 @endif
