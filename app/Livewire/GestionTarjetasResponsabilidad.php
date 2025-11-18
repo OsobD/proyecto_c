@@ -269,17 +269,25 @@ class GestionTarjetasResponsabilidad extends Component
      */
     public function verProductos($tarjetaId)
     {
-        $tarjeta = TarjetaResponsabilidad::with(['persona', 'tarjetasProducto.producto'])
+        $tarjeta = TarjetaResponsabilidad::with(['persona', 'tarjetasProducto.producto', 'tarjetasProducto.lote.bodega'])
             ->findOrFail($tarjetaId);
 
         $this->tarjetaNombre = "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}";
         $this->tarjetaProductos = $tarjeta->tarjetasProducto->map(function($tp) {
+            $lote = $tp->lote;
             return [
                 'id' => $tp->id,
-                'producto' => $tp->producto->nombre,
-                'cantidad' => $tp->cantidad,
-                'fecha_asignacion' => $tp->fecha_asignacion ? \Carbon\Carbon::parse($tp->fecha_asignacion)->format('d/m/Y') : 'N/A',
-                'estado' => $tp->estado,
+                'producto_codigo' => $tp->producto->codigo ?? 'N/A',
+                'producto_nombre' => $tp->producto->nombre ?? 'N/A',
+                'lote_id' => $lote ? $lote->id : 'N/A',
+                'cantidad_lote' => $lote ? $lote->cantidad : 0,
+                'cantidad_inicial' => $lote ? $lote->cantidad_inicial : 0,
+                'precio_ingreso' => $lote ? $lote->precio_ingreso : 0,
+                'precio_asignacion' => $tp->precio_asignacion,
+                'fecha_ingreso' => $lote && $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y H:i') : 'N/A',
+                'bodega' => $lote && $lote->bodega ? $lote->bodega->nombre : 'N/A',
+                'estado' => $lote ? ($lote->estado ? 'Activo' : 'Inactivo') : 'N/A',
+                'observaciones' => $lote ? ($lote->observaciones ?? '-') : '-',
             ];
         })->toArray();
 
