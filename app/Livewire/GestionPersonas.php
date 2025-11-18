@@ -43,6 +43,7 @@ class GestionPersonas extends Component
         'apellidos.required' => 'Los apellidos son obligatorios.',
         'dpi.required' => 'El DPI es obligatorio.',
         'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
+        'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
         'correo.email' => 'El correo debe ser una dirección válida.',
     ];
 
