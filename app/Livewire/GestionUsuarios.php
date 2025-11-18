@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Usuario;
 use App\Models\Persona;
-use App\Models\Rol;
+use App\Models\Puesto;
 use App\Models\Bitacora;
 use App\Models\TarjetaResponsabilidad;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +28,7 @@ class GestionUsuarios extends Component
 
     // Propiedades de búsqueda y filtrado
     public $search = '';
-    public $filterRol = '';
+    public $filterPuesto = '';
     public $sortField = null;  // 'nombre_usuario' o 'nombre_completo'
     public $sortDirection = null;  // 'asc' o 'desc'
 
@@ -48,7 +48,7 @@ class GestionUsuarios extends Component
 
     // Datos de Usuario
     public $nombre_usuario = '';
-    public $rolId = '';
+    public $puestoId = '';
     public $contrasena = '';
     public $estado = true;
 
@@ -56,17 +56,25 @@ class GestionUsuarios extends Component
     public $passwordGenerada = '';
     public $mostrarPassword = false;
 
-    // Propiedades para autocompletado de rol
-    public $searchRol = '';
-    public $showRolDropdown = false;
-    public $selectedRol = null;
+    // Propiedades para autocompletado de puesto
+    public $searchPuesto = '';
+    public $showPuestoDropdown = false;
+    public $selectedPuesto = null;
 
-    // Propiedades para filtro de rol mejorado
-    public $searchFilterRol = '';
-    public $showFilterRolDropdown = false;
-    public $selectedFilterRol = null;
+    // Propiedades para filtro de puesto mejorado
+    public $searchFilterPuesto = '';
+    public $showFilterPuestoDropdown = false;
+    public $selectedFilterPuesto = null;
+
+    // Propiedades para selección de persona existente
+    public $searchPersona = '';
+    public $showPersonaDropdown = false;
+    public $selectedPersona = null;
+    public $personaId = null;
 
     protected $paginationTheme = 'tailwind';
+
+    protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
 
     /**
      * Reglas de validación para crear usuario
@@ -75,19 +83,26 @@ class GestionUsuarios extends Component
     {
         $usuarioIdRule = $this->editMode ? 'unique:usuario,nombre_usuario,' . $this->usuarioId : 'unique:usuario,nombre_usuario';
 
-        // Validar DPI único según el modo
-        $dpiRule = $this->editMode && !empty($this->usuarioId)
-            ? 'required|string|size:13|unique:persona,dpi,' . Usuario::find($this->usuarioId)?->id_persona
-            : 'required|string|size:13|unique:persona,dpi';
+        // En modo creación, siempre requerimos una persona seleccionada
+        // En modo edición, validamos los datos de la persona
+        if ($this->editMode) {
+            $dpiRule = 'required|string|size:13|unique:persona,dpi,' . Usuario::find($this->usuarioId)?->id_persona;
+
+            return [
+                'nombres' => 'required|string|max:255',
+                'apellidos' => 'required|string|max:255',
+                'dpi' => $dpiRule,
+                'telefono' => 'nullable|string|max:20',
+                'correo' => 'nullable|email|max:255',
+                'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
+                'puestoId' => 'required|exists:puesto,id',
+            ];
+        }
 
         return [
-            'nombres' => 'required|string|max:255',
-            'apellidos' => 'required|string|max:255',
-            'dpi' => $dpiRule,
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:255',
+            'personaId' => 'required|exists:persona,id',
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
-            'rolId' => 'required|exists:rol,id',
+            'puestoId' => 'required|exists:puesto,id',
         ];
     }
 
@@ -104,8 +119,10 @@ class GestionUsuarios extends Component
         'correo.email' => 'El correo debe ser una dirección válida.',
         'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
-        'rolId.required' => 'Debe seleccionar un rol.',
-        'rolId.exists' => 'El rol seleccionado no es válido.',
+        'puestoId.required' => 'Debe seleccionar un puesto.',
+        'puestoId.exists' => 'El puesto seleccionado no es válido.',
+        'personaId.required' => 'Debe seleccionar una persona.',
+        'personaId.exists' => 'La persona seleccionada no es válida.',
     ];
 
     /**
@@ -117,9 +134,9 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Resetea la paginación cuando cambia el filtro de rol
+     * Resetea la paginación cuando cambia el filtro de puesto
      */
-    public function updatingFilterRol()
+    public function updatingFilterPuesto()
     {
         $this->resetPage();
     }
@@ -149,102 +166,172 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Actualiza cuando cambia la búsqueda de rol
+     * Actualiza cuando cambia la búsqueda de puesto
      */
-    public function updatedSearchRol()
+    public function updatedSearchPuesto()
     {
-        $this->showRolDropdown = true;
+        $this->showPuestoDropdown = true;
     }
 
     /**
-     * Obtiene roles filtrados para el autocompletado
+     * Obtiene puestos filtrados para el autocompletado
      */
-    public function getRolResultsProperty()
+    public function getPuestoResultsProperty()
     {
-        $roles = $this->roles->toArray();
+        $puestos = $this->puestos->toArray();
 
-        if (empty($this->searchRol)) {
-            return $roles;
+        if (empty($this->searchPuesto)) {
+            return $puestos;
         }
 
-        $search = strtolower(trim($this->searchRol));
+        $search = strtolower(trim($this->searchPuesto));
 
-        return array_filter($roles, function($rol) use ($search) {
-            return str_contains(strtolower($rol['nombre']), $search);
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
 
     /**
-     * Selecciona un rol del autocompletado
+     * Selecciona un puesto del autocompletado
      */
-    public function selectRol($id)
+    public function selectPuesto($id)
     {
-        $rol = $this->roles->firstWhere('id', $id);
-        if ($rol) {
-            $this->selectedRol = [
-                'id' => $rol->id,
-                'nombre' => $rol->nombre,
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
+            $this->selectedPuesto = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
             ];
-            $this->rolId = $rol->id;
-            $this->showRolDropdown = false;
-            $this->searchRol = '';
+            $this->puestoId = $puesto->id;
+            $this->showPuestoDropdown = false;
+            $this->searchPuesto = '';
         }
     }
 
     /**
-     * Limpia la selección de rol
+     * Limpia la selección de puesto
      */
-    public function clearRol()
+    public function clearPuesto()
     {
-        $this->selectedRol = null;
-        $this->rolId = '';
+        $this->selectedPuesto = null;
+        $this->puestoId = "";
     }
 
     /**
-     * Obtiene los roles filtrados para el filtro de búsqueda
+     * Obtiene los puestos filtrados para el filtro de búsqueda
      */
-    public function getFilterRolResultsProperty()
+    public function getFilterPuestoResultsProperty()
     {
-        $roles = $this->roles->toArray();
+        $puestos = $this->puestos->toArray();
 
-        if (empty($this->searchFilterRol)) {
-            return $roles;
+        if (empty($this->searchFilterPuesto)) {
+            return $puestos;
         }
 
-        $search = strtolower(trim($this->searchFilterRol));
+        $search = strtolower(trim($this->searchFilterPuesto));
 
-        return array_filter($roles, function($rol) use ($search) {
-            return str_contains(strtolower($rol['nombre']), $search);
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
 
     /**
-     * Selecciona un rol del filtro de búsqueda
+     * Selecciona un puesto del filtro de búsqueda
      */
-    public function selectFilterRol($id)
+    public function selectFilterPuesto($id)
     {
-        $rol = $this->roles->firstWhere('id', $id);
-        if ($rol) {
-            $this->selectedFilterRol = [
-                'id' => $rol->id,
-                'nombre' => $rol->nombre,
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
+            $this->selectedFilterPuesto = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
             ];
-            $this->filterRol = $rol->id;
-            $this->showFilterRolDropdown = false;
-            $this->searchFilterRol = '';
+            $this->filterPuesto = $puesto->id;
+            $this->showFilterPuestoDropdown = false;
+            $this->searchFilterPuesto = '';
             $this->resetPage(); // Resetear paginación al filtrar
         }
     }
 
     /**
-     * Limpia la selección del filtro de rol
+     * Limpia la selección del filtro de puesto
      */
-    public function clearFilterRol()
+    public function clearFilterPuesto()
     {
-        $this->selectedFilterRol = null;
-        $this->filterRol = '';
-        $this->searchFilterRol = '';
+        $this->selectedFilterPuesto = null;
+        $this->filterPuesto = '';
+        $this->searchFilterPuesto = '';
         $this->resetPage(); // Resetear paginación al limpiar filtro
+    }
+
+    /**
+     * Actualiza cuando cambia la búsqueda de persona
+     */
+    public function updatedSearchPersona()
+    {
+        $this->showPersonaDropdown = true;
+    }
+
+    /**
+     * Obtiene personas filtradas para el autocompletado
+     * Solo muestra personas activas que NO tienen usuario asignado
+     */
+    public function getPersonaResultsProperty()
+    {
+        $query = Persona::where('estado', true)
+            ->whereDoesntHave('usuario'); // Solo personas sin usuario
+
+        if (!empty($this->searchPersona)) {
+            $search = $this->searchPersona;
+            $query->where(function ($q) use ($search) {
+                $q->where('nombres', 'like', '%' . $search . '%')
+                  ->orWhere('apellidos', 'like', '%' . $search . '%')
+                  ->orWhere('dpi', 'like', '%' . $search . '%');
+            });
+        }
+
+        return $query->orderBy('nombres')->limit(10)->get();
+    }
+
+    /**
+     * Selecciona una persona del autocompletado
+     */
+    public function selectPersona($id)
+    {
+        $persona = Persona::find($id);
+        if ($persona) {
+            $this->selectedPersona = [
+                'id' => $persona->id,
+                'nombre_completo' => "{$persona->nombres} {$persona->apellidos}",
+                'dpi' => $persona->dpi,
+            ];
+            $this->personaId = $persona->id;
+            $this->showPersonaDropdown = false;
+            $this->searchPersona = '';
+        }
+    }
+
+    /**
+     * Limpia la selección de persona
+     */
+    public function clearPersona()
+    {
+        $this->selectedPersona = null;
+        $this->personaId = null;
+    }
+
+    /**
+     * Maneja el evento cuando se crea una persona
+     */
+    public function handlePersonaCreada($personaData, $mensaje)
+    {
+        // Seleccionar automáticamente la persona recién creada
+        $this->selectedPersona = $personaData;
+        $this->personaId = $personaData['id'];
+        $this->showPersonaDropdown = false;
+
+        // Establecer el mensaje flash
+        session()->flash('message', $mensaje);
     }
 
     /**
@@ -279,7 +366,7 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Guarda un nuevo usuario con sincronización en ambas tablas
+     * Guarda un nuevo usuario con persona seleccionada
      */
     public function guardarUsuario()
     {
@@ -288,24 +375,31 @@ class GestionUsuarios extends Component
         try {
             DB::beginTransaction();
 
-            // 1. Crear la Persona
-            $persona = Persona::create([
-                'nombres' => $this->nombres,
-                'apellidos' => $this->apellidos,
-                'dpi' => $this->dpi,
-                'telefono' => $this->telefono,
-                'correo' => $this->correo,
-                'estado' => true,
-            ]);
+            // 1. Usar persona seleccionada
+            $persona = Persona::findOrFail($this->personaId);
 
-            // 2. Crear tarjeta de responsabilidad para la persona
-            TarjetaResponsabilidad::create([
-                'nombre' => "{$this->nombres} {$this->apellidos}",
-                'fecha_creacion' => now(),
-                'total' => 0,
-                'id_persona' => $persona->id,
-                'activo' => true,
-            ]);
+            // Validar que la persona no tenga ya un usuario asignado
+            if ($persona->usuario) {
+                session()->flash('error', 'Esta persona ya tiene un usuario asignado.');
+                DB::rollBack();
+                return;
+            }
+
+            // Verificar si la persona ya tiene tarjeta de responsabilidad
+            if (!$persona->tarjetasResponsabilidad()->exists()) {
+                // 2. Crear tarjeta de responsabilidad si no existe
+                // IMPORTANTE: created_by y updated_by deben ser NULL ya que
+                // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
+                TarjetaResponsabilidad::create([
+                    'nombre' => "{$persona->nombres} {$persona->apellidos}",
+                    'fecha_creacion' => now(),
+                    'total' => 0,
+                    'id_persona' => $persona->id,
+                    'activo' => true,
+                    'created_by' => null,
+                    'updated_by' => null,
+                ]);
+            }
 
             // 3. Generar contraseña si no existe
             if (empty($this->passwordGenerada)) {
@@ -317,7 +411,7 @@ class GestionUsuarios extends Component
                 'nombre_usuario' => $this->nombre_usuario,
                 'contrasena' => Hash::make($this->passwordGenerada),
                 'id_persona' => $persona->id,
-                'id_rol' => $this->rolId,
+                'id_puesto' => $this->puestoId,
                 'estado' => true,
             ]);
 
@@ -326,7 +420,7 @@ class GestionUsuarios extends Component
                 'accion' => 'crear',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario, persona y tarjeta creados: {$this->nombre_usuario} ({$this->nombres} {$this->apellidos})",
+                'descripcion' => "Usuario creado: {$this->nombre_usuario} para {$persona->nombres} {$persona->apellidos}",
                 'id_usuario' => auth()->id() ?? 1,
                 'created_at' => now(),
             ]);
@@ -374,15 +468,15 @@ class GestionUsuarios extends Component
 
         // Cargar datos de usuario
         $this->nombre_usuario = $usuario->nombre_usuario;
-        $this->rolId = $usuario->id_rol;
+        $this->puestoId = "";
         $this->estado = $usuario->estado;
 
         // Cargar rol seleccionado para el dropdown
-        $rol = $this->roles->firstWhere('id', $usuario->id_rol);
-        if ($rol) {
-            $this->selectedRol = [
-                'id' => $rol->id,
-                'nombre' => $rol->nombre,
+        $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
+        if ($puesto) {
+            $this->selectedPuesto = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
             ];
         }
 
@@ -413,7 +507,7 @@ class GestionUsuarios extends Component
 
             // Actualizar Usuario
             $usuario->update([
-                'id_rol' => $this->rolId,
+                'id_puesto' => $this->puestoId,
                 'estado' => $this->estado,
             ]);
 
@@ -459,15 +553,21 @@ class GestionUsuarios extends Component
         $this->telefono = '';
         $this->correo = '';
         $this->nombre_usuario = '';
-        $this->rolId = '';
+        $this->puestoId = "";
         $this->contrasena = '';
         $this->estado = true;
         $this->usuarioId = null;
         $this->passwordGenerada = '';
         $this->mostrarPassword = false;
-        $this->selectedRol = null;
-        $this->searchRol = '';
-        $this->showRolDropdown = false;
+        $this->selectedPuesto = null;
+        $this->searchPuesto = '';
+        $this->showPuestoDropdown = false;
+
+        // Resetear campos de persona
+        $this->searchPersona = '';
+        $this->showPersonaDropdown = false;
+        $this->selectedPersona = null;
+        $this->personaId = null;
     }
 
     /**
@@ -554,7 +654,7 @@ class GestionUsuarios extends Component
     {
         $query = Usuario::with(['persona', 'rol'])
             ->whereHas('persona') // Solo usuarios que tienen persona asignada
-            ->whereNotNull('id_rol'); // Solo usuarios con rol (usuarios reales)
+            ->whereNotNull('id_puesto'); // Solo usuarios con rol (usuarios reales)
 
         // Aplicar búsqueda
         if (!empty($this->search)) {
@@ -569,8 +669,8 @@ class GestionUsuarios extends Component
         }
 
         // Aplicar filtro por rol
-        if (!empty($this->filterRol)) {
-            $query->where('id_rol', $this->filterRol);
+        if (!empty($this->filterPuesto)) {
+            $query->where('id_puesto', $this->filterPuesto);
         }
 
         // Aplicar ordenamiento
@@ -590,11 +690,11 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Obtiene la lista de roles para el filtro
+     * Obtiene la lista de puestos para el filtro
      */
-    public function getRolesProperty()
+    public function getPuestosProperty()
     {
-        return Rol::orderBy('nombre')->get();
+        return Puesto::orderBy('nombre')->get();
     }
 
     /**
@@ -604,7 +704,7 @@ class GestionUsuarios extends Component
     {
         return view('livewire.gestion-usuarios', [
             'usuarios' => $this->usuarios,
-            'roles' => $this->roles,
+            'puestos' => $this->puestos,
         ]);
     }
 }

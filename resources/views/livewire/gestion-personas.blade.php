@@ -7,7 +7,7 @@
                 <input type="checkbox" wire:model.live="showAllPersonas" class="mr-2">
                 <span class="text-sm text-gray-700">Mostrar inactivos</span>
             </label>
-            <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+            <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                 + Nueva Persona
             </button>
         </div>
@@ -15,7 +15,7 @@
 
     {{-- Mensajes --}}
     @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
             <span class="block sm:inline">{{ session('message') }}</span>
             <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
                 <span class="text-2xl">&times;</span>
@@ -24,7 +24,7 @@
     @endif
 
     @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
             <span class="block sm:inline">{{ session('error') }}</span>
             <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
                 <span class="text-2xl">&times;</span>
@@ -36,8 +36,17 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         {{-- Búsqueda --}}
         <div class="mb-4">
-            <input type="text" wire:model.live="search" class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   placeholder="Buscar por nombre, apellido, correo o teléfono...">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text"
+                       wire:model.live.debounce.300ms="search"
+                       class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                       placeholder="Buscar por nombre, apellido, DPI, correo o teléfono...">
+            </div>
         </div>
 
         {{-- Tabla --}}
@@ -45,42 +54,98 @@
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
-                        <th class="py-3 px-6 text-left">ID</th>
-                        <th class="py-3 px-6 text-left">Nombres</th>
-                        <th class="py-3 px-6 text-left">Apellidos</th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('id')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                ID
+                                @if($sortField === 'id')
+                                    @if($sortDirection === 'asc')
+                                        <span class="text-blue-600">↑</span>
+                                    @else
+                                        <span class="text-blue-600">↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('nombres')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Nombres
+                                @if($sortField === 'nombres')
+                                    @if($sortDirection === 'asc')
+                                        <span class="text-blue-600">↑</span>
+                                    @else
+                                        <span class="text-blue-600">↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('apellidos')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Apellidos
+                                @if($sortField === 'apellidos')
+                                    @if($sortDirection === 'asc')
+                                        <span class="text-blue-600">↑</span>
+                                    @else
+                                        <span class="text-blue-600">↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('dpi')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                DPI
+                                @if($sortField === 'dpi')
+                                    @if($sortDirection === 'asc')
+                                        <span class="text-blue-600">↑</span>
+                                    @else
+                                        <span class="text-blue-600">↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="py-3 px-6 text-left">Teléfono</th>
                         <th class="py-3 px-6 text-left">Correo</th>
-                        <th class="py-3 px-6 text-left">Género</th>
-                        <th class="py-3 px-6 text-left">Fecha Nac.</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-600 text-sm font-light">
                     @forelse ($personas as $persona)
-                        <tr class="border-b border-gray-200 hover:bg-gray-100">
-                            <td class="py-3 px-6 text-left whitespace-nowrap">{{ $persona->id }}</td>
-                            <td class="py-3 px-6 text-left">{{ $persona->nombres }}</td>
-                            <td class="py-3 px-6 text-left">{{ $persona->apellidos }}</td>
+                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                            <td class="py-3 px-6 text-left whitespace-nowrap">
+                                <span class="font-semibold text-gray-800">{{ $persona->id }}</span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span class="font-medium">{{ $persona->nombres }}</span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span class="font-medium">{{ $persona->apellidos }}</span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span class="font-mono text-gray-700">{{ $persona->dpi ?? 'N/A' }}</span>
+                            </td>
                             <td class="py-3 px-6 text-left">{{ $persona->telefono ?? 'N/A' }}</td>
                             <td class="py-3 px-6 text-left">{{ $persona->correo ?? 'N/A' }}</td>
-                            <td class="py-3 px-6 text-left">
-                                @if($persona->genero === 'M')
-                                    <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs">Masculino</span>
-                                @elseif($persona->genero === 'F')
-                                    <span class="bg-pink-200 text-pink-800 py-1 px-3 rounded-full text-xs">Femenino</span>
-                                @else
-                                    <span class="bg-gray-200 text-gray-800 py-1 px-3 rounded-full text-xs">N/A</span>
-                                @endif
-                            </td>
-                            <td class="py-3 px-6 text-left">
-                                {{ $persona->fecha_nacimiento ? \Carbon\Carbon::parse($persona->fecha_nacimiento)->format('d/m/Y') : 'N/A' }}
-                            </td>
                             <td class="py-3 px-6 text-center">
                                 @if($persona->estado)
-                                    <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">Activo</span>
+                                    <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">Activo</span>
                                 @else
-                                    <span class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">Inactivo</span>
+                                    <span class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs font-semibold">Inactivo</span>
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -107,7 +172,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4 text-gray-500">No se encontraron personas.</td>
+                            <td colspan="8" class="text-center py-8 text-gray-500">
+                                <div class="flex flex-col items-center gap-2">
+                                    <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="font-medium">No se encontraron personas.</span>
+                                </div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -115,9 +187,11 @@
         </div>
 
         {{-- Paginación --}}
-        <div class="mt-4">
-            {{ $personas->links() }}
-        </div>
+        @if($personas->hasPages())
+            <div class="mt-6 px-6 py-4 border-t border-gray-200">
+                {{ $personas->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- Modal --}}
@@ -158,6 +232,18 @@
                             @enderror
                         </div>
 
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                DPI <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" wire:model="dpi" maxlength="13"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('dpi') border-red-500 @enderror"
+                                   placeholder="1234567890123">
+                            @error('dpi')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
                             <input type="text" wire:model="telefono"
@@ -172,28 +258,6 @@
                             <input type="email" wire:model="correo"
                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('correo') border-red-500 @enderror">
                             @error('correo')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento</label>
-                            <input type="date" wire:model="fecha_nacimiento"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('fecha_nacimiento') border-red-500 @enderror">
-                            @error('fecha_nacimiento')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Género</label>
-                            <select wire:model="genero"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('genero') border-red-500 @enderror">
-                                <option value="">Seleccione...</option>
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                            </select>
-                            @error('genero')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -213,4 +277,25 @@
             </div>
         </div>
     @endif
+
+    {{-- Modal Reutilizable: Crear Nueva Persona --}}
+    @livewire('modal-persona')
+
+    <style>
+        /* Animación de mensajes flash */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+    </style>
 </div>

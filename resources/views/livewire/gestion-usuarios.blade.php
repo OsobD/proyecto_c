@@ -35,33 +35,33 @@
                 </div>
             </div>
 
-            {{-- Filtro por Rol --}}
+            {{-- Filtro por Puesto --}}
             <div class="w-full md:w-64">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por rol</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por puesto</label>
                 <div class="relative">
-                    @if($selectedFilterRol)
+                    @if($selectedFilterPuesto)
                         <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white">
-                            <span class="font-medium">{{ $selectedFilterRol['nombre'] }}</span>
-                            <button type="button" wire:click.prevent="clearFilterRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                            <span class="font-medium">{{ $selectedFilterPuesto['nombre'] }}</span>
+                            <button type="button" wire:click.prevent="clearFilterPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
                                 ×
                             </button>
                         </div>
                     @else
-                        <div class="relative" x-data="{ open: @entangle('showFilterRolDropdown').live }" @click.outside="open = false">
+                        <div class="relative" x-data="{ open: @entangle('showFilterPuestoDropdown').live }" @click.outside="open = false">
                             <input
                                 type="text"
-                                wire:model.live.debounce.300ms="searchFilterRol"
+                                wire:model.live.debounce.300ms="searchFilterPuesto"
                                 @click="open = true"
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                placeholder="Seleccionar rol...">
+                                placeholder="Seleccionar puesto...">
                             <div x-show="open"
                                  x-transition
                                  class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                 <ul>
-                                    @foreach (array_slice($this->filterRolResults, 0, 6) as $rol)
-                                        <li wire:click.prevent="selectFilterRol({{ $rol['id'] }})"
+                                    @foreach (array_slice($this->filterPuestoResults, 0, 6) as $puesto)
+                                        <li wire:click.prevent="selectFilterPuesto({{ $puesto['id'] }})"
                                             class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                            {{ $rol['nombre'] }}
+                                            {{ $puesto['nombre'] }}
                                         </li>
                                     @endforeach
                                 </ul>
@@ -122,7 +122,7 @@
                             </button>
                         </th>
                         <th class="py-3 px-6 text-left">Email</th>
-                        <th class="py-3 px-6 text-left">Rol</th>
+                        <th class="py-3 px-6 text-left">Puesto</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
@@ -141,7 +141,7 @@
                             </td>
                             <td class="py-3 px-6 text-left">
                                 <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                    {{ $usuario->rol->nombre }}
+                                    {{ $usuario->puesto->nombre }}
                                 </span>
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -239,120 +239,66 @@
             </div>
 
             <form wire:submit.prevent="guardarUsuario">
-                {{-- Sección: Datos de la Persona --}}
+                {{-- Sección: Selección de Persona --}}
                 <div class="mb-6">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Información Personal</h4>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Nombres --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombres *</label>
-                            <input
-                                type="text"
-                                wire:model="nombres"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nombres') border-red-500 ring-2 ring-red-200 @enderror"
-                                placeholder="Ej: Juan Carlos">
-                            @error('nombres')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- Apellidos --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos *</label>
-                            <input
-                                type="text"
-                                wire:model="apellidos"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('apellidos') border-red-500 ring-2 ring-red-200 @enderror"
-                                placeholder="Ej: Pérez García">
-                            @error('apellidos')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- Teléfono --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
-                            <input
-                                type="text"
-                                wire:model="telefono"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('telefono') border-red-500 ring-2 ring-red-200 @enderror"
-                                placeholder="Ej: 5555-5555">
-                            @error('telefono')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- Correo --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
-                            <input
-                                type="email"
-                                wire:model="correo"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('correo') border-red-500 ring-2 ring-red-200 @enderror"
-                                placeholder="Ej: usuario@eemq.com">
-                            @error('correo')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- Fecha de Nacimiento --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento *</label>
-                            <input
-                                type="date"
-                                wire:model="fecha_nacimiento"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('fecha_nacimiento') border-red-500 ring-2 ring-red-200 @enderror">
-                            @error('fecha_nacimiento')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- Género --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Género *</label>
-                            <select
-                                wire:model="genero"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23666%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10 @error('genero') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccione...</option>
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                            </select>
-                            @error('genero')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Persona</label>
+                    <div class="relative">
+                        @if($selectedPersona)
+                            <div wire:click="clearPersona" class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-colors @error('personaId') border-red-500 ring-2 ring-red-200 @enderror">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="font-medium">{{ $selectedPersona['nombre_completo'] }}</span>
+                                    <span class="text-xs text-gray-500">DPI: {{ $selectedPersona['dpi'] }}</span>
+                                </div>
+                                <span class="text-gray-400 text-xl">⟲</span>
+                            </div>
+                        @else
+                            <div class="relative" x-data="{ open: @entangle('showPersonaDropdown').live }" @click.outside="open = false">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.300ms="searchPersona"
+                                    @click="open = true"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('personaId') border-red-500 ring-2 ring-red-200 @enderror"
+                                    placeholder="Buscar por nombre, apellidos o DPI...">
+                                <div x-show="open"
+                                     x-transition
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                    <ul>
+                                        @forelse ($this->personaResults as $persona)
+                                            <li wire:click.prevent="selectPersona({{ $persona->id }})"
+                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                <div class="font-medium">{{ $persona->nombres }} {{ $persona->apellidos }}</div>
+                                                <div class="text-xs text-gray-500">DPI: {{ $persona->dpi }}</div>
+                                            </li>
+                                        @empty
+                                            <li class="px-3 py-2 text-sm text-gray-500 text-center">
+                                                No se encontraron personas
+                                            </li>
+                                        @endforelse
+                                    </ul>
+                                    {{-- Botón para crear nueva persona --}}
+                                    <div class="border-t border-gray-200">
+                                        <button
+                                            type="button"
+                                            wire:click="$dispatch('abrirModalPersona')"
+                                            class="w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2">
+                                            <span>+</span>
+                                            <span>Crear nueva persona</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
+                    @error('personaId')
+                        <p class="text-red-500 text-xs mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 {{-- Sección: Datos de Usuario --}}
@@ -378,33 +324,33 @@
                             @enderror
                         </div>
 
-                        {{-- Rol --}}
+                        {{-- Puesto --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
                             <div class="relative">
-                                @if($selectedRol)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <span class="font-medium">{{ $selectedRol['nombre'] }}</span>
-                                        <button type="button" wire:click.prevent="clearRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                                @if($selectedPuesto)
+                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
+                                        <span class="font-medium">{{ $selectedPuesto['nombre'] }}</span>
+                                        <button type="button" wire:click.prevent="clearPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
                                             ×
                                         </button>
                                     </div>
                                 @else
-                                    <div class="relative" x-data="{ open: @entangle('showRolDropdown').live }" @click.outside="open = false">
+                                    <div class="relative" x-data="{ open: @entangle('showPuestoDropdown').live }" @click.outside="open = false">
                                         <input
                                             type="text"
-                                            wire:model.live.debounce.300ms="searchRol"
+                                            wire:model.live.debounce.300ms="searchPuesto"
                                             @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar rol...">
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror"
+                                            placeholder="Buscar puesto...">
                                         <div x-show="open"
                                              x-transition
                                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                             <ul>
-                                                @foreach (array_slice($this->rolResults, 0, 6) as $rol)
-                                                    <li wire:click.prevent="selectRol({{ $rol['id'] }})"
+                                                @foreach (array_slice($this->puestoResults, 0, 6) as $puesto)
+                                                    <li wire:click.prevent="selectPuesto({{ $puesto['id'] }})"
                                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                        {{ $rol['nombre'] }}
+                                                        {{ $puesto['nombre'] }}
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -412,7 +358,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @error('rolId')
+                            @error('puestoId')
                                 <p class="text-red-500 text-xs mt-2 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -558,8 +504,8 @@
                         </div>
 
                         {{-- Correo --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
                             <input
                                 type="email"
                                 wire:model="correo"
@@ -573,77 +519,41 @@
                                 </p>
                             @enderror
                         </div>
-
-                        {{-- Fecha de Nacimiento --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento *</label>
-                            <input
-                                type="date"
-                                wire:model="fecha_nacimiento"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('fecha_nacimiento') border-red-500 ring-2 ring-red-200 @enderror">
-                            @error('fecha_nacimiento')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- Género --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Género *</label>
-                            <select
-                                wire:model="genero"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-md bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23666%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10 @error('genero') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                            </select>
-                            @error('genero')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
                     </div>
                 </div>
 
-                {{-- Sección: Rol y Estado --}}
+                {{-- Sección: Puesto y Estado --}}
                 <div class="mb-6">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Configuración</h4>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Rol --}}
+                        {{-- Puesto --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
                             <div class="relative">
-                                @if($selectedRol)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <span class="font-medium">{{ $selectedRol['nombre'] }}</span>
-                                        <button type="button" wire:click.prevent="clearRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                                @if($selectedPuesto)
+                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
+                                        <span class="font-medium">{{ $selectedPuesto['nombre'] }}</span>
+                                        <button type="button" wire:click.prevent="clearPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
                                             ×
                                         </button>
                                     </div>
                                 @else
-                                    <div class="relative" x-data="{ open: @entangle('showRolDropdown').live }" @click.outside="open = false">
+                                    <div class="relative" x-data="{ open: @entangle('showPuestoDropdown').live }" @click.outside="open = false">
                                         <input
                                             type="text"
-                                            wire:model.live.debounce.300ms="searchRol"
+                                            wire:model.live.debounce.300ms="searchPuesto"
                                             @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar rol...">
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror"
+                                            placeholder="Buscar puesto...">
                                         <div x-show="open"
                                              x-transition
                                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                             <ul>
-                                                @foreach (array_slice($this->rolResults, 0, 6) as $rol)
-                                                    <li wire:click.prevent="selectRol({{ $rol['id'] }})"
+                                                @foreach (array_slice($this->puestoResults, 0, 6) as $puesto)
+                                                    <li wire:click.prevent="selectPuesto({{ $puesto['id'] }})"
                                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                        {{ $rol['nombre'] }}
+                                                        {{ $puesto['nombre'] }}
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -651,7 +561,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @error('rolId')
+                            @error('puestoId')
                                 <p class="text-red-500 text-xs mt-2 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -767,6 +677,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Reutilizable: Crear Nueva Persona --}}
+    @livewire('modal-persona')
 
     <style>
         /* Ocultar elementos hasta que Alpine.js esté listo */

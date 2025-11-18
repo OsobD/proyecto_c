@@ -18,6 +18,8 @@ class TarjetaResponsabilidad extends Model
         'total',
         'id_persona',
         'activo',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -75,14 +77,20 @@ class TarjetaResponsabilidad extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (auth()->check()) {
+            // Solo establecer created_by/updated_by si:
+            // 1. El usuario está autenticado
+            // 2. Los campos NO han sido establecidos explícitamente (ni siquiera como null)
+            // Usamos array_key_exists en lugar de isset porque isset retorna false para valores null
+            if (auth()->check() && !array_key_exists('created_by', $model->getAttributes())) {
                 $model->created_by = auth()->id();
+            }
+            if (auth()->check() && !array_key_exists('updated_by', $model->getAttributes())) {
                 $model->updated_by = auth()->id();
             }
         });
 
         static::updating(function ($model) {
-            if (auth()->check()) {
+            if (auth()->check() && !$model->isDirty('updated_by')) {
                 $model->updated_by = auth()->id();
             }
         });

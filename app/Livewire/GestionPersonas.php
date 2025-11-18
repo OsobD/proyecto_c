@@ -18,6 +18,10 @@ class GestionPersonas extends Component
     public $editMode = false;
     public $showAllPersonas = false; // Para mostrar inactivas también
 
+    // Propiedades de ordenamiento
+    public $sortField = null;  // 'id', 'nombres', 'apellidos', 'dpi'
+    public $sortDirection = null;  // 'asc' o 'desc'
+
     // Campos del formulario
     public $personaId;
     public $nombres;
@@ -26,7 +30,9 @@ class GestionPersonas extends Component
     public $telefono;
     public $correo;
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
+
+    protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
 
     protected $rules = [
         'nombres' => 'required|string|max:255',
@@ -41,11 +47,36 @@ class GestionPersonas extends Component
         'apellidos.required' => 'Los apellidos son obligatorios.',
         'dpi.required' => 'El DPI es obligatorio.',
         'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
+        'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
         'correo.email' => 'El correo debe ser una dirección válida.',
     ];
 
     public function updatingSearch()
     {
+        $this->resetPage();
+    }
+
+    /**
+     * Alterna el ordenamiento por campo
+     * Triple-click: alfabético → inverso → sin filtro
+     */
+    public function sortBy($field)
+    {
+        // Si es un campo diferente, empezar con orden ascendente
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+        // Si es el mismo campo, alternar: asc → desc → null
+        else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+
         $this->resetPage();
     }
 
@@ -58,15 +89,27 @@ class GestionPersonas extends Component
             $query->where('estado', true);
         }
 
-        $personas = $query->where(function($q) {
+        // Aplicar búsqueda
+        if (!empty($this->search)) {
+            $query->where(function($q) {
                 $q->where('nombres', 'like', '%' . $this->search . '%')
                   ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                  ->orWhere('dpi', 'like', '%' . $this->search . '%')
                   ->orWhere('correo', 'like', '%' . $this->search . '%')
                   ->orWhere('telefono', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('apellidos', 'asc')
-            ->orderBy('nombres', 'asc')
-            ->paginate(10);
+            });
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            // Orden por defecto: por apellidos y nombres
+            $query->orderBy('apellidos', 'asc')
+                  ->orderBy('nombres', 'asc');
+        }
+
+        $personas = $query->paginate(30);
 
         return view('livewire.gestion-personas', [
             'personas' => $personas
@@ -128,7 +171,7 @@ class GestionPersonas extends Component
                     'created_at' => now(),
                 ]);
 
-                $mensaje = 'Persona actualizada correctamente.';
+                $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' actualizada exitosamente.";
             } else {
                 // Crear persona
                 $persona = Persona::create([
@@ -141,12 +184,16 @@ class GestionPersonas extends Component
                 ]);
 
                 // Crear tarjeta de responsabilidad automáticamente
+                // IMPORTANTE: created_by y updated_by deben ser NULL ya que
+                // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
                 TarjetaResponsabilidad::create([
                     'nombre' => "{$this->nombres} {$this->apellidos}",
                     'fecha_creacion' => now(),
                     'total' => 0,
                     'id_persona' => $persona->id,
                     'activo' => true,
+                    'created_by' => null,
+                    'updated_by' => null,
                 ]);
 
                 // Registrar en bitácora
@@ -159,7 +206,7 @@ class GestionPersonas extends Component
                     'created_at' => now(),
                 ]);
 
-                $mensaje = 'Persona y tarjeta de responsabilidad creadas correctamente.';
+                $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente con tarjeta de responsabilidad.";
             }
 
             $this->closeModal();
@@ -237,5 +284,14 @@ class GestionPersonas extends Component
         $this->telefono = '';
         $this->correo = '';
         $this->resetErrorBag();
+    }
+
+    /**
+     * Maneja el evento cuando se crea una persona desde el modal reutilizable
+     */
+    public function handlePersonaCreada($personaData, $mensaje)
+    {
+        // Establecer el mensaje flash
+        session()->flash('message', $mensaje);
     }
 }

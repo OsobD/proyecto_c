@@ -17,6 +17,7 @@ class Usuario extends Authenticatable
         'contrasena',
         'id_persona',
         'id_rol',
+        'id_puesto',
         'estado',
     ];
 
@@ -57,6 +58,11 @@ class Usuario extends Authenticatable
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'id_rol');
+    }
+
+    public function puesto()
+    {
+        return $this->belongsTo(Puesto::class, 'id_puesto');
     }
 
     public function compras()
