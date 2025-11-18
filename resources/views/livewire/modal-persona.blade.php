@@ -7,7 +7,7 @@
      x-cloak
      x-init="$watch('show', value => { if (!value) animatingOut = true; })"
      @animationend="if (!show) animatingOut = false"
-     class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[60] flex items-center justify-center"
+     class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100] flex items-center justify-center"
      :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
      wire:click.self="cerrar"
      wire:ignore.self>
