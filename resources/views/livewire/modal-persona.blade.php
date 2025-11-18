@@ -24,7 +24,48 @@
                 </button>
             </div>
 
+            {{-- Botón de prueba (temporal para debugging) --}}
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <button
+                    type="button"
+                    wire:click="testComponente"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
+                    🔧 Probar Componente
+                </button>
+                <p class="text-xs text-yellow-700 mt-1">Botón de prueba - Si aparece un alert, el componente funciona</p>
+            </div>
+
             <form wire:submit.prevent="guardar">
+                {{-- Resumen de errores de validación --}}
+                @if ($errors->any())
+                    <div class="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <svg class="h-5 w-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-red-800 mb-2">Hay errores en el formulario:</p>
+                                <ul class="list-disc list-inside text-sm text-red-700">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Indicador de carga visible --}}
+                <div wire:loading wire:target="guardar" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <div class="flex items-center gap-2 text-blue-700">
+                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="font-semibold">Guardando persona...</span>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 gap-4">
                     {{-- Nombres --}}
                     <div>

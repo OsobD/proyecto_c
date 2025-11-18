@@ -52,9 +52,32 @@ class ModalPersona extends Component
         $this->resetValidation();
     }
 
+    public function testComponente()
+    {
+        // Método de prueba para verificar que el componente funciona
+        $this->js("alert('El componente ModalPersona está funcionando correctamente');");
+    }
+
     public function guardar()
     {
-        $this->validate();
+        // Log inicial para debugging
+        \Log::info('ModalPersona::guardar() - Inicio', [
+            'nombres' => $this->nombres,
+            'apellidos' => $this->apellidos,
+            'dpi' => $this->dpi,
+        ]);
+
+        // Validar los datos
+        try {
+            $validatedData = $this->validate();
+            \Log::info('ModalPersona::guardar() - Validación exitosa');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('ModalPersona::guardar() - Error de validación', [
+                'errors' => $e->errors()
+            ]);
+            // Re-lanzar la excepción para que Livewire la maneje
+            throw $e;
+        }
 
         try {
             DB::beginTransaction();
@@ -69,6 +92,8 @@ class ModalPersona extends Component
                 'estado' => true,
             ]);
 
+            \Log::info('ModalPersona::guardar() - Persona creada', ['id' => $persona->id]);
+
             // Crear tarjeta de responsabilidad
             TarjetaResponsabilidad::create([
                 'nombre' => "{$this->nombres} {$this->apellidos}",
@@ -78,24 +103,42 @@ class ModalPersona extends Component
                 'activo' => true,
             ]);
 
+            \Log::info('ModalPersona::guardar() - Tarjeta de responsabilidad creada');
+
             DB::commit();
 
-            // Emitir evento para notificar que se creó la persona
-            $this->dispatch('personaCreada', [
+            // Preparar datos para enviar
+            $personaData = [
                 'id' => $persona->id,
                 'nombre_completo' => "{$persona->nombres} {$persona->apellidos}",
                 'dpi' => $persona->dpi,
-            ]);
+            ];
 
-            // Cerrar modal
+            // Cerrar modal ANTES de disparar eventos
             $this->showModal = false;
             $this->resetForm();
 
-            session()->flash('message', 'Persona creada exitosamente.');
+            // Emitir evento para notificar que se creó la persona
+            $this->dispatch('personaCreada', personaData: $personaData);
+
+            \Log::info('ModalPersona::guardar() - Evento personaCreada disparado', $personaData);
+
+            // JavaScript toast notification
+            $this->js("
+                console.log('Persona creada:', " . json_encode($personaData) . ");
+                alert('Persona creada exitosamente: {$persona->nombres} {$persona->apellidos}');
+            ");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al crear la persona: ' . $e->getMessage());
+
+            // Log del error para debugging
+            \Log::error('ModalPersona::guardar() - Error al crear persona', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->js("alert('Error al crear la persona: " . addslashes($e->getMessage()) . "');");
         }
     }
 
