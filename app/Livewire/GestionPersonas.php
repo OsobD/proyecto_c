@@ -18,6 +18,10 @@ class GestionPersonas extends Component
     public $editMode = false;
     public $showAllPersonas = false; // Para mostrar inactivas también
 
+    // Propiedades de ordenamiento
+    public $sortField = null;  // 'id', 'nombres', 'apellidos', 'dpi'
+    public $sortDirection = null;  // 'asc' o 'desc'
+
     // Campos del formulario
     public $personaId;
     public $nombres;
@@ -26,7 +30,7 @@ class GestionPersonas extends Component
     public $telefono;
     public $correo;
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
 
     protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
 
@@ -52,6 +56,30 @@ class GestionPersonas extends Component
         $this->resetPage();
     }
 
+    /**
+     * Alterna el ordenamiento por campo
+     * Triple-click: alfabético → inverso → sin filtro
+     */
+    public function sortBy($field)
+    {
+        // Si es un campo diferente, empezar con orden ascendente
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+        // Si es el mismo campo, alternar: asc → desc → null
+        else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+
+        $this->resetPage();
+    }
+
     public function render()
     {
         $query = Persona::query();
@@ -61,15 +89,27 @@ class GestionPersonas extends Component
             $query->where('estado', true);
         }
 
-        $personas = $query->where(function($q) {
+        // Aplicar búsqueda
+        if (!empty($this->search)) {
+            $query->where(function($q) {
                 $q->where('nombres', 'like', '%' . $this->search . '%')
                   ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                  ->orWhere('dpi', 'like', '%' . $this->search . '%')
                   ->orWhere('correo', 'like', '%' . $this->search . '%')
                   ->orWhere('telefono', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('apellidos', 'asc')
-            ->orderBy('nombres', 'asc')
-            ->paginate(10);
+            });
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            // Orden por defecto: por apellidos y nombres
+            $query->orderBy('apellidos', 'asc')
+                  ->orderBy('nombres', 'asc');
+        }
+
+        $personas = $query->paginate(30);
 
         return view('livewire.gestion-personas', [
             'personas' => $personas
