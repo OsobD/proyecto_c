@@ -35,31 +35,31 @@
                 </div>
             </div>
 
-            {{-- Filtro por Rol --}}
+            {{-- Filtro por Puesto --}}
             <div class="w-full md:w-64">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por rol</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por puesto</label>
                 <div class="relative">
-                    @if($selectedFilterRol)
+                    @if($selectedFilterPuesto)
                         <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white">
-                            <span class="font-medium">{{ $selectedFilterRol['nombre'] }}</span>
-                            <button type="button" wire:click.prevent="clearFilterRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                            <span class="font-medium">{{ $selectedFilterPuesto['nombre'] }}</span>
+                            <button type="button" wire:click.prevent="clearFilterPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
                                 ×
                             </button>
                         </div>
                     @else
-                        <div class="relative" x-data="{ open: @entangle('showFilterRolDropdown').live }" @click.outside="open = false">
+                        <div class="relative" x-data="{ open: @entangle('showFilterPuestoDropdown').live }" @click.outside="open = false">
                             <input
                                 type="text"
-                                wire:model.live.debounce.300ms="searchFilterRol"
+                                wire:model.live.debounce.300ms="searchFilterPuesto"
                                 @click="open = true"
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                placeholder="Seleccionar rol...">
+                                placeholder="Seleccionar puesto...">
                             <div x-show="open"
                                  x-transition
                                  class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                 <ul>
-                                    @foreach (array_slice($this->filterRolResults, 0, 6) as $rol)
-                                        <li wire:click.prevent="selectFilterRol({{ $rol['id'] }})"
+                                    @foreach (array_slice($this->filterPuestoResults, 0, 6) as $rol)
+                                        <li wire:click.prevent="selectFilterPuesto({{ $rol['id'] }})"
                                             class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                             {{ $rol['nombre'] }}
                                         </li>
@@ -122,7 +122,7 @@
                             </button>
                         </th>
                         <th class="py-3 px-6 text-left">Email</th>
-                        <th class="py-3 px-6 text-left">Rol</th>
+                        <th class="py-3 px-6 text-left">Puesto</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
@@ -141,7 +141,7 @@
                             </td>
                             <td class="py-3 px-6 text-left">
                                 <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                    {{ $usuario->rol->nombre }}
+                                    {{ $usuario->puesto->nombre }}
                                 </span>
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -328,27 +328,27 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
                             <div class="relative">
-                                @if($selectedRol)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <span class="font-medium">{{ $selectedRol['nombre'] }}</span>
-                                        <button type="button" wire:click.prevent="clearRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                                @if($selectedPuesto)
+                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
+                                        <span class="font-medium">{{ $selectedPuesto['nombre'] }}</span>
+                                        <button type="button" wire:click.prevent="clearPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
                                             ×
                                         </button>
                                     </div>
                                 @else
-                                    <div class="relative" x-data="{ open: @entangle('showRolDropdown').live }" @click.outside="open = false">
+                                    <div class="relative" x-data="{ open: @entangle('showPuestoDropdown').live }" @click.outside="open = false">
                                         <input
                                             type="text"
-                                            wire:model.live.debounce.300ms="searchRol"
+                                            wire:model.live.debounce.300ms="searchPuesto"
                                             @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar rol...">
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror"
+                                            placeholder="Buscar puesto...">
                                         <div x-show="open"
                                              x-transition
                                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                             <ul>
-                                                @foreach (array_slice($this->rolResults, 0, 6) as $rol)
-                                                    <li wire:click.prevent="selectRol({{ $rol['id'] }})"
+                                                @foreach (array_slice($this->puestoResults, 0, 6) as $rol)
+                                                    <li wire:click.prevent="selectPuesto({{ $rol['id'] }})"
                                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                                         {{ $rol['nombre'] }}
                                                     </li>
@@ -358,7 +358,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @error('rolId')
+                            @error('puestoId')
                                 <p class="text-red-500 text-xs mt-2 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -531,27 +531,27 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
                             <div class="relative">
-                                @if($selectedRol)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <span class="font-medium">{{ $selectedRol['nombre'] }}</span>
-                                        <button type="button" wire:click.prevent="clearRol" class="text-gray-400 hover:text-gray-600 text-xl">
+                                @if($selectedPuesto)
+                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
+                                        <span class="font-medium">{{ $selectedPuesto['nombre'] }}</span>
+                                        <button type="button" wire:click.prevent="clearPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
                                             ×
                                         </button>
                                     </div>
                                 @else
-                                    <div class="relative" x-data="{ open: @entangle('showRolDropdown').live }" @click.outside="open = false">
+                                    <div class="relative" x-data="{ open: @entangle('showPuestoDropdown').live }" @click.outside="open = false">
                                         <input
                                             type="text"
-                                            wire:model.live.debounce.300ms="searchRol"
+                                            wire:model.live.debounce.300ms="searchPuesto"
                                             @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar rol...">
+                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror"
+                                            placeholder="Buscar puesto...">
                                         <div x-show="open"
                                              x-transition
                                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                             <ul>
-                                                @foreach (array_slice($this->rolResults, 0, 6) as $rol)
-                                                    <li wire:click.prevent="selectRol({{ $rol['id'] }})"
+                                                @foreach (array_slice($this->puestoResults, 0, 6) as $rol)
+                                                    <li wire:click.prevent="selectPuesto({{ $rol['id'] }})"
                                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                                         {{ $rol['nombre'] }}
                                                     </li>
@@ -561,7 +561,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @error('rolId')
+                            @error('puestoId')
                                 <p class="text-red-500 text-xs mt-2 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>

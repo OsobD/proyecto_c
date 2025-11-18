@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Usuario;
 use App\Models\Persona;
-use App\Models\Rol;
+use App\Models\Puesto;
 use App\Models\Bitacora;
 use App\Models\TarjetaResponsabilidad;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +28,7 @@ class GestionUsuarios extends Component
 
     // Propiedades de búsqueda y filtrado
     public $search = '';
-    public $filterRol = '';
+    public $filterPuesto = '';
     public $sortField = null;  // 'nombre_usuario' o 'nombre_completo'
     public $sortDirection = null;  // 'asc' o 'desc'
 
@@ -48,7 +48,7 @@ class GestionUsuarios extends Component
 
     // Datos de Usuario
     public $nombre_usuario = '';
-    public $rolId = '';
+    public $puestoId = '';
     public $contrasena = '';
     public $estado = true;
 
@@ -56,15 +56,15 @@ class GestionUsuarios extends Component
     public $passwordGenerada = '';
     public $mostrarPassword = false;
 
-    // Propiedades para autocompletado de rol
-    public $searchRol = '';
-    public $showRolDropdown = false;
-    public $selectedRol = null;
+    // Propiedades para autocompletado de puesto
+    public $searchPuesto = '';
+    public $showPuestoDropdown = false;
+    public $selectedPuesto = null;
 
-    // Propiedades para filtro de rol mejorado
-    public $searchFilterRol = '';
-    public $showFilterRolDropdown = false;
-    public $selectedFilterRol = null;
+    // Propiedades para filtro de puesto mejorado
+    public $searchFilterPuesto = '';
+    public $showFilterPuestoDropdown = false;
+    public $selectedFilterPuesto = null;
 
     // Propiedades para selección de persona existente
     public $searchPersona = '';
@@ -95,14 +95,14 @@ class GestionUsuarios extends Component
                 'telefono' => 'nullable|string|max:20',
                 'correo' => 'nullable|email|max:255',
                 'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
-                'rolId' => 'required|exists:rol,id',
+                'puestoId' => 'required|exists:puesto,id',
             ];
         }
 
         return [
             'personaId' => 'required|exists:persona,id',
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
-            'rolId' => 'required|exists:rol,id',
+            'puestoId' => 'required|exists:puesto,id',
         ];
     }
 
@@ -119,8 +119,8 @@ class GestionUsuarios extends Component
         'correo.email' => 'El correo debe ser una dirección válida.',
         'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
-        'rolId.required' => 'Debe seleccionar un rol.',
-        'rolId.exists' => 'El rol seleccionado no es válido.',
+        'rolId.required' => 'Debe seleccionar un puesto.',
+        'rolId.exists' => 'El puesto seleccionado no es válido.',
         'personaId.required' => 'Debe seleccionar una persona.',
         'personaId.exists' => 'La persona seleccionada no es válida.',
     ];
@@ -134,9 +134,9 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Resetea la paginación cuando cambia el filtro de rol
+     * Resetea la paginación cuando cambia el filtro de puesto
      */
-    public function updatingFilterRol()
+    public function updatingFilterPuesto()
     {
         $this->resetPage();
     }
@@ -166,87 +166,87 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Actualiza cuando cambia la búsqueda de rol
+     * Actualiza cuando cambia la búsqueda de puesto
      */
-    public function updatedSearchRol()
+    public function updatedSearchPuesto()
     {
-        $this->showRolDropdown = true;
+        $this->showPuestoDropdown = true;
     }
 
     /**
-     * Obtiene roles filtrados para el autocompletado
+     * Obtiene puestos filtrados para el autocompletado
      */
-    public function getRolResultsProperty()
+    public function getPuestoResultsProperty()
     {
-        $roles = $this->roles->toArray();
+        $puestos = $this->puestos->toArray();
 
-        if (empty($this->searchRol)) {
-            return $roles;
+        if (empty($this->searchPuesto)) {
+            return $puestos;
         }
 
-        $search = strtolower(trim($this->searchRol));
+        $search = strtolower(trim($this->searchPuesto));
 
-        return array_filter($roles, function($rol) use ($search) {
-            return str_contains(strtolower($rol['nombre']), $search);
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
 
     /**
-     * Selecciona un rol del autocompletado
+     * Selecciona un puesto del autocompletado
      */
-    public function selectRol($id)
+    public function selectPuesto($id)
     {
-        $rol = $this->roles->firstWhere('id', $id);
-        if ($rol) {
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
             $this->selectedRol = [
                 'id' => $rol->id,
                 'nombre' => $rol->nombre,
             ];
             $this->rolId = $rol->id;
             $this->showRolDropdown = false;
-            $this->searchRol = '';
+            $this->searchPuesto = '';
         }
     }
 
     /**
-     * Limpia la selección de rol
+     * Limpia la selección de puesto
      */
-    public function clearRol()
+    public function clearPuesto()
     {
         $this->selectedRol = null;
         $this->rolId = '';
     }
 
     /**
-     * Obtiene los roles filtrados para el filtro de búsqueda
+     * Obtiene los puestos filtrados para el filtro de búsqueda
      */
     public function getFilterRolResultsProperty()
     {
-        $roles = $this->roles->toArray();
+        $puestos = $this->puestos->toArray();
 
         if (empty($this->searchFilterRol)) {
-            return $roles;
+            return $puestos;
         }
 
         $search = strtolower(trim($this->searchFilterRol));
 
-        return array_filter($roles, function($rol) use ($search) {
-            return str_contains(strtolower($rol['nombre']), $search);
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
 
     /**
-     * Selecciona un rol del filtro de búsqueda
+     * Selecciona un puesto del filtro de búsqueda
      */
     public function selectFilterRol($id)
     {
-        $rol = $this->roles->firstWhere('id', $id);
-        if ($rol) {
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
             $this->selectedFilterRol = [
                 'id' => $rol->id,
                 'nombre' => $rol->nombre,
             ];
-            $this->filterRol = $rol->id;
+            $this->filterPuesto = $rol->id;
             $this->showFilterRolDropdown = false;
             $this->searchFilterRol = '';
             $this->resetPage(); // Resetear paginación al filtrar
@@ -254,12 +254,12 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Limpia la selección del filtro de rol
+     * Limpia la selección del filtro de puesto
      */
     public function clearFilterRol()
     {
         $this->selectedFilterRol = null;
-        $this->filterRol = '';
+        $this->filterPuesto = '';
         $this->searchFilterRol = '';
         $this->resetPage(); // Resetear paginación al limpiar filtro
     }
@@ -411,7 +411,7 @@ class GestionUsuarios extends Component
                 'nombre_usuario' => $this->nombre_usuario,
                 'contrasena' => Hash::make($this->passwordGenerada),
                 'id_persona' => $persona->id,
-                'id_rol' => $this->rolId,
+                'id_puesto' => $this->rolId,
                 'estado' => true,
             ]);
 
@@ -468,12 +468,12 @@ class GestionUsuarios extends Component
 
         // Cargar datos de usuario
         $this->nombre_usuario = $usuario->nombre_usuario;
-        $this->rolId = $usuario->id_rol;
+        $this->rolId = $usuario->id_puesto;
         $this->estado = $usuario->estado;
 
         // Cargar rol seleccionado para el dropdown
-        $rol = $this->roles->firstWhere('id', $usuario->id_rol);
-        if ($rol) {
+        $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
+        if ($puesto) {
             $this->selectedRol = [
                 'id' => $rol->id,
                 'nombre' => $rol->nombre,
@@ -507,7 +507,7 @@ class GestionUsuarios extends Component
 
             // Actualizar Usuario
             $usuario->update([
-                'id_rol' => $this->rolId,
+                'id_puesto' => $this->rolId,
                 'estado' => $this->estado,
             ]);
 
@@ -560,7 +560,7 @@ class GestionUsuarios extends Component
         $this->passwordGenerada = '';
         $this->mostrarPassword = false;
         $this->selectedRol = null;
-        $this->searchRol = '';
+        $this->searchPuesto = '';
         $this->showRolDropdown = false;
 
         // Resetear campos de persona
@@ -654,7 +654,7 @@ class GestionUsuarios extends Component
     {
         $query = Usuario::with(['persona', 'rol'])
             ->whereHas('persona') // Solo usuarios que tienen persona asignada
-            ->whereNotNull('id_rol'); // Solo usuarios con rol (usuarios reales)
+            ->whereNotNull('id_puesto'); // Solo usuarios con rol (usuarios reales)
 
         // Aplicar búsqueda
         if (!empty($this->search)) {
@@ -669,8 +669,8 @@ class GestionUsuarios extends Component
         }
 
         // Aplicar filtro por rol
-        if (!empty($this->filterRol)) {
-            $query->where('id_rol', $this->filterRol);
+        if (!empty($this->filterPuesto)) {
+            $query->where('id_puesto', $this->filterPuesto);
         }
 
         // Aplicar ordenamiento
@@ -690,11 +690,11 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Obtiene la lista de roles para el filtro
+     * Obtiene la lista de puestos para el filtro
      */
-    public function getRolesProperty()
+    public function getPuestosProperty()
     {
-        return Rol::orderBy('nombre')->get();
+        return Puesto::orderBy('nombre')->get();
     }
 
     /**
@@ -704,7 +704,7 @@ class GestionUsuarios extends Component
     {
         return view('livewire.gestion-usuarios', [
             'usuarios' => $this->usuarios,
-            'roles' => $this->roles,
+            'puestos' => $this->puestos,
         ]);
     }
 }
