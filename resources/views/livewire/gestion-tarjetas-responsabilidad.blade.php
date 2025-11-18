@@ -276,10 +276,10 @@
                                         <th class="py-3 px-4 text-left">Código</th>
                                         <th class="py-3 px-4 text-left">Producto</th>
                                         <th class="py-3 px-4 text-center">Lote ID</th>
-                                        <th class="py-3 px-4 text-center">Cant. Disponible</th>
-                                        <th class="py-3 px-4 text-center">Cant. Inicial</th>
-                                        <th class="py-3 px-4 text-right">Precio Ingreso</th>
-                                        <th class="py-3 px-4 text-right">Precio Asignación</th>
+                                        <th class="py-3 px-4 text-center">Cant. Asignada</th>
+                                        <th class="py-3 px-4 text-center">Cant. Disponible (Lote)</th>
+                                        <th class="py-3 px-4 text-right">Precio Unitario</th>
+                                        <th class="py-3 px-4 text-right">Total Asignado</th>
                                         <th class="py-3 px-4 text-center">Fecha Ingreso</th>
                                         <th class="py-3 px-4 text-left">Bodega</th>
                                         <th class="py-3 px-4 text-center">Estado</th>
@@ -301,12 +301,13 @@
                                                 </span>
                                             </td>
                                             <td class="py-3 px-4 text-center">
-                                                <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                                    {{ $tp['cantidad_lote'] }}
+                                                <span class="bg-indigo-100 text-indigo-800 py-1 px-3 rounded-full text-xs font-bold">
+                                                    {{ $tp['cantidad_asignada'] }}
                                                 </span>
                                             </td>
                                             <td class="py-3 px-4 text-center">
-                                                <span class="text-gray-600">{{ $tp['cantidad_inicial'] }}</span>
+                                                <span class="text-gray-600">{{ $tp['cantidad_disponible'] }}</span>
+                                                <span class="text-gray-400 text-xs">/ {{ $tp['cantidad_inicial'] }}</span>
                                             </td>
                                             <td class="py-3 px-4 text-right">
                                                 <span class="font-medium text-gray-700">Q{{ number_format($tp['precio_ingreso'], 2) }}</span>

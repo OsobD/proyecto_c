@@ -275,12 +275,21 @@ class GestionTarjetasResponsabilidad extends Component
         $this->tarjetaNombre = "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}";
         $this->tarjetaProductos = $tarjeta->tarjetasProducto->map(function($tp) {
             $lote = $tp->lote;
+            $producto = $tp->producto;
+
+            // Calcular la cantidad asignada dividiendo el precio de asignación entre el precio de ingreso
+            $cantidadAsignada = 0;
+            if ($lote && $lote->precio_ingreso > 0) {
+                $cantidadAsignada = round($tp->precio_asignacion / $lote->precio_ingreso);
+            }
+
             return [
                 'id' => $tp->id,
-                'producto_codigo' => $tp->producto->codigo ?? 'N/A',
-                'producto_nombre' => $tp->producto->nombre ?? 'N/A',
+                'producto_codigo' => $producto ? $producto->id : 'N/A',
+                'producto_nombre' => $producto ? $producto->descripcion : 'N/A',
                 'lote_id' => $lote ? $lote->id : 'N/A',
-                'cantidad_lote' => $lote ? $lote->cantidad : 0,
+                'cantidad_asignada' => $cantidadAsignada,
+                'cantidad_disponible' => $lote ? $lote->cantidad : 0,
                 'cantidad_inicial' => $lote ? $lote->cantidad_inicial : 0,
                 'precio_ingreso' => $lote ? $lote->precio_ingreso : 0,
                 'precio_asignacion' => $tp->precio_asignacion,
