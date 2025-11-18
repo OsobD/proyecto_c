@@ -119,8 +119,8 @@ class GestionUsuarios extends Component
         'correo.email' => 'El correo debe ser una dirección válida.',
         'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
-        'rolId.required' => 'Debe seleccionar un puesto.',
-        'rolId.exists' => 'El puesto seleccionado no es válido.',
+        'puestoId.required' => 'Debe seleccionar un puesto.',
+        'puestoId.exists' => 'El puesto seleccionado no es válido.',
         'personaId.required' => 'Debe seleccionar una persona.',
         'personaId.exists' => 'La persona seleccionada no es válida.',
     ];
@@ -411,7 +411,7 @@ class GestionUsuarios extends Component
                 'nombre_usuario' => $this->nombre_usuario,
                 'contrasena' => Hash::make($this->passwordGenerada),
                 'id_persona' => $persona->id,
-                'id_puesto' => $this->rolId,
+                'id_puesto' => $this->puestoId,
                 'estado' => true,
             ]);
 
@@ -507,7 +507,7 @@ class GestionUsuarios extends Component
 
             // Actualizar Usuario
             $usuario->update([
-                'id_puesto' => $this->rolId,
+                'id_puesto' => $this->puestoId,
                 'estado' => $this->estado,
             ]);
 
