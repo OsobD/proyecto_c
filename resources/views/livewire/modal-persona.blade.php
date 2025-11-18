@@ -24,17 +24,6 @@
                 </button>
             </div>
 
-            {{-- Botón de prueba (temporal para debugging) --}}
-            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                <button
-                    type="button"
-                    wire:click="testComponente"
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
-                    🔧 Probar Componente
-                </button>
-                <p class="text-xs text-yellow-700 mt-1">Botón de prueba - Si aparece un alert, el componente funciona</p>
-            </div>
-
             <form wire:submit.prevent="guardar">
                 {{-- Resumen de errores de validación --}}
                 @if ($errors->any())
