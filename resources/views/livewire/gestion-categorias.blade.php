@@ -12,7 +12,12 @@
 
     {{-- Encabezado con título y botón para agregar categoría --}}
     <div class="flex justify-between items-center mb-6">
+        <div>
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Categorías</h1>
+            <p class="text-sm text-gray-600 mt-1">
+                Administra las categorías del sistema de inventario
+            </p>
+        </div>
         <button
             wire:click="abrirModal"
             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
