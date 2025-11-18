@@ -28,6 +28,8 @@ class GestionPersonas extends Component
 
     protected $paginationTheme = 'bootstrap';
 
+    protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
+
     protected $rules = [
         'nombres' => 'required|string|max:255',
         'apellidos' => 'required|string|max:255',
@@ -237,5 +239,14 @@ class GestionPersonas extends Component
         $this->telefono = '';
         $this->correo = '';
         $this->resetErrorBag();
+    }
+
+    /**
+     * Maneja el evento cuando se crea una persona desde el modal reutilizable
+     */
+    public function handlePersonaCreada($personaData)
+    {
+        // Simplemente refrescar la lista
+        // Livewire lo hará automáticamente en el siguiente render
     }
 }

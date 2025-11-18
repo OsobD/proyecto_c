@@ -7,7 +7,7 @@
                 <input type="checkbox" wire:model.live="showAllPersonas" class="mr-2">
                 <span class="text-sm text-gray-700">Mostrar inactivos</span>
             </label>
-            <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+            <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                 + Nueva Persona
             </button>
         </div>
@@ -213,4 +213,7 @@
             </div>
         </div>
     @endif
+
+    {{-- Modal Reutilizable: Crear Nueva Persona --}}
+    @livewire('modal-persona')
 </div>

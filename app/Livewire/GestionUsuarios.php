@@ -72,15 +72,9 @@ class GestionUsuarios extends Component
     public $selectedPersona = null;
     public $personaId = null;
 
-    // Modal anidado para crear nueva persona
-    public $showModalPersona = false;
-    public $nombresNuevaPersona = '';
-    public $apellidosNuevaPersona = '';
-    public $dpiNuevaPersona = '';
-    public $telefonoNuevaPersona = '';
-    public $correoNuevaPersona = '';
-
     protected $paginationTheme = 'tailwind';
+
+    protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
 
     /**
      * Reglas de validación para crear usuario
@@ -109,20 +103,6 @@ class GestionUsuarios extends Component
             'personaId' => 'required|exists:persona,id',
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
             'rolId' => 'required|exists:rol,id',
-        ];
-    }
-
-    /**
-     * Reglas de validación para crear nueva persona en modal anidado
-     */
-    protected function rulesNuevaPersona()
-    {
-        return [
-            'nombresNuevaPersona' => 'required|string|max:255',
-            'apellidosNuevaPersona' => 'required|string|max:255',
-            'dpiNuevaPersona' => 'required|string|size:13|unique:persona,dpi',
-            'telefonoNuevaPersona' => 'nullable|string|max:20',
-            'correoNuevaPersona' => 'nullable|email|max:255',
         ];
     }
 
@@ -341,83 +321,14 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Abre el modal para crear nueva persona
+     * Maneja el evento cuando se crea una persona
      */
-    public function abrirModalPersona()
+    public function handlePersonaCreada($personaData)
     {
-        $this->resetValidation();
-        $this->nombresNuevaPersona = '';
-        $this->apellidosNuevaPersona = '';
-        $this->dpiNuevaPersona = '';
-        $this->telefonoNuevaPersona = '';
-        $this->correoNuevaPersona = '';
-        $this->showModalPersona = true;
-        $this->showPersonaDropdown = false; // Cerrar el dropdown
-    }
-
-    /**
-     * Cierra el modal de crear nueva persona
-     */
-    public function cerrarModalPersona()
-    {
-        $this->showModalPersona = false;
-        $this->resetValidation();
-    }
-
-    /**
-     * Guarda la nueva persona desde el modal anidado
-     */
-    public function guardarPersonaNueva()
-    {
-        $this->validate($this->rulesNuevaPersona(), [
-            'nombresNuevaPersona.required' => 'Los nombres son obligatorios.',
-            'apellidosNuevaPersona.required' => 'Los apellidos son obligatorios.',
-            'dpiNuevaPersona.required' => 'El DPI es obligatorio.',
-            'dpiNuevaPersona.size' => 'El DPI debe tener exactamente 13 dígitos.',
-            'dpiNuevaPersona.unique' => 'Este DPI ya está registrado.',
-            'correoNuevaPersona.email' => 'El correo debe ser una dirección válida.',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Crear la nueva persona
-            $persona = Persona::create([
-                'nombres' => $this->nombresNuevaPersona,
-                'apellidos' => $this->apellidosNuevaPersona,
-                'dpi' => $this->dpiNuevaPersona,
-                'telefono' => $this->telefonoNuevaPersona,
-                'correo' => $this->correoNuevaPersona,
-                'estado' => true,
-            ]);
-
-            // Crear tarjeta de responsabilidad
-            TarjetaResponsabilidad::create([
-                'nombre' => "{$this->nombresNuevaPersona} {$this->apellidosNuevaPersona}",
-                'fecha_creacion' => now(),
-                'total' => 0,
-                'id_persona' => $persona->id,
-                'activo' => true,
-            ]);
-
-            DB::commit();
-
-            // Seleccionar automáticamente la persona recién creada
-            $this->selectedPersona = [
-                'id' => $persona->id,
-                'nombre_completo' => "{$persona->nombres} {$persona->apellidos}",
-                'dpi' => $persona->dpi,
-            ];
-            $this->personaId = $persona->id;
-
-            // Cerrar modal y mostrar mensaje
-            $this->showModalPersona = false;
-            session()->flash('message', 'Persona creada exitosamente.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error', 'Error al crear la persona: ' . $e->getMessage());
-        }
+        // Seleccionar automáticamente la persona recién creada
+        $this->selectedPersona = $personaData;
+        $this->personaId = $personaData['id'];
+        $this->showPersonaDropdown = false;
     }
 
     /**
@@ -650,14 +561,6 @@ class GestionUsuarios extends Component
         $this->showPersonaDropdown = false;
         $this->selectedPersona = null;
         $this->personaId = null;
-
-        // Resetear modal anidado
-        $this->nombresNuevaPersona = '';
-        $this->apellidosNuevaPersona = '';
-        $this->dpiNuevaPersona = '';
-        $this->telefonoNuevaPersona = '';
-        $this->correoNuevaPersona = '';
-        $this->showModalPersona = false;
     }
 
     /**
