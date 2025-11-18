@@ -65,13 +65,13 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
-                                    {{-- Botón para ver productos --}}
+                                    {{-- Botón para expandir/colapsar productos --}}
                                     <button
-                                        wire:click="verProductos({{ $tarjeta->id }})"
+                                        wire:click="toggleProductos({{ $tarjeta->id }})"
                                         class="bg-gray-500 hover:bg-gray-700 text-white p-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
                                         title="Ver productos asignados">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-200 {{ $tarjetaIdProductosExpandido === $tarjeta->id ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
 
@@ -86,6 +86,101 @@
                                 </div>
                             </td>
                         </tr>
+
+                        {{-- Fila expandible con productos --}}
+                        @if($tarjetaIdProductosExpandido === $tarjeta->id)
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 bg-gray-50">
+                                    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+                                        <h4 class="text-md font-semibold text-gray-700 mb-3">Productos Asignados</h4>
+
+                                        @if($tarjeta->tarjetasProducto->count() > 0)
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full bg-white border border-gray-200 rounded">
+                                                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                                                        <tr>
+                                                            <th class="py-2 px-3 text-left">Código</th>
+                                                            <th class="py-2 px-3 text-left">Producto</th>
+                                                            <th class="py-2 px-3 text-center">Lote ID</th>
+                                                            <th class="py-2 px-3 text-center">Cant. Asignada</th>
+                                                            <th class="py-2 px-3 text-right">Precio Unitario</th>
+                                                            <th class="py-2 px-3 text-right">Total Asignado</th>
+                                                            <th class="py-2 px-3 text-center">Fecha Ingreso</th>
+                                                            <th class="py-2 px-3 text-left">Bodega</th>
+                                                            <th class="py-2 px-3 text-center">Estado</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="text-gray-600 text-xs">
+                                                        @foreach($tarjeta->tarjetasProducto as $tp)
+                                                            @php
+                                                                $lote = $tp->lote;
+                                                                $producto = $tp->producto;
+                                                                $cantidadAsignada = 0;
+                                                                if ($lote && $lote->precio_ingreso > 0) {
+                                                                    $cantidadAsignada = round($tp->precio_asignacion / $lote->precio_ingreso);
+                                                                }
+                                                            @endphp
+                                                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                                                <td class="py-2 px-3 text-left">
+                                                                    <span class="font-mono text-gray-700 font-semibold">{{ $producto->id }}</span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-left">
+                                                                    <span class="font-medium text-gray-800">{{ $producto->descripcion }}</span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-center">
+                                                                    <span class="bg-gray-100 text-gray-700 py-1 px-2 rounded text-xs">
+                                                                        #{{ $lote ? $lote->id : 'N/A' }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-center">
+                                                                    <span class="bg-indigo-100 text-indigo-800 py-1 px-2 rounded text-xs font-bold">
+                                                                        {{ $cantidadAsignada }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-right">
+                                                                    <span class="font-medium text-gray-700">Q{{ $lote ? number_format($lote->precio_ingreso, 2) : '0.00' }}</span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-right">
+                                                                    <span class="font-semibold text-indigo-600">Q{{ number_format($tp->precio_asignacion, 2) }}</span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-center">
+                                                                    <span class="text-gray-600">{{ $lote && $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') : 'N/A' }}</span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-left">
+                                                                    <span class="text-gray-700">{{ $lote && $lote->bodega ? $lote->bodega->nombre : 'N/A' }}</span>
+                                                                </td>
+                                                                <td class="py-2 px-3 text-center">
+                                                                    @if($lote && $lote->estado)
+                                                                        <span class="bg-green-100 text-green-800 py-1 px-2 rounded text-xs">
+                                                                            Activo
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="bg-red-100 text-red-800 py-1 px-2 rounded text-xs">
+                                                                            Inactivo
+                                                                        </span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="mt-3 bg-gray-50 border border-gray-200 rounded p-3">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-gray-700 font-medium text-sm">Total de productos asignados:</span>
+                                                    <span class="text-lg font-bold text-indigo-600">{{ $tarjeta->tarjetasProducto->count() }}</span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="text-center py-8">
+                                                <p class="text-gray-500">No hay productos asignados a esta tarjeta</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="6" class="text-center py-4 text-gray-500">No se encontraron tarjetas de responsabilidad.</td>
@@ -241,133 +336,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    @endif
-
-    {{-- Modal: Ver Productos Asignados --}}
-    @if($showProductosModal)
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 z-[70] flex items-center justify-center"
-             x-data
-             @click.self="$wire.cerrarProductosModal()">
-            <div class="bg-white rounded-lg shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden" @click.stop>
-                {{-- Header del Modal --}}
-                <div class="bg-white px-6 py-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-900">Productos Asignados</h3>
-                            <p class="text-gray-600 text-sm mt-1">{{ $tarjetaNombre }}</p>
-                        </div>
-                        <button wire:click="cerrarProductosModal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Contenido del Modal --}}
-                <div class="p-6 overflow-y-auto max-h-[calc(90vh-150px)]">
-                    @if(count($tarjetaProductos) > 0)
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-                                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                    <tr>
-                                        <th class="py-3 px-4 text-left">Código</th>
-                                        <th class="py-3 px-4 text-left">Producto</th>
-                                        <th class="py-3 px-4 text-center">Lote ID</th>
-                                        <th class="py-3 px-4 text-center">Cant. Asignada</th>
-                                        <th class="py-3 px-4 text-right">Precio Unitario</th>
-                                        <th class="py-3 px-4 text-right">Total Asignado</th>
-                                        <th class="py-3 px-4 text-center">Fecha Ingreso</th>
-                                        <th class="py-3 px-4 text-left">Bodega</th>
-                                        <th class="py-3 px-4 text-center">Estado</th>
-                                        <th class="py-3 px-4 text-left">Observaciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-gray-600 text-sm">
-                                    @foreach($tarjetaProductos as $tp)
-                                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                                            <td class="py-3 px-4 text-left">
-                                                <span class="font-mono text-gray-700 font-semibold">{{ $tp['producto_codigo'] }}</span>
-                                            </td>
-                                            <td class="py-3 px-4 text-left">
-                                                <span class="font-medium text-gray-800">{{ $tp['producto_nombre'] }}</span>
-                                            </td>
-                                            <td class="py-3 px-4 text-center">
-                                                <span class="bg-gray-100 text-gray-700 py-1 px-3 rounded-full text-xs font-semibold">
-                                                    #{{ $tp['lote_id'] }}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-4 text-center">
-                                                <span class="bg-indigo-100 text-indigo-800 py-1 px-3 rounded-full text-xs font-bold">
-                                                    {{ $tp['cantidad_asignada'] }}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-4 text-right">
-                                                <span class="font-medium text-gray-700">Q{{ number_format($tp['precio_ingreso'], 2) }}</span>
-                                            </td>
-                                            <td class="py-3 px-4 text-right">
-                                                <span class="font-semibold text-indigo-600">Q{{ number_format($tp['precio_asignacion'], 2) }}</span>
-                                            </td>
-                                            <td class="py-3 px-4 text-center">
-                                                <span class="text-gray-600 text-xs">{{ $tp['fecha_ingreso'] }}</span>
-                                            </td>
-                                            <td class="py-3 px-4 text-left">
-                                                <span class="text-gray-700">{{ $tp['bodega'] }}</span>
-                                            </td>
-                                            <td class="py-3 px-4 text-center">
-                                                @if($tp['estado'] === 'Activo')
-                                                    <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                                        Activo
-                                                    </span>
-                                                @else
-                                                    <span class="bg-red-100 text-red-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                                        Inactivo
-                                                    </span>
-                                                @endif
-                                            </td>
-                                            <td class="py-3 px-4 text-left max-w-xs">
-                                                <span class="text-gray-600 text-xs line-clamp-2">{{ $tp['observaciones'] }}</span>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Resumen --}}
-                        <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-700 font-medium">Total de productos asignados:</span>
-                                <span class="text-2xl font-bold text-indigo-600">{{ count($tarjetaProductos) }}</span>
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-12">
-                            <div class="flex flex-col items-center gap-4">
-                                <div class="bg-gray-100 p-4 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-gray-600 font-medium text-lg">No hay productos asignados</p>
-                                    <p class="text-gray-500 text-sm mt-1">Esta tarjeta aún no tiene productos registrados</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                {{-- Footer --}}
-                <div class="bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-200">
-                    <button
-                        wire:click="cerrarProductosModal"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-all duration-200">
-                        Cerrar
-                    </button>
-                </div>
             </div>
         </div>
     @endif

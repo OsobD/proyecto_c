@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Models\Usuario;
 use App\Models\Persona;
 use App\Models\Puesto;
-use App\Models\Bitacora;
 use App\Models\TarjetaResponsabilidad;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -416,15 +415,6 @@ class GestionUsuarios extends Component
             ]);
 
             // 5. Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'crear',
-                'modelo' => 'Usuario',
-                'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario creado: {$this->nombre_usuario} para {$persona->nombres} {$persona->apellidos}",
-                'id_usuario' => auth()->id() ?? 1,
-                'created_at' => now(),
-            ]);
-
             DB::commit();
 
             session()->flash('message', 'Usuario creado exitosamente. Contraseña temporal generada.');
@@ -510,17 +500,6 @@ class GestionUsuarios extends Component
                 'id_puesto' => $this->puestoId,
                 'estado' => $this->estado,
             ]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'actualizar',
-                'modelo' => 'Usuario',
-                'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario actualizado: {$this->nombre_usuario}",
-                'id_usuario' => auth()->id() ?? 1,
-                'created_at' => now(),
-            ]);
-
             DB::commit();
 
             session()->flash('message', 'Usuario actualizado exitosamente.');
@@ -589,17 +568,6 @@ class GestionUsuarios extends Component
             $usuario->update([
                 'contrasena' => Hash::make($this->passwordGenerada),
             ]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'resetear_password',
-                'modelo' => 'Usuario',
-                'modelo_id' => $usuario->id,
-                'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario}",
-                'id_usuario' => auth()->id() ?? 1,
-                'created_at' => now(),
-            ]);
-
             DB::commit();
 
             session()->flash('message', 'Contraseña reseteada exitosamente.');
@@ -627,15 +595,6 @@ class GestionUsuarios extends Component
 
             // Registrar en bitácora
             $accion = $nuevoEstado ? 'activar' : 'desactivar';
-            Bitacora::create([
-                'accion' => $accion,
-                'modelo' => 'Usuario',
-                'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario {$accion}do: {$usuario->nombre_usuario}",
-                'id_usuario' => auth()->id() ?? 1,
-                'created_at' => now(),
-            ]);
-
             DB::commit();
 
             $mensaje = $nuevoEstado ? 'Usuario activado exitosamente.' : 'Usuario desactivado exitosamente.';

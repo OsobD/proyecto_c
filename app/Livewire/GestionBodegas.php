@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\Lote;
 use App\Models\Producto;
@@ -116,28 +115,12 @@ class GestionBodegas extends Component
                     'updated_by' => Auth::id(),
                 ]);
 
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Actualizar',
-                    'descripcion' => "Bodega actualizada: {$bodega->nombre}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
                 session()->flash('message', 'Bodega actualizada correctamente.');
             } else {
                 $bodega = Bodega::create([
                     'nombre' => $this->nombre,
                     'activo' => true,
                     'created_by' => Auth::id(),
-                ]);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Crear',
-                    'descripcion' => "Bodega creada: {$bodega->nombre}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
                 ]);
 
                 session()->flash('message', 'Bodega creada correctamente.');
@@ -185,14 +168,6 @@ class GestionBodegas extends Component
             $bodega->update([
                 'activo' => false,
                 'updated_by' => Auth::id(),
-            ]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'Desactivar',
-                'descripcion' => "Bodega desactivada: {$bodega->nombre}",
-                'id_usuario' => Auth::id(),
-                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Bodega desactivada correctamente.');
@@ -358,14 +333,6 @@ class GestionBodegas extends Component
                 'id_categoria' => $this->categoriaId,
                 'es_consumible' => $this->esConsumible,
                 'activo' => true,
-            ]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'Crear',
-                'descripcion' => "Producto creado: {$this->codigo} - {$this->descripcion}",
-                'id_usuario' => Auth::id(),
-                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Producto creado correctamente.');

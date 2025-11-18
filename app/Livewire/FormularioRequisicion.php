@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\ConsumiblePersona;
 use App\Models\DetalleSalida;
@@ -561,31 +560,6 @@ class FormularioRequisicion extends Component
                 $tarjeta->total += $totalTarjeta;
                 $tarjeta->saveQuietly();
             }
-
-            // Registrar en bitácora
-            $userName = auth()->check() && auth()->user() ? auth()->user()->name : 'Sistema';
-            $detalleRegistros = collect($registrosCreados)->map(fn($r) => "{$r['tipo']} #{$r['id']}")->join(', ');
-
-            Bitacora::create([
-                'accion' => 'crear',
-                'modelo' => 'Requisicion',
-                'modelo_id' => null,
-                'descripcion' => $userName . " creó Requisición desde bodega '{$this->selectedOrigen['nombre']}' hacia '{$this->selectedDestino['nombre']}'. Registros: {$detalleRegistros}",
-                'datos_anteriores' => null,
-                'datos_nuevos' => json_encode([
-                    'registros' => $registrosCreados,
-                    'bodega' => $this->selectedOrigen['nombre'],
-                    'persona' => $this->selectedDestino['nombre'],
-                    'total' => $this->subtotal,
-                    'correlativo' => $this->correlativo,
-                    'consumibles' => $productosConsumibles->count(),
-                    'no_consumibles' => $productosNoConsumibles->count(),
-                ]),
-                'id_usuario' => $userId,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'created_at' => now(),
-            ]);
 
             DB::commit();
 

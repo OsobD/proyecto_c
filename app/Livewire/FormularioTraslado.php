@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\DetalleTraslado;
 use App\Models\Lote;
@@ -618,18 +617,6 @@ class FormularioTraslado extends Component
                     $cantidadRestante -= $cantidadAUsar;
                 }
             }
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'id_usuario' => $usuario->id,
-                'accion' => 'Creación',
-                'modelo' => 'App\\Models\\Traslado',
-                'modelo_id' => $traslado->id,
-                'descripcion' => "Traslado creado: {$this->selectedOrigen['nombre']} → {$this->selectedDestino['nombre']} - Total: Q" . number_format($this->subtotal, 2),
-                'created_at' => now(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
 
             DB::commit();
 

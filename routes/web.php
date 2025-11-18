@@ -66,7 +66,6 @@ Route::middleware('auth')->group(function () {
     // Otras rutas
     Route::get('/usuarios', \App\Livewire\GestionUsuarios::class)->name('usuarios');
     Route::get('/proveedores', \App\Livewire\GestionProveedores::class)->name('proveedores');
-    Route::get('/bitacora', \App\Livewire\BitacoraSistema::class)->name('bitacora');
     Route::get('/reportes', \App\Livewire\GenerarReportes::class)->name('reportes');
     Route::get('/configuracion', \App\Livewire\ConfiguracionSistema::class)->name('configuracion');
 });

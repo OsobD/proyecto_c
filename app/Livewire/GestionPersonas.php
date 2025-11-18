@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Persona;
-use App\Models\Bitacora;
 use App\Models\TarjetaResponsabilidad;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -161,16 +160,6 @@ class GestionPersonas extends Component
                     'correo' => $this->correo,
                 ]);
 
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Actualizar',
-                    'modelo' => 'Persona',
-                    'modelo_id' => $persona->id,
-                    'descripcion' => "Persona actualizada: {$persona->nombres} {$persona->apellidos}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
                 $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' actualizada exitosamente.";
             } else {
                 // Crear persona
@@ -194,16 +183,6 @@ class GestionPersonas extends Component
                     'activo' => true,
                     'created_by' => null,
                     'updated_by' => null,
-                ]);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Crear',
-                    'modelo' => 'Persona',
-                    'modelo_id' => $persona->id,
-                    'descripcion' => "Persona creada: {$persona->nombres} {$persona->apellidos} (con tarjeta de responsabilidad)",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
                 ]);
 
                 $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente con tarjeta de responsabilidad.";
@@ -252,16 +231,6 @@ class GestionPersonas extends Component
             // Cambiar estado
             $nuevoEstado = !$persona->estado;
             $persona->update(['estado' => $nuevoEstado]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => $nuevoEstado ? 'Activar' : 'Desactivar',
-                'modelo' => 'Persona',
-                'modelo_id' => $persona->id,
-                'descripcion' => ($nuevoEstado ? 'Persona activada: ' : 'Persona desactivada: ') . "{$persona->nombres} {$persona->apellidos}",
-                'id_usuario' => Auth::id(),
-                'created_at' => now(),
-            ]);
 
             session()->flash('message', $nuevoEstado ? 'Persona activada correctamente.' : 'Persona desactivada correctamente.');
         } catch (\Exception $e) {

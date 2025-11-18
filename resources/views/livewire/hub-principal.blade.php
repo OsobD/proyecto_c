@@ -27,10 +27,6 @@
             <h3 class="text-lg font-semibold text-gray-800">Reportes</h3>
             <p class="text-sm text-gray-600 mt-1">Generar reportes</p>
         </a>
-        <a href="{{ route('bitacora') }}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon">
-            <h3 class="text-lg font-semibold text-gray-800">Bitácora</h3>
-            <p class="text-sm text-gray-600 mt-1">Ver bitácora del sistema</p>
-        </a>
         <a href="{{ route('configuracion') }}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon">
             <h3 class="text-lg font-semibold text-gray-800">Configuración</h3>
             <p class="text-sm text-gray-600 mt-1">Configuración del sistema</p>

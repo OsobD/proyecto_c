@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\Persona;
 use App\Models\TarjetaResponsabilidad;
-use App\Models\Bitacora;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
@@ -31,10 +30,8 @@ class GestionTarjetasResponsabilidad extends Component
     // Para mostrar la persona seleccionada en el modal
     public $personaSeleccionada = null;
 
-    // Para el modal de productos
-    public $showProductosModal = false;
-    public $tarjetaProductos = [];
-    public $tarjetaNombre = '';
+    // Control de expansión de productos por tarjeta
+    public $tarjetaIdProductosExpandido = null;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -62,7 +59,11 @@ class GestionTarjetasResponsabilidad extends Component
 
     public function render()
     {
-        $tarjetas = TarjetaResponsabilidad::with('persona')
+        $queryBuilder = TarjetaResponsabilidad::with([
+            'persona',
+            'tarjetasProducto.producto.categoria',
+            'tarjetasProducto.lote.bodega'
+        ])
             ->where('activo', true)
             ->whereHas('persona', function($query) {
                 $query->where('estado', true)
@@ -71,8 +72,9 @@ class GestionTarjetasResponsabilidad extends Component
                             ->orWhere('apellidos', 'like', '%' . $this->search . '%');
                       });
             })
-            ->orderBy('fecha_creacion', 'desc')
-            ->paginate(10);
+            ->orderBy('fecha_creacion', 'desc');
+
+        $tarjetas = $queryBuilder->paginate(10);
 
         return view('livewire.gestion-tarjetas-responsabilidad', [
             'tarjetas' => $tarjetas
@@ -123,17 +125,6 @@ class GestionTarjetasResponsabilidad extends Component
                 ]);
 
                 $persona = Persona::find($tarjeta->id_persona);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Actualizar',
-                    'modelo' => 'TarjetaResponsabilidad',
-                    'modelo_id' => $tarjeta->id,
-                    'descripcion' => "Tarjeta de responsabilidad actualizada para: {$persona->nombres} {$persona->apellidos}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
                 $mensaje = 'Tarjeta de responsabilidad actualizada correctamente.';
             } else {
                 // Primero crear la persona
@@ -153,17 +144,6 @@ class GestionTarjetasResponsabilidad extends Component
                     'activo' => true,
                     'created_by' => Auth::id(),
                 ]);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Crear',
-                    'modelo' => 'TarjetaResponsabilidad',
-                    'modelo_id' => $tarjeta->id,
-                    'descripcion' => "Tarjeta y persona creadas: {$persona->nombres} {$persona->apellidos}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
                 $mensaje = 'Persona y tarjeta de responsabilidad creadas correctamente.';
             }
 
@@ -230,15 +210,6 @@ class GestionTarjetasResponsabilidad extends Component
                 'activo' => false,
                 'updated_by' => Auth::id(),
             ]);
-
-            // Registrar en bitácora
-            Bitacora::create([
-                'accion' => 'Desactivar',
-                'descripcion' => "Tarjeta de responsabilidad desactivada para: {$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}",
-                'id_usuario' => Auth::id(),
-                'created_at' => now(),
-            ]);
-
             session()->flash('message', 'Tarjeta de responsabilidad desactivada correctamente.');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al desactivar la tarjeta: ' . $e->getMessage());
@@ -265,51 +236,10 @@ class GestionTarjetasResponsabilidad extends Component
     }
 
     /**
-     * Muestra el modal con los productos asignados a una tarjeta
+     * Expande/colapsa los productos de una tarjeta
      */
-    public function verProductos($tarjetaId)
+    public function toggleProductos($id)
     {
-        $tarjeta = TarjetaResponsabilidad::with(['persona', 'tarjetasProducto.producto', 'tarjetasProducto.lote.bodega'])
-            ->findOrFail($tarjetaId);
-
-        $this->tarjetaNombre = "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}";
-        $this->tarjetaProductos = $tarjeta->tarjetasProducto->map(function($tp) {
-            $lote = $tp->lote;
-            $producto = $tp->producto;
-
-            // Calcular la cantidad asignada dividiendo el precio de asignación entre el precio de ingreso
-            $cantidadAsignada = 0;
-            if ($lote && $lote->precio_ingreso > 0) {
-                $cantidadAsignada = round($tp->precio_asignacion / $lote->precio_ingreso);
-            }
-
-            return [
-                'id' => $tp->id,
-                'producto_codigo' => $producto ? $producto->id : 'N/A',
-                'producto_nombre' => $producto ? $producto->descripcion : 'N/A',
-                'lote_id' => $lote ? $lote->id : 'N/A',
-                'cantidad_asignada' => $cantidadAsignada,
-                'cantidad_disponible' => $lote ? $lote->cantidad : 0,
-                'cantidad_inicial' => $lote ? $lote->cantidad_inicial : 0,
-                'precio_ingreso' => $lote ? $lote->precio_ingreso : 0,
-                'precio_asignacion' => $tp->precio_asignacion,
-                'fecha_ingreso' => $lote && $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y H:i') : 'N/A',
-                'bodega' => $lote && $lote->bodega ? $lote->bodega->nombre : 'N/A',
-                'estado' => $lote ? ($lote->estado ? 'Activo' : 'Inactivo') : 'N/A',
-                'observaciones' => $lote ? ($lote->observaciones ?? '-') : '-',
-            ];
-        })->toArray();
-
-        $this->showProductosModal = true;
-    }
-
-    /**
-     * Cierra el modal de productos
-     */
-    public function cerrarProductosModal()
-    {
-        $this->showProductosModal = false;
-        $this->tarjetaProductos = [];
-        $this->tarjetaNombre = '';
+        $this->tarjetaIdProductosExpandido = $this->tarjetaIdProductosExpandido === $id ? null : $id;
     }
 }

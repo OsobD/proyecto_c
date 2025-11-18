@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Configuracion;
-use App\Models\Bitacora;
 use App\Models\Permiso;
 use App\Models\Rol;
 
@@ -20,29 +19,20 @@ class RolesPermisosSeeder extends Seeder
         $configGeneral = Configuracion::create(['nombre' => 'Configuración General']);
         $configInventario = Configuracion::create(['nombre' => 'Configuración Inventario']);
 
-        // NOTA: Bitácoras comentadas porque el modelo extendido requiere campos adicionales
-        // que no están en el schema base SQL. Se implementarán cuando se defina
-        // la funcionalidad completa de auditoría.
-        // $bitacoraGeneral = Bitacora::create();
-        // $bitacoraInventario = Bitacora::create();
-
-        // Crear permisos básicos (sin bitácoras por ahora)
+        // Crear permisos básicos
         $permisoAdmin = Permiso::create([
             'nombre' => 'Administrador Total',
             'id_configuracion' => $configGeneral->id,
-            'id_bitacora' => null, // Será implementado cuando se active auditoría
         ]);
 
         $permisoInventario = Permiso::create([
             'nombre' => 'Gestión de Inventario',
             'id_configuracion' => $configInventario->id,
-            'id_bitacora' => null, // Será implementado cuando se active auditoría
         ]);
 
         $permisoOperador = Permiso::create([
             'nombre' => 'Operador Básico',
             'id_configuracion' => $configGeneral->id,
-            'id_bitacora' => null, // Será implementado cuando se active auditoría
         ]);
 
         // Crear roles básicos usando relación many-to-many correcta

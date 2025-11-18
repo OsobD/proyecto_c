@@ -192,15 +192,6 @@ return new class extends Migration
             $table->index('id_tarjeta');
         });
 
-        // 18. BITACORA - MEDIUM: Audit queries
-        // NOTA: bitacora ya tiene índices en accion, created_at, [modelo, modelo_id] desde add_audit_fields
-        // Solo agregamos índices adicionales que no existen
-        Schema::table('bitacora', function (Blueprint $table) {
-            $table->index('id_usuario');
-            // Índice compuesto para consultas de auditoría por usuario y fecha
-            $table->index(['id_usuario', 'created_at'], 'idx_bitacora_usuario_fecha');
-        });
-
         // 19. KARDEX - MEDIUM: Transaction tracking
         // NOTA: kardex solo tiene: id, timestamp, tipo_movimiento, id_detalle
         Schema::table('kardex', function (Blueprint $table) {
@@ -233,11 +224,6 @@ return new class extends Migration
             $table->dropIndex(['timestamp']);
             $table->dropIndex(['tipo_movimiento']);
             $table->dropIndex(['id_detalle']);
-        });
-
-        Schema::table('bitacora', function (Blueprint $table) {
-            $table->dropIndex(['id_usuario']);
-            $table->dropIndex('idx_bitacora_usuario_fecha');
         });
 
         Schema::table('entrada', function (Blueprint $table) {

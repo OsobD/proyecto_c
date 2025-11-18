@@ -142,7 +142,6 @@
                             </a>
                         </div>
                     </div>
-                    <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bitácora</a>
                     <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Configuración</a>
                 </div>
 
