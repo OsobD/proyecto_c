@@ -50,10 +50,10 @@
                                 @if($tarjeta->persona->correo || $tarjeta->persona->telefono)
                                     <div class="text-xs text-gray-500 mt-1">
                                         @if($tarjeta->persona->correo)
-                                            <div>✉ {{ $tarjeta->persona->correo }}</div>
+                                            <div>{{ $tarjeta->persona->correo }}</div>
                                         @endif
                                         @if($tarjeta->persona->telefono)
-                                            <div>☎ {{ $tarjeta->persona->telefono }}</div>
+                                            <div>{{ $tarjeta->persona->telefono }}</div>
                                         @endif
                                     </div>
                                 @endif
@@ -68,13 +68,12 @@
                                     {{-- Botón para expandir/colapsar productos --}}
                                     <button
                                         wire:click="toggleProductos({{ $tarjeta->id }})"
-                                        class="bg-gray-500 hover:bg-gray-700 text-white p-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 {{ $tarjetaIdProductosExpandido === $tarjeta->id ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
                                         title="Ver productos asignados">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-200 {{ $tarjetaIdProductosExpandido === $tarjeta->id ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
-
                                     <x-action-button
                                         type="edit"
                                         wire:click="edit({{ $tarjeta->id }})"
