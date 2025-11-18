@@ -41,24 +41,24 @@
         </button>
     </div>
 
-    {{-- Barra de búsqueda --}}
-    <div class="mb-4">
-        <div class="relative w-full md:w-1/2">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <input
-                type="text"
-                wire:model.live="searchProveedor"
-                placeholder="Buscar por nombre, NIT o régimen tributario..."
-                class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
-        </div>
-    </div>
-
     {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
+        {{-- Barra de búsqueda --}}
+        <div class="mb-6">
+            <div class="relative w-full md:w-1/2">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    wire:model.live="searchProveedor"
+                    placeholder="Buscar por nombre, NIT o régimen tributario..."
+                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+            </div>
+        </div>
+
         {{-- Tabla de listado de proveedores --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
