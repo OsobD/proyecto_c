@@ -122,8 +122,26 @@
                         </div>
                     </div>
 
-                    {{-- Enlace directo a Bodegas --}}
-                    <a href="{{ route('bodegas') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bodegas') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bodegas</a>
+                    {{-- Dropdown de Almacenes (Bodegas y Puestos) --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['bodegas', 'puestos']) ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }} flex items-center">
+                            Almacenes
+                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-cloak
+                             x-transition
+                             class="absolute left-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                            <a href="{{ route('bodegas') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('bodegas') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Bodegas
+                            </a>
+                            <a href="{{ route('puestos') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 {{ request()->routeIs('puestos') ? 'bg-gray-100 font-semibold' : '' }}">
+                                Puestos
+                            </a>
+                        </div>
+                    </div>
                     <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Bitácora</a>
                     <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200' }}">Configuración</a>
                 </div>

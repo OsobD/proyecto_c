@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
 
     // Rutas de Bodegas y Responsabilidad (ahora bajo /almacenes)
     Route::get('/almacenes/bodegas', \App\Livewire\GestionBodegas::class)->name('bodegas');
+    Route::get('/almacenes/puestos', \App\Livewire\GestionPuestos::class)->name('puestos');
     Route::get('/personas', \App\Livewire\GestionPersonas::class)->name('personas');
     Route::get('/almacenes/tarjetas', \App\Livewire\GestionTarjetasResponsabilidad::class)->name('tarjetas.responsabilidad');
 

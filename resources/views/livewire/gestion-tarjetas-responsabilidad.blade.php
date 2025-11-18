@@ -59,7 +59,7 @@
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($tarjeta->fecha_creacion)->format('d/m/Y H:i') }}</td>
-                            <td class="py-3 px-6 text-left">${{ number_format($tarjeta->total, 2) }}</td>
+                            <td class="py-3 px-6 text-left">Q{{ number_format($tarjeta->total, 2) }}</td>
                             <td class="py-3 px-6 text-left">
                                 <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">Activa</span>
                             </td>
@@ -277,7 +277,6 @@
                                         <th class="py-3 px-4 text-left">Producto</th>
                                         <th class="py-3 px-4 text-center">Lote ID</th>
                                         <th class="py-3 px-4 text-center">Cant. Asignada</th>
-                                        <th class="py-3 px-4 text-center">Cant. Disponible (Lote)</th>
                                         <th class="py-3 px-4 text-right">Precio Unitario</th>
                                         <th class="py-3 px-4 text-right">Total Asignado</th>
                                         <th class="py-3 px-4 text-center">Fecha Ingreso</th>
@@ -304,10 +303,6 @@
                                                 <span class="bg-indigo-100 text-indigo-800 py-1 px-3 rounded-full text-xs font-bold">
                                                     {{ $tp['cantidad_asignada'] }}
                                                 </span>
-                                            </td>
-                                            <td class="py-3 px-4 text-center">
-                                                <span class="text-gray-600">{{ $tp['cantidad_disponible'] }}</span>
-                                                <span class="text-gray-400 text-xs">/ {{ $tp['cantidad_inicial'] }}</span>
                                             </td>
                                             <td class="py-3 px-4 text-right">
                                                 <span class="font-medium text-gray-700">Q{{ number_format($tp['precio_ingreso'], 2) }}</span>
