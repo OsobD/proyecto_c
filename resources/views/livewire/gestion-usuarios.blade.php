@@ -239,194 +239,66 @@
             </div>
 
             <form wire:submit.prevent="guardarUsuario">
-                {{-- Sección: Datos de la Persona --}}
+                {{-- Sección: Selección de Persona --}}
                 <div class="mb-6">
-                    <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
-                        <h4 class="text-lg font-semibold text-gray-800">Información Personal</h4>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Información Personal</h4>
 
-                        {{-- Toggle para cambiar modo --}}
-                        <button
-                            type="button"
-                            wire:click="toggleModoCreacionPersona"
-                            class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                            @if($modoCreacionPersona)
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                </svg>
-                                Seleccionar persona existente
-                            @else
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                                Crear nueva persona
-                            @endif
-                        </button>
-                    </div>
-
-                    @if($modoCreacionPersona)
-                        {{-- MODO: Crear nueva persona --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {{-- Nombres --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombres *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Persona</label>
+                    <div class="relative">
+                        @if($selectedPersona)
+                            <div wire:click="clearPersona" class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-colors @error('personaId') border-red-500 ring-2 ring-red-200 @enderror">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="font-medium">{{ $selectedPersona['nombre_completo'] }}</span>
+                                    <span class="text-xs text-gray-500">DPI: {{ $selectedPersona['dpi'] }}</span>
+                                </div>
+                                <span class="text-gray-400 text-xl">⟲</span>
+                            </div>
+                        @else
+                            <div class="relative" x-data="{ open: @entangle('showPersonaDropdown').live }" @click.outside="open = false">
                                 <input
                                     type="text"
-                                    wire:model="nombres"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nombres') border-red-500 ring-2 ring-red-200 @enderror"
-                                    placeholder="Ej: Juan Carlos">
-                                @error('nombres')
-                                    <p class="text-red-500 text-xs mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            {{-- Apellidos --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos *</label>
-                                <input
-                                    type="text"
-                                    wire:model="apellidos"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('apellidos') border-red-500 ring-2 ring-red-200 @enderror"
-                                    placeholder="Ej: Pérez García">
-                                @error('apellidos')
-                                    <p class="text-red-500 text-xs mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            {{-- DPI --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">DPI *</label>
-                                <input
-                                    type="text"
-                                    wire:model="dpi"
-                                    maxlength="13"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('dpi') border-red-500 ring-2 ring-red-200 @enderror"
-                                    placeholder="Ej: 1234567890101">
-                                @error('dpi')
-                                    <p class="text-red-500 text-xs mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            {{-- Teléfono --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                                <input
-                                    type="text"
-                                    wire:model="telefono"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('telefono') border-red-500 ring-2 ring-red-200 @enderror"
-                                    placeholder="Ej: 5555-5555">
-                                @error('telefono')
-                                    <p class="text-red-500 text-xs mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            {{-- Correo --}}
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-                                <input
-                                    type="email"
-                                    wire:model="correo"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('correo') border-red-500 ring-2 ring-red-200 @enderror"
-                                    placeholder="Ej: usuario@eemq.com">
-                                @error('correo')
-                                    <p class="text-red-500 text-xs mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-                        </div>
-                    @else
-                        {{-- MODO: Seleccionar persona existente --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Persona *</label>
-                            <div class="relative">
-                                @if($selectedPersona)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white @error('personaId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <div>
-                                            <span class="font-medium">{{ $selectedPersona['nombre_completo'] }}</span>
-                                            <span class="text-sm text-gray-500 ml-2">(DPI: {{ $selectedPersona['dpi'] }})</span>
-                                        </div>
-                                        <button type="button" wire:click.prevent="clearPersona" class="text-gray-400 hover:text-gray-600 text-xl">
-                                            ×
+                                    wire:model.live.debounce.300ms="searchPersona"
+                                    @click="open = true"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('personaId') border-red-500 ring-2 ring-red-200 @enderror"
+                                    placeholder="Buscar por nombre, apellidos o DPI...">
+                                <div x-show="open"
+                                     x-transition
+                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                    <ul>
+                                        @forelse ($this->personaResults as $persona)
+                                            <li wire:click.prevent="selectPersona({{ $persona->id }})"
+                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
+                                                <div class="font-medium">{{ $persona->nombres }} {{ $persona->apellidos }}</div>
+                                                <div class="text-xs text-gray-500">DPI: {{ $persona->dpi }}</div>
+                                            </li>
+                                        @empty
+                                            <li class="px-3 py-2 text-sm text-gray-500 text-center">
+                                                No se encontraron personas
+                                            </li>
+                                        @endforelse
+                                    </ul>
+                                    {{-- Botón para crear nueva persona --}}
+                                    <div class="border-t border-gray-200">
+                                        <button
+                                            type="button"
+                                            wire:click="abrirModalPersona"
+                                            class="w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2">
+                                            <span>+</span>
+                                            <span>Crear nueva persona</span>
                                         </button>
-                                    </div>
-                                @else
-                                    <div class="relative" x-data="{ open: @entangle('showPersonaDropdown').live }" @click.outside="open = false">
-                                        <input
-                                            type="text"
-                                            wire:model.live.debounce.300ms="searchPersona"
-                                            @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('personaId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar por nombre, apellidos o DPI...">
-                                        <div x-show="open"
-                                             x-transition
-                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
-                                            <ul>
-                                                @forelse ($this->personaResults as $persona)
-                                                    <li wire:click.prevent="selectPersona({{ $persona->id }})"
-                                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100">
-                                                        <div class="font-medium">{{ $persona->nombres }} {{ $persona->apellidos }}</div>
-                                                        <div class="text-xs text-gray-500">DPI: {{ $persona->dpi }}</div>
-                                                    </li>
-                                                @empty
-                                                    <li class="px-3 py-2 text-sm text-gray-500 text-center">
-                                                        No se encontraron personas disponibles
-                                                    </li>
-                                                @endforelse
-                                            </ul>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                            @error('personaId')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-
-                            {{-- Información adicional --}}
-                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                <div class="flex items-start gap-2">
-                                    <svg class="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-blue-800 font-medium">
-                                            Solo se muestran personas activas sin usuario asignado
-                                        </p>
-                                        <p class="text-xs text-blue-700 mt-1">
-                                            Si no encuentra la persona, puede crear una nueva haciendo clic en el botón superior derecho.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
+                    @error('personaId')
+                        <p class="text-red-500 text-xs mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 {{-- Sección: Datos de Usuario --}}
@@ -802,6 +674,128 @@
                     class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
                     ✓ Entendido
                 </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Anidado: Crear Nueva Persona --}}
+    <div x-data="{
+            show: @entangle('showModalPersona').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[60] flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="cerrarModalPersona"
+         wire:ignore.self>
+        <div class="relative border w-full max-w-lg shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="p-8 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">Crear Nueva Persona</h3>
+                    <button wire:click="cerrarModalPersona" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="guardarPersonaNueva">
+                    <div class="grid grid-cols-1 gap-4">
+                        {{-- Nombres --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombres *</label>
+                            <input
+                                type="text"
+                                wire:model="nombresNuevaPersona"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nombresNuevaPersona') border-red-500 ring-2 ring-red-200 @enderror"
+                                placeholder="Ej: Juan Carlos">
+                            @error('nombresNuevaPersona')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Apellidos --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos *</label>
+                            <input
+                                type="text"
+                                wire:model="apellidosNuevaPersona"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('apellidosNuevaPersona') border-red-500 ring-2 ring-red-200 @enderror"
+                                placeholder="Ej: Pérez García">
+                            @error('apellidosNuevaPersona')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- DPI --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">DPI *</label>
+                            <input
+                                type="text"
+                                wire:model="dpiNuevaPersona"
+                                maxlength="13"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('dpiNuevaPersona') border-red-500 ring-2 ring-red-200 @enderror"
+                                placeholder="Ej: 1234567890101">
+                            @error('dpiNuevaPersona')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Teléfono --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                            <input
+                                type="text"
+                                wire:model="telefonoNuevaPersona"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('telefonoNuevaPersona') border-red-500 ring-2 ring-red-200 @enderror"
+                                placeholder="Ej: 5555-5555">
+                            @error('telefonoNuevaPersona')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Correo --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                            <input
+                                type="email"
+                                wire:model="correoNuevaPersona"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('correoNuevaPersona') border-red-500 ring-2 ring-red-200 @enderror"
+                                placeholder="Ej: usuario@eemq.com">
+                            @error('correoNuevaPersona')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Botones --}}
+                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                        <button
+                            type="button"
+                            wire:click="cerrarModalPersona"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200">
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            wire:loading.attr="disabled"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50">
+                            <span wire:loading.remove wire:target="guardarPersonaNueva">✓ Crear Persona</span>
+                            <span wire:loading wire:target="guardarPersonaNueva" class="flex items-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Creando...
+                            </span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
