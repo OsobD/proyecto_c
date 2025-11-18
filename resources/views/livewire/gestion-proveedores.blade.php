@@ -41,17 +41,24 @@
         </button>
     </div>
 
-    {{-- Barra de búsqueda --}}
-    <div class="mb-4">
-        <input
-            type="text"
-            wire:model.live="searchProveedor"
-            placeholder="Buscar por nombre, NIT o régimen tributario..."
-            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-    </div>
-
     {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
+        {{-- Barra de búsqueda --}}
+        <div class="mb-6">
+            <div class="relative w-full md:w-1/2">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    wire:model.live="searchProveedor"
+                    placeholder="Buscar por nombre, NIT o régimen tributario..."
+                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+            </div>
+        </div>
+
         {{-- Tabla de listado de proveedores --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
@@ -86,29 +93,22 @@
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
                                     {{-- Editar --}}
-                                    <button
+                                    <x-action-button
+                                        type="edit"
                                         wire:click="editarProveedor({{ $proveedor->id }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-md bg-blue-100 hover:bg-blue-200 text-blue-600"
-                                        title="Editar proveedor">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
-                                        </svg>
-                                    </button>
+                                        title="Editar proveedor" />
                                     {{-- Toggle Estado --}}
-                                    <button
-                                        wire:click="toggleEstado({{ $proveedor->id }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-md {{ $proveedor->activo ? 'bg-red-100 hover:bg-red-200 text-red-600' : 'bg-green-100 hover:bg-green-200 text-green-600' }}"
-                                        title="{{ $proveedor->activo ? 'Desactivar' : 'Activar' }} proveedor">
-                                        @if ($proveedor->activo)
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        @endif
-                                    </button>
+                                    @if ($proveedor->activo)
+                                        <x-action-button
+                                            type="delete"
+                                            wire:click="toggleEstado({{ $proveedor->id }})"
+                                            title="Desactivar proveedor" />
+                                    @else
+                                        <x-action-button
+                                            type="activate"
+                                            wire:click="toggleEstado({{ $proveedor->id }})"
+                                            title="Activar proveedor" />
+                                    @endif
                                 </div>
                             </td>
                         </tr>

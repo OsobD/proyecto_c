@@ -143,7 +143,7 @@
              class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
              :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
              wire:click.self="toggleLotes('')">
-            <div class="relative p-6 border w-full max-w-6xl shadow-lg rounded-lg bg-white max-h-[90vh] overflow-hidden"
+            <div class="relative p-6 border w-full max-w-4xl shadow-lg rounded-lg bg-white max-h-[90vh] overflow-hidden"
                  :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
                  @click.stop>
                 <div class="flex justify-between items-center mb-4">
@@ -159,15 +159,7 @@
                     </button>
                 </div>
 
-                <div class="mb-4">
-                    <button
-                        wire:click="abrirModalCrearLote('{{ $productoIdLotesExpandido }}')"
-                        class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg">
-                        + Crear Nuevo Lote
-                    </button>
-                </div>
-
-                <div class="overflow-y-auto max-h-[calc(90vh-180px)]">
+                <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
                     @if($productoSeleccionado && $productoSeleccionado->lotes->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full bg-white">
@@ -463,137 +455,6 @@
                     <button
                         type="button"
                         wire:click="closeSubModalCategoria"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
-                        Cancelar
-                    </button>
-                    <button
-                        type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
-                        Crear
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Modal Crear Lote --}}
-    <div x-data="{
-            show: @entangle('showModalLotes').live,
-            animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
-         style="z-index: 9999 !important;"
-         :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
-         wire:click.self="closeModalLotes"
-         wire:ignore.self>
-        <div class="relative p-6 border w-full max-w-2xl shadow-lg rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-900">Crear Lote</h3>
-                <button wire:click="closeModalLotes" class="text-gray-400 hover:text-gray-600">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <form wire:submit.prevent="guardarLote">
-                <div class="grid grid-cols-2 gap-4">
-                    {{-- Cantidad --}}
-                    <div class="mb-4">
-                        <label for="loteCantidad" class="block text-sm font-medium text-gray-700 mb-2">
-                            Cantidad
-                        </label>
-                        <input
-                            type="number"
-                            id="loteCantidad"
-                            wire:model="loteCantidad"
-                            min="0"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('loteCantidad') border-red-500 @enderror"
-                            placeholder="0">
-                        @error('loteCantidad')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Precio de Ingreso --}}
-                    <div class="mb-4">
-                        <label for="lotePrecioIngreso" class="block text-sm font-medium text-gray-700 mb-2">
-                            Precio de Ingreso
-                        </label>
-                        <input
-                            type="number"
-                            id="lotePrecioIngreso"
-                            wire:model="lotePrecioIngreso"
-                            step="0.01"
-                            min="0"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('lotePrecioIngreso') border-red-500 @enderror"
-                            placeholder="0.00">
-                        @error('lotePrecioIngreso')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Fecha de Ingreso --}}
-                    <div class="mb-4">
-                        <label for="loteFechaIngreso" class="block text-sm font-medium text-gray-700 mb-2">
-                            Fecha de Ingreso
-                        </label>
-                        <input
-                            type="date"
-                            id="loteFechaIngreso"
-                            wire:model="loteFechaIngreso"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('loteFechaIngreso') border-red-500 @enderror">
-                        @error('loteFechaIngreso')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Bodega --}}
-                    <div class="mb-4">
-                        <label for="loteBodegaId" class="block text-sm font-medium text-gray-700 mb-2">
-                            Bodega
-                        </label>
-                        <select
-                            id="loteBodegaId"
-                            wire:model="loteBodegaId"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('loteBodegaId') border-red-500 @enderror">
-                            <option value="">Seleccione una bodega</option>
-                            @foreach($bodegas as $bodega)
-                                <option value="{{ $bodega->id }}">{{ $bodega->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('loteBodegaId')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                {{-- Observaciones --}}
-                <div class="mb-6">
-                    <label for="loteObservaciones" class="block text-sm font-medium text-gray-700 mb-2">
-                        Observaciones
-                    </label>
-                    <textarea
-                        id="loteObservaciones"
-                        wire:model="loteObservaciones"
-                        rows="3"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('loteObservaciones') border-red-500 @enderror"
-                        placeholder="Ingrese observaciones adicionales (opcional)"></textarea>
-                    @error('loteObservaciones')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="flex justify-between mt-6">
-                    <button
-                        type="button"
-                        wire:click="closeModalLotes"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
                         Cancelar
                     </button>
