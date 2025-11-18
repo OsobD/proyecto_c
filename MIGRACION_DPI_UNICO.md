@@ -3,8 +3,46 @@
 ## Descripción
 Esta migración agrega un índice único al campo `dpi` en la tabla `persona` para garantizar que no puedan existir dos personas con el mismo número de Documento Personal de Identificación (DPI).
 
-## Archivo de Migración
-`database/migrations/2025_11_18_065754_add_unique_index_to_dpi_in_persona_table.php`
+## Archivos Relacionados
+- **Migración:** `database/migrations/2025_11_18_065754_add_unique_index_to_dpi_in_persona_table.php`
+- **Script de Limpieza:** `limpiar_dpis_duplicados.php`
+
+## 🚀 MÉTODO RÁPIDO (Recomendado)
+
+### Paso 1: Limpiar Duplicados Automáticamente
+
+Ejecuta el script de limpieza que detecta y elimina automáticamente los DPIs duplicados:
+
+```bash
+php limpiar_dpis_duplicados.php
+```
+
+**El script:**
+- ✅ Busca personas con DPIs duplicados
+- ✅ Mantiene el registro más antiguo (menor ID)
+- ✅ Elimina los registros duplicados más recientes
+- ✅ Maneja relaciones (usuarios, tarjetas de responsabilidad)
+- ✅ Muestra un resumen detallado de lo que hace
+
+**Salida esperada:**
+```
+=== LIMPIEZA DE DPIs DUPLICADOS ===
+
+Buscando DPIs duplicados...
+✅ No se encontraron DPIs duplicados. La base de datos está limpia.
+
+Puedes ejecutar la migración con: php artisan migrate
+```
+
+### Paso 2: Ejecutar la Migración
+
+```bash
+php artisan migrate
+```
+
+---
+
+## 📋 MÉTODO MANUAL (Si prefieres hacerlo manualmente)
 
 ## Antes de Ejecutar
 
