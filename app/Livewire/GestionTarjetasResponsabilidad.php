@@ -28,6 +28,14 @@ class GestionTarjetasResponsabilidad extends Component
     public $apellidos;
     public $dpi;
 
+    // Para mostrar la persona seleccionada en el modal
+    public $personaSeleccionada = null;
+
+    // Para el modal de productos
+    public $showProductosModal = false;
+    public $tarjetaProductos = [];
+    public $tarjetaNombre = '';
+
     protected $paginationTheme = 'bootstrap';
 
     protected $rules = [
@@ -89,6 +97,9 @@ class GestionTarjetasResponsabilidad extends Component
         $this->nombres = $tarjeta->persona->nombres;
         $this->apellidos = $tarjeta->persona->apellidos;
         $this->dpi = $tarjeta->persona->dpi;
+
+        // Establecer la persona seleccionada para mostrar en el modal
+        $this->personaSeleccionada = $tarjeta->persona;
 
         $this->editMode = true;
         $this->showModal = true;
@@ -249,6 +260,39 @@ class GestionTarjetasResponsabilidad extends Component
         $this->dpi = '';
         $this->fecha_creacion = '';
         $this->total = 0;
+        $this->personaSeleccionada = null;
         $this->resetErrorBag();
+    }
+
+    /**
+     * Muestra el modal con los productos asignados a una tarjeta
+     */
+    public function verProductos($tarjetaId)
+    {
+        $tarjeta = TarjetaResponsabilidad::with(['persona', 'tarjetasProducto.producto'])
+            ->findOrFail($tarjetaId);
+
+        $this->tarjetaNombre = "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}";
+        $this->tarjetaProductos = $tarjeta->tarjetasProducto->map(function($tp) {
+            return [
+                'id' => $tp->id,
+                'producto' => $tp->producto->nombre,
+                'cantidad' => $tp->cantidad,
+                'fecha_asignacion' => $tp->fecha_asignacion ? \Carbon\Carbon::parse($tp->fecha_asignacion)->format('d/m/Y') : 'N/A',
+                'estado' => $tp->estado,
+            ];
+        })->toArray();
+
+        $this->showProductosModal = true;
+    }
+
+    /**
+     * Cierra el modal de productos
+     */
+    public function cerrarProductosModal()
+    {
+        $this->showProductosModal = false;
+        $this->tarjetaProductos = [];
+        $this->tarjetaNombre = '';
     }
 }

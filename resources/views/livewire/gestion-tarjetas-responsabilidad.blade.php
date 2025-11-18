@@ -65,6 +65,16 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
+                                    {{-- Botón para ver productos --}}
+                                    <button
+                                        wire:click="verProductos({{ $tarjeta->id }})"
+                                        class="bg-purple-500 hover:bg-purple-700 text-white p-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                                        title="Ver productos asignados">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                    </button>
+
                                     <x-action-button
                                         type="edit"
                                         wire:click="edit({{ $tarjeta->id }})"
@@ -231,6 +241,116 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal: Ver Productos Asignados --}}
+    @if($showProductosModal)
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 z-[70] flex items-center justify-center"
+             x-data
+             @click.self="$wire.cerrarProductosModal()">
+            <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" @click.stop>
+                {{-- Header del Modal --}}
+                <div class="bg-gradient-to-r from-purple-600 to-purple-800 px-6 py-4 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-white/20 p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Productos Asignados</h3>
+                            <p class="text-purple-200 text-sm">{{ $tarjetaNombre }}</p>
+                        </div>
+                    </div>
+                    <button wire:click="cerrarProductosModal" class="text-white hover:text-purple-200 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Contenido del Modal --}}
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
+                    @if(count($tarjetaProductos) > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white">
+                                <thead class="bg-purple-100 text-purple-800 uppercase text-sm leading-normal">
+                                    <tr>
+                                        <th class="py-3 px-6 text-left">ID</th>
+                                        <th class="py-3 px-6 text-left">Producto</th>
+                                        <th class="py-3 px-6 text-center">Cantidad</th>
+                                        <th class="py-3 px-6 text-center">Fecha Asignación</th>
+                                        <th class="py-3 px-6 text-center">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-600 text-sm font-light">
+                                    @foreach($tarjetaProductos as $tp)
+                                        <tr class="border-b border-gray-200 hover:bg-purple-50 transition-colors">
+                                            <td class="py-3 px-6 text-left whitespace-nowrap">
+                                                <span class="font-semibold text-gray-800">#{{ $tp['id'] }}</span>
+                                            </td>
+                                            <td class="py-3 px-6 text-left">
+                                                <span class="font-medium">{{ $tp['producto'] }}</span>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                <span class="bg-purple-100 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                                    {{ $tp['cantidad'] }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                {{ $tp['fecha_asignacion'] }}
+                                            </td>
+                                            <td class="py-3 px-6 text-center">
+                                                @if($tp['estado'])
+                                                    <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                                        Activo
+                                                    </span>
+                                                @else
+                                                    <span class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                                        Inactivo
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Resumen --}}
+                        <div class="mt-6 bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-700 font-medium">Total de productos asignados:</span>
+                                <span class="text-2xl font-bold text-purple-600">{{ count($tarjetaProductos) }}</span>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-12">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="bg-purple-100 p-4 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 font-medium text-lg">No hay productos asignados</p>
+                                    <p class="text-gray-500 text-sm mt-1">Esta tarjeta aún no tiene productos registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Footer --}}
+                <div class="bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-200">
+                    <button
+                        wire:click="cerrarProductosModal"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+                        Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     @endif
