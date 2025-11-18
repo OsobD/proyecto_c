@@ -58,10 +58,10 @@
                                  x-transition
                                  class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                 <ul>
-                                    @foreach (array_slice($this->filterPuestoResults, 0, 6) as $rol)
-                                        <li wire:click.prevent="selectFilterPuesto({{ $rol['id'] }})"
+                                    @foreach (array_slice($this->filterPuestoResults, 0, 6) as $puesto)
+                                        <li wire:click.prevent="selectFilterPuesto({{ $puesto['id'] }})"
                                             class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                            {{ $rol['nombre'] }}
+                                            {{ $puesto['nombre'] }}
                                         </li>
                                     @endforeach
                                 </ul>
@@ -324,9 +324,9 @@
                             @enderror
                         </div>
 
-                        {{-- Rol --}}
+                        {{-- Puesto --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
                             <div class="relative">
                                 @if($selectedPuesto)
                                     <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
@@ -347,10 +347,10 @@
                                              x-transition
                                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                             <ul>
-                                                @foreach (array_slice($this->puestoResults, 0, 6) as $rol)
-                                                    <li wire:click.prevent="selectPuesto({{ $rol['id'] }})"
+                                                @foreach (array_slice($this->puestoResults, 0, 6) as $puesto)
+                                                    <li wire:click.prevent="selectPuesto({{ $puesto['id'] }})"
                                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                        {{ $rol['nombre'] }}
+                                                        {{ $puesto['nombre'] }}
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -522,14 +522,14 @@
                     </div>
                 </div>
 
-                {{-- Sección: Rol y Estado --}}
+                {{-- Sección: Puesto y Estado --}}
                 <div class="mb-6">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Configuración</h4>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Rol --}}
+                        {{-- Puesto --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
                             <div class="relative">
                                 @if($selectedPuesto)
                                     <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
@@ -550,10 +550,10 @@
                                              x-transition
                                              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                             <ul>
-                                                @foreach (array_slice($this->puestoResults, 0, 6) as $rol)
-                                                    <li wire:click.prevent="selectPuesto({{ $rol['id'] }})"
+                                                @foreach (array_slice($this->puestoResults, 0, 6) as $puesto)
+                                                    <li wire:click.prevent="selectPuesto({{ $puesto['id'] }})"
                                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                        {{ $rol['nombre'] }}
+                                                        {{ $puesto['nombre'] }}
                                                     </li>
                                                 @endforeach
                                             </ul>

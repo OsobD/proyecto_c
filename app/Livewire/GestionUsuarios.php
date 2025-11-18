@@ -198,12 +198,12 @@ class GestionUsuarios extends Component
     {
         $puesto = $this->puestos->firstWhere('id', $id);
         if ($puesto) {
-            $this->selectedRol = [
-                'id' => $rol->id,
-                'nombre' => $rol->nombre,
+            $this->selectedPuesto = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
             ];
-            $this->rolId = $rol->id;
-            $this->showRolDropdown = false;
+            $this->puestoId = $puesto->id;
+            $this->showPuestoDropdown = false;
             $this->searchPuesto = '';
         }
     }
@@ -213,22 +213,22 @@ class GestionUsuarios extends Component
      */
     public function clearPuesto()
     {
-        $this->selectedRol = null;
-        $this->rolId = '';
+        $this->selectedPuesto = null;
+        $this->puestoId = "";
     }
 
     /**
      * Obtiene los puestos filtrados para el filtro de búsqueda
      */
-    public function getFilterRolResultsProperty()
+    public function getFilterPuestoResultsProperty()
     {
         $puestos = $this->puestos->toArray();
 
-        if (empty($this->searchFilterRol)) {
+        if (empty($this->searchFilterPuesto)) {
             return $puestos;
         }
 
-        $search = strtolower(trim($this->searchFilterRol));
+        $search = strtolower(trim($this->searchFilterPuesto));
 
         return array_filter($puestos, function($puesto) use ($search) {
             return str_contains(strtolower($puesto['nombre']), $search);
@@ -238,17 +238,17 @@ class GestionUsuarios extends Component
     /**
      * Selecciona un puesto del filtro de búsqueda
      */
-    public function selectFilterRol($id)
+    public function selectFilterPuesto($id)
     {
         $puesto = $this->puestos->firstWhere('id', $id);
         if ($puesto) {
-            $this->selectedFilterRol = [
-                'id' => $rol->id,
-                'nombre' => $rol->nombre,
+            $this->selectedFilterPuesto = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
             ];
-            $this->filterPuesto = $rol->id;
-            $this->showFilterRolDropdown = false;
-            $this->searchFilterRol = '';
+            $this->filterPuesto = $puesto->id;
+            $this->showFilterPuestoDropdown = false;
+            $this->searchFilterPuesto = '';
             $this->resetPage(); // Resetear paginación al filtrar
         }
     }
@@ -256,11 +256,11 @@ class GestionUsuarios extends Component
     /**
      * Limpia la selección del filtro de puesto
      */
-    public function clearFilterRol()
+    public function clearFilterPuesto()
     {
-        $this->selectedFilterRol = null;
+        $this->selectedFilterPuesto = null;
         $this->filterPuesto = '';
-        $this->searchFilterRol = '';
+        $this->searchFilterPuesto = '';
         $this->resetPage(); // Resetear paginación al limpiar filtro
     }
 
@@ -468,15 +468,15 @@ class GestionUsuarios extends Component
 
         // Cargar datos de usuario
         $this->nombre_usuario = $usuario->nombre_usuario;
-        $this->rolId = $usuario->id_puesto;
+        $this->puestoId = "";
         $this->estado = $usuario->estado;
 
         // Cargar rol seleccionado para el dropdown
         $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
         if ($puesto) {
-            $this->selectedRol = [
-                'id' => $rol->id,
-                'nombre' => $rol->nombre,
+            $this->selectedPuesto = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
             ];
         }
 
@@ -553,15 +553,15 @@ class GestionUsuarios extends Component
         $this->telefono = '';
         $this->correo = '';
         $this->nombre_usuario = '';
-        $this->rolId = '';
+        $this->puestoId = "";
         $this->contrasena = '';
         $this->estado = true;
         $this->usuarioId = null;
         $this->passwordGenerada = '';
         $this->mostrarPassword = false;
-        $this->selectedRol = null;
+        $this->selectedPuesto = null;
         $this->searchPuesto = '';
-        $this->showRolDropdown = false;
+        $this->showPuestoDropdown = false;
 
         // Resetear campos de persona
         $this->searchPersona = '';

@@ -120,7 +120,7 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('livewire:init', () => {
+    document.addEventListener('DOMContentLoaded', () => {
         Livewire.on('confirm-delete', () => {
             if (confirm('¿Está seguro de que desea eliminar este puesto?')) {
                 @this.call('delete');
