@@ -95,13 +95,19 @@ class ModalPersona extends Component
             \Log::info('ModalPersona::guardar() - Persona creada', ['id' => $persona->id]);
 
             // Crear tarjeta de responsabilidad
-            TarjetaResponsabilidad::create([
+            // IMPORTANTE: created_by y updated_by deben ser NULL ya que
+            // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
+            $tarjetaData = [
                 'nombre' => "{$this->nombres} {$this->apellidos}",
                 'fecha_creacion' => now(),
                 'total' => 0,
                 'id_persona' => $persona->id,
                 'activo' => true,
-            ]);
+                'created_by' => null,
+                'updated_by' => null,
+            ];
+
+            TarjetaResponsabilidad::create($tarjetaData);
 
             \Log::info('ModalPersona::guardar() - Tarjeta de responsabilidad creada');
 

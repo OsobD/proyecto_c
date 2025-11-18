@@ -143,12 +143,16 @@ class GestionPersonas extends Component
                 ]);
 
                 // Crear tarjeta de responsabilidad automáticamente
+                // IMPORTANTE: created_by y updated_by deben ser NULL ya que
+                // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
                 TarjetaResponsabilidad::create([
                     'nombre' => "{$this->nombres} {$this->apellidos}",
                     'fecha_creacion' => now(),
                     'total' => 0,
                     'id_persona' => $persona->id,
                     'activo' => true,
+                    'created_by' => null,
+                    'updated_by' => null,
                 ]);
 
                 // Registrar en bitácora

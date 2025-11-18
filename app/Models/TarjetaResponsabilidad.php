@@ -75,14 +75,19 @@ class TarjetaResponsabilidad extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (auth()->check()) {
+            // Solo establecer created_by/updated_by si:
+            // 1. El usuario está autenticado
+            // 2. Los campos aún no han sido establecidos
+            if (auth()->check() && !isset($model->created_by)) {
                 $model->created_by = auth()->id();
+            }
+            if (auth()->check() && !isset($model->updated_by)) {
                 $model->updated_by = auth()->id();
             }
         });
 
         static::updating(function ($model) {
-            if (auth()->check()) {
+            if (auth()->check() && !isset($model->updated_by)) {
                 $model->updated_by = auth()->id();
             }
         });

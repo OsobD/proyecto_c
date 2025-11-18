@@ -385,12 +385,16 @@ class GestionUsuarios extends Component
             // Verificar si la persona ya tiene tarjeta de responsabilidad
             if (!$persona->tarjetasResponsabilidad()->exists()) {
                 // 2. Crear tarjeta de responsabilidad si no existe
+                // IMPORTANTE: created_by y updated_by deben ser NULL ya que
+                // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
                 TarjetaResponsabilidad::create([
                     'nombre' => "{$persona->nombres} {$persona->apellidos}",
                     'fecha_creacion' => now(),
                     'total' => 0,
                     'id_persona' => $persona->id,
                     'activo' => true,
+                    'created_by' => null,
+                    'updated_by' => null,
                 ]);
             }
 
