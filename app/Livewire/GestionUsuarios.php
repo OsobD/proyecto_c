@@ -323,12 +323,15 @@ class GestionUsuarios extends Component
     /**
      * Maneja el evento cuando se crea una persona
      */
-    public function handlePersonaCreada($personaData)
+    public function handlePersonaCreada($personaData, $mensaje)
     {
         // Seleccionar automáticamente la persona recién creada
         $this->selectedPersona = $personaData;
         $this->personaId = $personaData['id'];
         $this->showPersonaDropdown = false;
+
+        // Establecer el mensaje flash
+        session()->flash('message', $mensaje);
     }
 
     /**

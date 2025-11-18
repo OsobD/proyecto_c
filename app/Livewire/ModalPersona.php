@@ -96,11 +96,11 @@ class ModalPersona extends Component
             $this->showModal = false;
             $this->resetForm();
 
-            // Emitir evento para notificar que se creó la persona
-            $this->dispatch('personaCreada', personaData: $personaData);
-
             // Mensaje de éxito
-            session()->flash('message', "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente con tarjeta de responsabilidad.");
+            $mensaje = "Persona '{$persona->nombres} {$persona->apellidos}' creada exitosamente con tarjeta de responsabilidad.";
+
+            // Emitir evento para notificar que se creó la persona (incluyendo el mensaje)
+            $this->dispatch('personaCreada', personaData: $personaData, mensaje: $mensaje);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -248,9 +248,9 @@ class GestionPersonas extends Component
     /**
      * Maneja el evento cuando se crea una persona desde el modal reutilizable
      */
-    public function handlePersonaCreada($personaData)
+    public function handlePersonaCreada($personaData, $mensaje)
     {
-        // Simplemente refrescar la lista
-        // Livewire lo hará automáticamente en el siguiente render
+        // Establecer el mensaje flash
+        session()->flash('message', $mensaje);
     }
 }
