@@ -795,3 +795,18 @@
         }
     </style>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('confirm-reset-password', (data) => {
+            const nombre = data[0].nombre || 'este usuario';
+            const usuario = data[0].usuario || '';
+
+            if (confirm(`¿Está seguro de que desea resetear la contraseña para ${nombre} (${usuario})?\n\nSe generará una nueva contraseña temporal que deberá ser comunicada al usuario.`)) {
+                @this.call('confirmarResetPassword');
+            }
+        });
+    });
+</script>
+@endpush

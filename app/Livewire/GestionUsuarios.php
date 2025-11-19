@@ -571,13 +571,38 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Resetea (genera nueva) contraseña de un usuario
+     * Solicita confirmación antes de resetear contraseña
      */
     public function resetearPassword($id)
     {
+        $usuario = Usuario::with('persona')->findOrFail($id);
+
+        if (!$usuario->persona) {
+            session()->flash('error', 'Error: El usuario no tiene una persona asignada.');
+            return;
+        }
+
         $this->usuarioId = $id;
-        $usuario = Usuario::findOrFail($id);
         $this->nombre_usuario = $usuario->nombre_usuario;
+
+        // Emitir evento para mostrar confirmación
+        $this->dispatch('confirm-reset-password', [
+            'nombre' => "{$usuario->persona->nombres} {$usuario->persona->apellidos}",
+            'usuario' => $usuario->nombre_usuario
+        ]);
+    }
+
+    /**
+     * Ejecuta el reseteo de contraseña después de confirmación
+     */
+    public function confirmarResetPassword()
+    {
+        if (!$this->usuarioId) {
+            session()->flash('error', 'Error: No se ha seleccionado un usuario.');
+            return;
+        }
+
+        $usuario = Usuario::findOrFail($this->usuarioId);
 
         // Generar nueva contraseña
         $this->generarPassword();
