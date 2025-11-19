@@ -10,9 +10,9 @@
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div class="text-center">
-            <h2 class="text-4xl font-extrabold text-gray-900">
-                EEMQ
-            </h2>
+            <div class="flex justify-center mb-4">
+                <img src="{{ asset('images/EEMQ@3x.png') }}" alt="Logo EEMQ" class="h-20 w-auto">
+            </div>
             <p class="mt-2 text-sm text-gray-600">
                 Sistema de Gestión de Inventario
             </p>
