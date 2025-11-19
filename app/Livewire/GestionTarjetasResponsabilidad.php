@@ -84,17 +84,30 @@ class GestionTarjetasResponsabilidad extends Component
 
     public function render()
     {
-        $tarjetas = TarjetaResponsabilidad::with('persona')
-            ->where('activo', true)
-            ->whereHas('persona', function($query) {
-                $query->where('estado', true)
-                      ->where(function($q) {
-                          $q->where('nombres', 'like', '%' . $this->search . '%')
-                            ->orWhere('apellidos', 'like', '%' . $this->search . '%');
-                      });
-            })
-            ->orderBy('fecha_creacion', 'desc')
-            ->paginate(30);
+        $query = TarjetaResponsabilidad::with('persona')
+            ->where('activo', true);
+
+        // Si hay búsqueda, filtrar por persona
+        if (!empty($this->search)) {
+            $query->whereHas('persona', function($q) {
+                $q->where('estado', true)
+                  ->where(function($subq) {
+                      $subq->where('nombres', 'like', '%' . $this->search . '%')
+                           ->orWhere('apellidos', 'like', '%' . $this->search . '%');
+                  });
+            });
+        } else {
+            // Sin búsqueda, mostrar todas las tarjetas activas con persona activa
+            $query->where(function($q) {
+                $q->whereHas('persona', function($subq) {
+                    $subq->where('estado', true);
+                })
+                ->orWhereNull('id_persona'); // Incluir tarjetas sin persona para detectar errores
+            });
+        }
+
+        $tarjetas = $query->orderBy('fecha_creacion', 'desc')
+                          ->paginate(30);
 
         return view('livewire.gestion-tarjetas-responsabilidad', [
             'tarjetas' => $tarjetas
@@ -112,6 +125,11 @@ class GestionTarjetasResponsabilidad extends Component
     public function edit($id)
     {
         $tarjeta = TarjetaResponsabilidad::with('persona')->findOrFail($id);
+
+        if (!$tarjeta->persona) {
+            session()->flash('error', 'Error: La tarjeta no tiene una persona asignada.');
+            return;
+        }
 
         $this->tarjetaId = $tarjeta->id;
         $this->id_persona = $tarjeta->id_persona;
@@ -144,6 +162,10 @@ class GestionTarjetasResponsabilidad extends Component
                 ]);
 
                 $persona = Persona::find($tarjeta->id_persona);
+
+                if (!$persona) {
+                    throw new \Exception('No se encontró la persona asociada a la tarjeta.');
+                }
 
                 // Registrar en bitácora
                 Bitacora::create([
@@ -294,10 +316,14 @@ class GestionTarjetasResponsabilidad extends Component
                 'updated_by' => Auth::id(),
             ]);
 
+            $personaDescripcion = $tarjeta->persona
+                ? "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}"
+                : "Tarjeta #{$tarjeta->id}";
+
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'Desactivar',
-                'descripcion' => "Tarjeta de responsabilidad desactivada para: {$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}",
+                'descripcion' => "Tarjeta de responsabilidad desactivada para: {$personaDescripcion}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
             ]);
