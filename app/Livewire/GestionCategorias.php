@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Categoria;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
  * Componente GestionCategorias
@@ -16,6 +17,8 @@ use Livewire\Component;
  */
 class GestionCategorias extends Component
 {
+    use WithPagination;
+
     /** @var string Término de búsqueda */
     public $searchCategoria = '';
 
@@ -29,24 +32,13 @@ class GestionCategorias extends Component
     public $nombre = '';
 
     /**
-     * Computed property: Retorna categorías desde BD filtradas por búsqueda
+     * Resetea la paginación cuando cambia la búsqueda
      *
-     * @return \Illuminate\Database\Eloquent\Collection Categorías que coinciden con el término de búsqueda
+     * @return void
      */
-    public function getCategoriasFiltradasProperty()
+    public function updatingSearchCategoria()
     {
-        $query = Categoria::query();
-
-        if (!empty($this->searchCategoria)) {
-            $search = trim($this->searchCategoria);
-            $query->where('nombre', 'like', "%{$search}%");
-        }
-
-        return $query->orderBy('nombre')->get()->map(fn($cat) => [
-            'id' => $cat->id,
-            'nombre' => $cat->nombre,
-            'activo' => $cat->activo,
-        ])->toArray();
+        $this->resetPage();
     }
 
     /**
@@ -162,6 +154,16 @@ class GestionCategorias extends Component
      */
     public function render()
     {
-        return view('livewire.gestion-categorias');
+        $categorias = Categoria::query()
+            ->when($this->searchCategoria, function($query) {
+                $search = trim($this->searchCategoria);
+                $query->where('nombre', 'like', "%{$search}%");
+            })
+            ->orderBy('nombre')
+            ->paginate(30);
+
+        return view('livewire.gestion-categorias', [
+            'categorias' => $categorias
+        ]);
     }
 }

@@ -79,13 +79,13 @@
                     </tr>
                 </thead>
                 <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
-                    @forelse ($this->categoriasFiltradas as $categoria)
+                    @forelse ($categorias as $categoria)
                         <tr class="hover:bg-blue-50 transition-colors duration-150">
                             <td class="py-4 px-6 text-left">
-                                <span class="font-semibold text-gray-800">{{ $categoria['nombre'] }}</span>
+                                <span class="font-semibold text-gray-800">{{ $categoria->nombre }}</span>
                             </td>
                             <td class="py-4 px-6 text-center">
-                                @if($categoria['activo'])
+                                @if($categoria->activo)
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
                                         <span class="w-2 h-2 mr-1.5 bg-green-500 rounded-full"></span>
                                         Activo
@@ -102,18 +102,18 @@
                                     {{-- Editar --}}
                                     <x-action-button
                                         type="edit"
-                                        wire:click="editarCategoria({{ $categoria['id'] }})"
+                                        wire:click="editarCategoria({{ $categoria->id }})"
                                         title="Editar categoría" />
                                     {{-- Toggle Estado --}}
-                                    @if($categoria['activo'])
+                                    @if($categoria->activo)
                                         <x-action-button
                                             type="delete"
-                                            wire:click="toggleEstado({{ $categoria['id'] }})"
+                                            wire:click="toggleEstado({{ $categoria->id }})"
                                             title="Desactivar categoría" />
                                     @else
                                         <x-action-button
                                             type="activate"
-                                            wire:click="toggleEstado({{ $categoria['id'] }})"
+                                            wire:click="toggleEstado({{ $categoria->id }})"
                                             title="Activar categoría" />
                                     @endif
                                 </div>
@@ -134,6 +134,11 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Paginación de categorías --}}
+        <div class="mt-6">
+            {{ $categorias->links() }}
         </div>
     </div>
 
