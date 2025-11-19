@@ -21,20 +21,26 @@
         </div>
         <button
             wire:click="abrirModal"
-            class="bg-[var(--color-eemq-primary)] hover:bg-[var(--color-eemq-primary-dark)] text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-150">
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
             + Nuevo Producto
         </button>
     </div>
 
     {{-- Alertas de éxito y error para operaciones CRUD --}}
     @if (session()->has('message'))
-        <div class="bg-green-50 border border-[var(--color-eemq-interactive)] text-[var(--color-eemq-primary)] px-4 py-3 rounded mb-4">
-            {{ session('message') }}
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
+            <span class="block sm:inline">{{ session('message') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
     @if (session()->has('error'))
-        <div class="bg-red-50 border border-[var(--color-eemq-accent)] text-[var(--color-eemq-accent-dark)] px-4 py-3 rounded mb-4">
-            {{ session('error') }}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
@@ -42,17 +48,24 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         {{-- Campo de búsqueda con filtrado reactivo --}}
         <div class="mb-6">
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="searchProducto"
-                class="w-full md:w-1/2 px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent"
-                placeholder="Buscar por código, descripción o categoría...">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="searchProducto"
+                    class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Buscar por código, descripción o categoría...">
+            </div>
         </div>
 
         {{-- Tabla de listado de productos --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
-                <thead class="bg-[var(--color-eemq-primary)] text-white uppercase text-sm leading-normal">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
                         <th class="py-3 px-6 text-left">Código</th>
                         <th class="py-3 px-6 text-left">Descripción</th>
@@ -72,7 +85,7 @@
                                 {{ $producto->descripcion }}
                             </td>
                             <td class="py-3 px-6 text-left">
-                                <span class="bg-[var(--color-eemq-bg)] text-[var(--color-eemq-primary)] border border-[var(--color-eemq-secondary)] text-xs font-semibold px-2 py-1 rounded">
+                                <span class="bg-blue-100 text-blue-800 border border-blue-200 text-xs font-semibold px-2 py-1 rounded">
                                     {{ $producto->categoria->nombre ?? 'Sin categoría' }}
                                 </span>
                             </td>
@@ -137,12 +150,14 @@
         @endphp
         <div x-data="{ show: true, animatingOut: false }"
              x-show="show || animatingOut"
+             x-cloak
              x-init="$watch('show', value => { if (!value) animatingOut = true; })"
              @animationend="if (!show) animatingOut = false"
-             class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+             class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100] flex items-center justify-center"
              :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-             wire:click.self="toggleLotes('')">
-            <div class="relative p-6 border w-full max-w-4xl shadow-lg rounded-lg bg-white max-h-[90vh] overflow-hidden"
+             wire:click.self="toggleLotes('')"
+             wire:ignore.self>
+            <div class="relative p-6 border w-full max-w-4xl shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
                  :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
                  @click.stop>
                 <div class="flex justify-between items-center mb-4">
@@ -162,7 +177,7 @@
                     @if($productoSeleccionado && $productoSeleccionado->lotes->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full bg-white">
-                                <thead class="bg-[var(--color-eemq-primary)] text-white uppercase text-xs leading-normal">
+                                <thead class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
                                     <tr>
                                         <th class="py-3 px-4 text-left">Bodega</th>
                                         <th class="py-3 px-4 text-center">Cantidad Disponible</th>
@@ -297,12 +312,14 @@
             animatingOut: false
          }"
          x-show="show || animatingOut"
+         x-cloak
          x-init="$watch('show', value => { if (!value) animatingOut = true; })"
          @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100] flex items-center justify-center"
          :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModal">
-        <div class="relative p-6 border w-full max-w-lg shadow-lg rounded-lg bg-white"
+         wire:click.self="closeModal"
+         wire:ignore.self>
+        <div class="relative p-6 border w-full max-w-lg shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center mb-4">
@@ -327,7 +344,7 @@
                         id="codigo"
                         wire:model="codigo"
                         {{ $editingId ? 'disabled' : '' }}
-                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('codigo') border-[var(--color-eemq-accent)] @enderror {{ $editingId ? 'bg-gray-100 cursor-not-allowed' : '' }}"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('codigo') border-red-500 ring-2 ring-red-200 @enderror {{ $editingId ? 'bg-gray-100 cursor-not-allowed' : '' }}"
                         placeholder="Ej: PROD-001">
                     @error('codigo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -343,7 +360,7 @@
                         type="text"
                         id="descripcion"
                         wire:model="descripcion"
-                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('descripcion') border-[var(--color-eemq-accent)] @enderror"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('descripcion') border-red-500 ring-2 ring-red-200 @enderror"
                         placeholder="Ej: Tornillos de acero inoxidable">
                     @error('descripcion')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -359,14 +376,14 @@
                         <button
                             type="button"
                             wire:click="abrirSubModalCategoria"
-                            class="text-[var(--color-eemq-interactive)] hover:text-[var(--color-eemq-primary)] text-sm font-semibold transition-colors">
+                            class="text-blue-600 hover:text-blue-700 text-sm font-semibold transition-colors">
                             + Crear Categoría
                         </button>
                     </div>
                     <select
                         id="categoriaId"
                         wire:model="categoriaId"
-                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('categoriaId') border-[var(--color-eemq-accent)] @enderror">
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('categoriaId') border-red-500 ring-2 ring-red-200 @enderror">
                         <option value="">Seleccione una categoría</option>
                         @foreach($categorias as $categoria)
                             <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
@@ -383,7 +400,7 @@
                         <input
                             type="checkbox"
                             wire:model="esConsumible"
-                            class="w-5 h-5 text-[var(--color-eemq-interactive)] border-2 border-[var(--color-eemq-secondary)] rounded focus:ring-2 focus:ring-[var(--color-eemq-interactive)]">
+                            class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
                         <span class="text-sm font-medium text-gray-700">
                             Este producto es consumible
                         </span>
@@ -393,16 +410,16 @@
                     </p>
                 </div>
 
-                <div class="flex justify-between mt-6">
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                     <button
                         type="button"
                         wire:click="closeModal"
-                        class="bg-[var(--color-eemq-secondary)] hover:bg-[var(--color-heather)] text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-[var(--color-eemq-primary)] hover:bg-[var(--color-eemq-primary-dark)] text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
                         {{ $editingId ? 'Actualizar' : 'Crear' }}
                     </button>
                 </div>
@@ -422,8 +439,9 @@
          class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
          style="z-index: 9999 !important;"
          :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
-         wire:click.self="closeSubModalCategoria">
-        <div class="relative p-6 border w-full max-w-sm shadow-lg rounded-lg bg-white"
+         wire:click.self="closeSubModalCategoria"
+         wire:ignore.self>
+        <div class="relative p-6 border w-full max-w-sm shadow-xl rounded-xl bg-white"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center mb-4">
@@ -444,23 +462,23 @@
                         type="text"
                         id="nuevaCategoriaNombre"
                         wire:model="nuevaCategoriaNombre"
-                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('nuevaCategoriaNombre') border-[var(--color-eemq-accent)] @enderror"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nuevaCategoriaNombre') border-red-500 ring-2 ring-red-200 @enderror"
                         placeholder="Ej: Equipos de Protección">
                     @error('nuevaCategoriaNombre')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="flex justify-between">
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                     <button
                         type="button"
                         wire:click="closeSubModalCategoria"
-                        class="bg-[var(--color-eemq-secondary)] hover:bg-[var(--color-heather)] text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-[var(--color-eemq-primary)] hover:bg-[var(--color-eemq-primary-dark)] text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
                         Crear
                     </button>
                 </div>
@@ -469,6 +487,11 @@
     </div>
 
     <style>
+        /* Ocultar elementos hasta que Alpine.js esté listo */
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Animaciones de entrada */
         @keyframes fadeIn {
             from {
@@ -509,6 +532,22 @@
                 transform: translateY(20px);
                 opacity: 0;
             }
+        }
+
+        /* Animación de mensajes flash */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
         }
     </style>
 </div>

@@ -15,14 +15,20 @@
 
     {{-- Mensajes --}}
     @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
             <span class="block sm:inline">{{ session('message') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
             <span class="block sm:inline">{{ session('error') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
@@ -59,7 +65,7 @@
                                 <div class="flex item-center justify-center gap-2">
                                     <button
                                         wire:click="toggleProductos({{ $bodega->id }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-md transition-all duration-200 {{ $bodegaIdProductosExpandido === $bodega->id ? 'bg-[var(--color-eemq-interactive)] text-white hover:bg-[var(--color-eemq-primary)]' : 'bg-[var(--color-eemq-bg)] border border-[var(--color-eemq-secondary)] text-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-secondary)]' }}"
+                                        class="w-8 h-8 flex items-center justify-center rounded-md transition-all duration-200 {{ $bodegaIdProductosExpandido === $bodega->id ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
                                         title="Ver productos de la bodega">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -197,44 +203,60 @@
     </div>
 
     {{-- Modal de Bodega --}}
-    @if($showModal)
-        <div class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 flex items-center justify-center"
-             x-data
-             @click.self="$wire.closeModal()">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
-                <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="text-xl font-semibold text-gray-800">
+    <div x-data="{
+            show: @entangle('showModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100] flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModal"
+         wire:ignore.self>
+        <div class="relative border w-full max-w-md shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="p-8 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">
                         {{ $editMode ? 'Editar Bodega' : 'Nueva Bodega' }}
                     </h3>
-                    <button wire:click="closeModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
-                <form wire:submit.prevent="save" class="mt-4">
+                <form wire:submit.prevent="save">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Nombre de la Bodega <span class="text-red-500">*</span>
                         </label>
                         <input type="text" wire:model="nombre"
-                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nombre') border-red-500 @enderror">
+                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nombre') border-red-500 ring-2 ring-red-200 @enderror"
+                               placeholder="Ej: Bodega Principal">
                         @error('nombre')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="flex justify-end space-x-2 mt-6">
+                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                         <button type="button" wire:click="closeModal"
-                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200">
                             Cancelar
                         </button>
                         <button type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
                             {{ $editMode ? 'Actualizar' : 'Guardar' }}
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-    @endif
+    </div>
 
     {{-- Modal para crear nuevo producto --}}
     <div x-data="{
@@ -482,6 +504,22 @@
                 transform: translateY(20px);
                 opacity: 0;
             }
+        }
+
+        /* Animación de mensajes flash */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
         }
     </style>
 </div>
