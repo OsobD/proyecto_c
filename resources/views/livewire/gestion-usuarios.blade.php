@@ -161,7 +161,7 @@
                                     {{-- Resetear Contraseña --}}
                                     <button
                                         wire:click="resetearPassword({{ $usuario->id }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-md bg-[var(--color-eemq-bg)] hover:bg-[var(--color-eemq-secondary)] border border-[var(--color-eemq-secondary)] text-[var(--color-eemq-interactive)] transition-all duration-150"
+                                        class="w-8 h-8 flex items-center justify-center rounded-md bg-white hover:bg-gray-300 border border-gray-300 text-blue-500 transition-all duration-150"
                                         title="Resetear contraseña">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -191,24 +191,30 @@
 
     {{-- Mensajes flash --}}
     @if (session()->has('message'))
-        <div class="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
+        <div class="relative fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
             <div class="flex items-center gap-2">
                 <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
                 <span class="font-medium">{{ session('message') }}</span>
             </div>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
+        <div class="relative fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
             <div class="flex items-center gap-2">
                 <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                 </svg>
                 <span class="font-medium">{{ session('error') }}</span>
             </div>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
