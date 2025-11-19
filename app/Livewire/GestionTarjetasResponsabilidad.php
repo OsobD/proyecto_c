@@ -124,6 +124,8 @@ class GestionTarjetasResponsabilidad extends Component
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'Desactivar',
+                'modelo' => 'TarjetaResponsabilidad',
+                'modelo_id' => $tarjeta->id,
                 'descripcion' => "Tarjeta de responsabilidad desactivada para: {$personaDescripcion}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
