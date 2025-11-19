@@ -15,6 +15,7 @@ class GestionTarjetasResponsabilidad extends Component
 
     public $search = '';
     public $tarjetaId; // ID de la tarjeta a desactivar
+    public $mostrarDesactivadas = false; // Checkbox para mostrar tarjetas desactivadas
 
     // Para el acordeón de productos (similar a bodegas)
     public $tarjetaIdExpandida = null;
@@ -28,11 +29,16 @@ class GestionTarjetasResponsabilidad extends Component
         $this->resetPage();
     }
 
+    public function updatingMostrarDesactivadas()
+    {
+        $this->resetPage();
+    }
+
 
     public function render()
     {
         $query = TarjetaResponsabilidad::with('persona')
-            ->where('activo', true);
+            ->where('activo', $this->mostrarDesactivadas ? false : true);
 
         // Si hay búsqueda, filtrar por persona
         if (!empty($this->search)) {

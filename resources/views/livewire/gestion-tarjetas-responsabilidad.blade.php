@@ -38,19 +38,33 @@
 
     {{-- Contenedor principal --}}
     <div class="bg-white p-6 rounded-lg shadow-md">
-        {{-- Búsqueda --}}
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar tarjeta</label>
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
+        {{-- Búsqueda y filtros --}}
+        <div class="mb-4 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar tarjeta</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           wire:model.live="search"
+                           class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                           placeholder="Buscar por nombre de persona...">
                 </div>
-                <input type="text"
-                       wire:model.live="search"
-                       class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                       placeholder="Buscar por nombre de persona...">
+            </div>
+
+            {{-- Checkbox para mostrar desactivadas --}}
+            <div class="flex items-center">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox"
+                           wire:model.live="mostrarDesactivadas"
+                           class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2 cursor-pointer transition-all">
+                    <span class="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                        Mostrar tarjetas desactivadas
+                    </span>
+                </label>
             </div>
         </div>
 
@@ -87,7 +101,11 @@
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-left">
-                                <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">Activa</span>
+                                @if($tarjeta->activo)
+                                    <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">Activa</span>
+                                @else
+                                    <span class="bg-red-200 text-red-800 py-1 px-3 rounded-full text-xs">Inactiva</span>
+                                @endif
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
@@ -101,10 +119,12 @@
                                         </svg>
                                     </button>
 
-                                    <x-action-button
-                                        type="delete"
-                                        wire:click="confirmDelete({{ $tarjeta->id }})"
-                                        title="Desactivar tarjeta" />
+                                    @if($tarjeta->activo)
+                                        <x-action-button
+                                            type="delete"
+                                            wire:click="confirmDelete({{ $tarjeta->id }})"
+                                            title="Desactivar tarjeta" />
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -230,7 +250,13 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center py-4 text-gray-500">No se encontraron tarjetas de responsabilidad.</td>
+                            <td colspan="4" class="text-center py-4 text-gray-500">
+                                @if($mostrarDesactivadas)
+                                    No se encontraron tarjetas desactivadas.
+                                @else
+                                    No se encontraron tarjetas de responsabilidad activas.
+                                @endif
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
