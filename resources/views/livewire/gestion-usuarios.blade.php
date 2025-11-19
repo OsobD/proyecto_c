@@ -31,7 +31,11 @@
                         type="text"
                         wire:model.live.debounce.300ms="search"
                         class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        placeholder="Nombre de usuario, nombre completo o email...">
+                        placeholder="Nombre de usuario, nombre completo o email..."
+                        autocomplete="off"
+                        data-bwignore
+                        data-lpignore="true"
+                        data-1p-ignore>
                 </div>
             </div>
 
