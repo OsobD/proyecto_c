@@ -61,8 +61,6 @@
                     <tr>
                         <th class="py-3 px-6 text-left">ID</th>
                         <th class="py-3 px-6 text-left">Persona</th>
-                        <th class="py-3 px-6 text-left">Fecha Creación</th>
-                        <th class="py-3 px-6 text-left">Total Asignado</th>
                         <th class="py-3 px-6 text-left">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
@@ -88,8 +86,6 @@
                                     <span class="text-red-500 text-sm">Sin persona asignada</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($tarjeta->fecha_creacion)->format('d/m/Y H:i') }}</td>
-                            <td class="py-3 px-6 text-left">Q{{ number_format($tarjeta->total, 2) }}</td>
                             <td class="py-3 px-6 text-left">
                                 <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">Activa</span>
                             </td>
@@ -106,10 +102,6 @@
                                     </button>
 
                                     <x-action-button
-                                        type="edit"
-                                        wire:click="edit({{ $tarjeta->id }})"
-                                        title="Editar tarjeta" />
-                                    <x-action-button
                                         type="delete"
                                         wire:click="confirmDelete({{ $tarjeta->id }})"
                                         title="Desactivar tarjeta" />
@@ -120,7 +112,7 @@
                         {{-- Expansión de productos de la tarjeta (acordeón) --}}
                         @if($tarjetaIdExpandida === $tarjeta->id)
                             <tr>
-                                <td colspan="6" class="bg-gray-50 p-6">
+                                <td colspan="4" class="bg-gray-50 p-6">
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">
@@ -238,7 +230,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-gray-500">No se encontraron tarjetas de responsabilidad.</td>
+                            <td colspan="4" class="text-center py-4 text-gray-500">No se encontraron tarjetas de responsabilidad.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -270,7 +262,7 @@
             <div class="overflow-y-auto max-h-[90vh]">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-gray-900">
-                        {{ $editMode ? 'Editar Tarjeta de Responsabilidad' : 'Nueva Tarjeta de Responsabilidad' }}
+                        Nueva Tarjeta de Responsabilidad
                     </h3>
                     <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,134 +278,101 @@
                             Persona <span class="text-red-500">*</span>
                         </label>
 
-                        @if($editMode)
-                            {{-- En modo edición, solo mostrar la persona (no editable) --}}
+                        {{-- Campo de búsqueda --}}
+                        <div class="relative">
+                            <input type="text"
+                                   wire:model.live="searchPersona"
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('id_persona') border-red-500 ring-2 ring-red-200 @enderror {{ $personaSeleccionada ? 'bg-gray-100' : '' }}"
+                                   placeholder="Buscar persona por nombre, apellido o correo..."
+                                   {{ $personaSeleccionada ? 'disabled' : '' }}
+                                   autocomplete="off">
+
                             @if($personaSeleccionada)
-                                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                                    <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        <div>
-                                            <strong>{{ $personaSeleccionada->nombres }} {{ $personaSeleccionada->apellidos }}</strong>
-                                            @if($personaSeleccionada->correo)
-                                                <div class="text-sm text-gray-600">{{ $personaSeleccionada->correo }}</div>
+                                <button type="button"
+                                        wire:click="clearPersona"
+                                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            @endif
+
+                            @error('id_persona')
+                                <p class="text-red-500 text-xs mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+
+                            {{-- Lista de personas encontradas con posición mejorada --}}
+                            @if(!empty($personasDisponibles) && !$personaSeleccionada)
+                                <div class="absolute z-[200] w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                                    @foreach($personasDisponibles as $persona)
+                                        <button type="button"
+                                                wire:click="selectPersona({{ $persona->id }})"
+                                                class="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-200 last:border-b-0 transition-colors">
+                                            <strong class="text-gray-900">{{ $persona->nombres }} {{ $persona->apellidos }}</strong>
+                                            @if($persona->correo)
+                                                <div class="text-sm text-gray-600">📧 {{ $persona->correo }}</div>
                                             @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="bg-red-50 border border-red-200 rounded-md p-4">
-                                    <p class="text-red-700 text-sm">Error: No se pudo cargar la información de la persona.</p>
+                                            @if($persona->telefono)
+                                                <div class="text-sm text-gray-600">📱 {{ $persona->telefono }}</div>
+                                            @endif
+                                        </button>
+                                    @endforeach
+
+                                    {{-- Botón para crear nueva persona --}}
+                                    <button type="button"
+                                            wire:click="$dispatch('abrirModalPersona')"
+                                            class="w-full px-4 py-3 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2 border-t-2 border-blue-200 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        <span>Crear nueva persona</span>
+                                    </button>
                                 </div>
                             @endif
-                        @else
-                            {{-- En modo crear, permitir búsqueda --}}
-                            <div class="relative">
-                                <input type="text"
-                                       wire:model.live="searchPersona"
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('id_persona') border-red-500 ring-2 ring-red-200 @enderror {{ $personaSeleccionada ? 'bg-gray-100' : '' }}"
-                                       placeholder="Buscar persona por nombre, apellido o correo..."
-                                       {{ $personaSeleccionada ? 'disabled' : '' }}>
 
-                                @if($personaSeleccionada)
-                                    <button type="button"
-                                            wire:click="clearPersona"
-                                            class="absolute right-2 top-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                @endif
-
-                                @error('id_persona')
-                                    <p class="text-red-500 text-xs mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-
-                                {{-- Lista de personas encontradas --}}
-                                @if(!empty($personasDisponibles) && !$personaSeleccionada)
-                                    <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach($personasDisponibles as $persona)
-                                            <button type="button"
-                                                    wire:click="selectPersona({{ $persona->id }})"
-                                                    class="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-200 last:border-b-0">
-                                                <strong>{{ $persona->nombres }} {{ $persona->apellidos }}</strong>
-                                                @if($persona->correo)
-                                                    <div class="text-sm text-gray-600">{{ $persona->correo }}</div>
-                                                @endif
-                                                @if($persona->telefono)
-                                                    <div class="text-sm text-gray-600">{{ $persona->telefono }}</div>
-                                                @endif
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                @endif
-
-                                {{-- Persona seleccionada --}}
-                                @if($personaSeleccionada && !$editMode)
-                                    <div class="bg-green-50 border border-green-200 rounded-md p-3 mt-2">
+                            {{-- Persona seleccionada --}}
+                            @if($personaSeleccionada)
+                                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 mt-3">
+                                    <div class="flex items-center justify-between">
                                         <div class="flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             <div>
-                                                <strong>{{ $personaSeleccionada->nombres }} {{ $personaSeleccionada->apellidos }}</strong>
+                                                <strong class="text-gray-900">{{ $personaSeleccionada->nombres }} {{ $personaSeleccionada->apellidos }}</strong>
                                                 @if($personaSeleccionada->correo)
                                                     <div class="text-sm text-gray-600">{{ $personaSeleccionada->correo }}</div>
                                                 @endif
                                             </div>
                                         </div>
                                     </div>
-                                @endif
+                                </div>
+                            @endif
+                        </div>
+
+                        @if(!$personaSeleccionada)
+                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p class="text-xs text-blue-700 flex items-start gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>
+                                        Escribe al menos 2 caracteres para buscar. Solo se muestran personas sin tarjeta activa.
+                                        <br>
+                                        <button type="button"
+                                                wire:click="$dispatch('abrirModalPersona')"
+                                                class="text-blue-600 hover:text-blue-800 font-semibold underline mt-1 inline-block">
+                                            Haz clic aquí para crear una nueva persona
+                                        </button>
+                                    </span>
+                                </p>
                             </div>
-
-                            <p class="text-xs text-gray-500 mt-2">
-                                ℹ Solo se muestran personas sin tarjeta de responsabilidad activa.
-                            </p>
                         @endif
-                    </div>
-
-                    {{-- Fecha de Creación y Total --}}
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Fecha de Creación <span class="text-red-500">*</span>
-                            </label>
-                            <input type="date"
-                                   wire:model="fecha_creacion"
-                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('fecha_creacion') border-red-500 ring-2 ring-red-200 @enderror">
-                            @error('fecha_creacion')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Total Asignado</label>
-                            <input type="number"
-                                   wire:model="total"
-                                   step="0.01"
-                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('total') border-red-500 ring-2 ring-red-200 @enderror"
-                                   placeholder="0.00">
-                            @error('total')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Este valor se actualizará automáticamente con las asignaciones de productos.</p>
-                        </div>
                     </div>
 
                     <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
@@ -424,8 +383,9 @@
                         </button>
                         <button type="submit"
                                 wire:loading.attr="disabled"
+                                :disabled="!$personaSeleccionada"
                                 class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading.remove wire:target="save">{{ $editMode ? '✓ Actualizar' : '✓ Crear Tarjeta' }}</span>
+                            <span wire:loading.remove wire:target="save">✓ Crear Tarjeta</span>
                             <span wire:loading wire:target="save" class="flex items-center">
                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -439,6 +399,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Incluir el modal de creación de persona --}}
+    @livewire('modal-persona')
 
     <style>
         /* Ocultar elementos hasta que Alpine.js esté listo */
