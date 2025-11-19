@@ -103,7 +103,13 @@
 
                         {{-- Fila expandible con productos --}}
                         @if($tarjetaIdProductosExpandido === $tarjeta->id)
-                            <tr x-data x-show="true" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-2">
+                            <tr x-data x-show="true"
+                                x-transition:enter="transition ease-out duration-500"
+                                x-transition:enter-start="opacity-0 transform -translate-y-4"
+                                x-transition:enter-end="opacity-100 transform translate-y-0"
+                                x-transition:leave="transition ease-in duration-400"
+                                x-transition:leave-start="opacity-100 transform translate-y-0"
+                                x-transition:leave-end="opacity-0 transform -translate-y-4">
                                 <td colspan="6" class="px-6 py-4 bg-gray-50">
                                     <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
                                         <h4 class="text-md font-semibold text-gray-700 mb-3">Productos Asignados</h4>
