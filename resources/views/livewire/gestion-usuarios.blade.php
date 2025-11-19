@@ -71,6 +71,21 @@
                 </div>
             </div>
 
+            {{-- Selector de items por página --}}
+            <div class="w-full md:w-auto">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Mostrar</label>
+                <div class="flex items-center gap-2">
+                    <select wire:model.live="perPage" class="py-3 px-3 border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200">
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-sm text-gray-700 whitespace-nowrap">por página</span>
+                </div>
+            </div>
+
             {{-- Botón Nuevo Usuario --}}
             <div>
                 <button

@@ -622,7 +622,7 @@ class GestionUsuarios extends Component
     {
         $query = Usuario::with(['persona', 'rol'])
             ->whereHas('persona') // Solo usuarios que tienen persona asignada
-            ->whereNotNull('id_puesto'); // Solo usuarios con rol (usuarios reales)
+            ->whereNotNull('id_rol'); // Solo usuarios con rol (usuarios reales)
 
         // Aplicar búsqueda
         if (!empty($this->search)) {
