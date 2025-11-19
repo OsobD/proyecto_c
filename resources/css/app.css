@@ -8,6 +8,28 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Colores Institucionales EEMQ */
+    --color-athens-gray: #fcfcfd;
+    --color-heather: #b1bdcd;
+    --color-horizon: #658bae;
+    --color-chambray: #3b618c;
+    --color-crimson: #db141e;
+
+    /* Paleta de colores institucionales con variantes */
+    --color-eemq-bg: var(--color-athens-gray);
+    --color-eemq-secondary: var(--color-heather);
+    --color-eemq-interactive: var(--color-horizon);
+    --color-eemq-primary: var(--color-chambray);
+    --color-eemq-accent: var(--color-crimson);
+
+    /* Variantes de tonos para el color primario */
+    --color-eemq-primary-light: #4b7ab8;
+    --color-eemq-primary-dark: #2d4a6f;
+
+    /* Variantes de tonos para el color de acento */
+    --color-eemq-accent-light: #e63946;
+    --color-eemq-accent-dark: #b8111a;
 }
 
 /* Alpine.js x-cloak - Oculta elementos hasta que Alpine esté listo */
