@@ -150,10 +150,9 @@
 
                 <div class="flex items-center">
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="flex items-center text-white focus:outline-none hover:bg-[var(--color-eemq-primary-dark)] px-3 py-2 rounded-md transition-colors">
-                            <span class="font-semibold">{{ auth()->user()->persona->nombres }} {{ auth()->user()->persona->apellidos }}</span>
-                            <svg class="h-5 w-5 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        <button @click="open = !open" class="flex items-center justify-center text-white focus:outline-none hover:bg-[var(--color-eemq-primary-dark)] p-2 rounded-md transition-colors">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </button>
                         <div x-show="open"
