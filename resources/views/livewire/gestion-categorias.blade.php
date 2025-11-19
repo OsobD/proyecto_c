@@ -37,13 +37,16 @@
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 transform scale-100"
             x-transition:leave-end="opacity-0 transform scale-90"
-            class="bg-green-100 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-md mb-6 shadow-md">
+            class="bg-green-100 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-md mb-6 shadow-md animate-fade-in relative">
             <div class="flex items-center">
                 <svg class="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
                 <span class="font-medium">{{ session('message') }}</span>
             </div>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
@@ -143,11 +146,11 @@
          x-cloak
          x-init="$watch('show', value => { if (!value) animatingOut = true; })"
          @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100] flex items-center justify-center"
          :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
          wire:click.self="closeModal"
          wire:ignore.self>
-        <div class="relative p-8 border w-full max-w-md shadow-2xl rounded-xl bg-white"
+        <div class="relative p-6 border w-full max-w-md shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center mb-6">
@@ -182,17 +185,17 @@
                     @enderror
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6">
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                     <button
                         type="button"
                         wire:click="closeModal"
-                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md">
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200">
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         wire:loading.attr="disabled"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         <span wire:loading.remove wire:target="guardarCategoria">
                             {{ $editingId ? '✓ Actualizar' : '✓ Crear' }}
                         </span>
@@ -217,12 +220,8 @@
 
         /* Animaciones de entrada */
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         @keyframes slideDown {
@@ -238,12 +237,8 @@
 
         /* Animaciones de salida */
         @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
 
         @keyframes slideUp {
@@ -255,6 +250,22 @@
                 transform: translateY(20px);
                 opacity: 0;
             }
+        }
+
+        /* Animación de mensajes flash */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
         }
     </style>
 </div>

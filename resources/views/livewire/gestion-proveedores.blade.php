@@ -12,14 +12,20 @@
 
     {{-- Mensajes flash --}}
     @if (session()->has('message'))
-        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative animate-fade-in" role="alert">
             <span class="block sm:inline">{{ session('message') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative animate-fade-in" role="alert">
             <span class="block sm:inline">{{ session('error') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
         </div>
     @endif
 
@@ -33,11 +39,8 @@
         </div>
         <button
             wire:click="abrirModal"
-            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Nuevo Proveedor
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+            + Nuevo Proveedor
         </button>
     </div>
 
@@ -137,11 +140,11 @@
          x-cloak
          x-init="$watch('show', value => { if (!value) animatingOut = true; })"
          @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-[100] flex items-center justify-center"
          :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
          wire:click.self="closeModal"
          wire:ignore.self>
-        <div class="relative p-6 border w-full max-w-sm shadow-lg rounded-lg bg-white"
+        <div class="relative p-6 border w-full max-w-sm shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
              :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
              @click.stop>
             <div class="flex justify-between items-center mb-6">
@@ -165,7 +168,7 @@
                         type="text"
                         id="nit"
                         wire:model="nit"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nit') border-red-500 @enderror"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nit') border-red-500 ring-2 ring-red-200 @enderror"
                         placeholder="Ej: 12345678-9">
                     @error('nit')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -190,7 +193,7 @@
                                 <button
                                     type="button"
                                     @click="open = !open"
-                                    class="mt-1 w-full px-4 py-3 text-left border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('regimenTributarioId') border-red-500 @enderror">
+                                    class="mt-1 w-full px-4 py-3 text-left border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('regimenTributarioId') border-red-500 ring-2 ring-red-200 @enderror">
                                     <span class="text-gray-500">Seleccione un régimen</span>
                                 </button>
                                 <div x-show="open"
@@ -223,23 +226,23 @@
                         type="text"
                         id="nombre"
                         wire:model="nombre"
-                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('nombre') border-red-500 @enderror"
+                        class="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nombre') border-red-500 ring-2 ring-red-200 @enderror"
                         placeholder="Ej: Ferretería San José">
                     @error('nombre')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="flex justify-between mt-6">
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                     <button
                         type="button"
                         wire:click="closeModal"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
                         {{ $editingId ? 'Actualizar' : 'Crear' }}
                     </button>
                 </div>
@@ -248,34 +251,67 @@
     </div>
 
     <style>
-        /* Animaciones de entrada y salida */
+        /* Ocultar elementos hasta que Alpine.js esté listo */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Animaciones de entrada */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
+
         @keyframes slideDown {
             from {
-                opacity: 0;
                 transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Animaciones de salida */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+        }
+
+        /* Animación de mensajes flash */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        @keyframes slideUp {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
+
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
         }
     </style>
 </div>
