@@ -59,10 +59,18 @@
                                 <div class="flex item-center justify-center gap-2">
                                     <button
                                         wire:click="toggleProductos({{ $bodega->id }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-md transition-all duration-200 {{ $bodegaIdProductosExpandido === $bodega->id ? 'bg-[var(--color-eemq-interactive)] text-white hover:bg-[var(--color-eemq-primary)]' : 'bg-[var(--color-eemq-bg)] border border-[var(--color-eemq-secondary)] text-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-secondary)]' }}"
+                                        x-data="{ isOpen: @js($bodegaIdProductosExpandido === $bodega->id) }"
+                                        @toggle-productos-{{ $bodega->id }}.window="isOpen = $event.detail.open"
+                                        class="w-8 h-8 flex items-center justify-center rounded-md transition-all duration-200"
+                                        :class="isOpen ? 'bg-[var(--color-eemq-interactive)] text-white hover:bg-[var(--color-eemq-primary)]' : 'bg-[var(--color-eemq-bg)] border border-[var(--color-eemq-secondary)] text-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-secondary)]'"
                                         title="Ver productos de la bodega">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             class="h-5 w-5 transition-transform duration-200"
+                                             :class="isOpen ? 'transform rotate-180' : ''"
+                                             fill="none"
+                                             viewBox="0 0 24 24"
+                                             stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
                                     <x-action-button
@@ -78,9 +86,17 @@
                         </tr>
 
                         {{-- Expansión de productos de la bodega --}}
-                        @if($bodegaIdProductosExpandido === $bodega->id)
-                            <tr>
-                                <td colspan="4" class="bg-gray-50 p-6">
+                        <tr x-data="{ open: @js($bodegaIdProductosExpandido === $bodega->id) }"
+                            x-show="open"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 transform -translate-y-2"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            x-transition:leave="transition ease-in duration-200"
+                            x-transition:leave-start="opacity-100 transform translate-y-0"
+                            x-transition:leave-end="opacity-0 transform -translate-y-2"
+                            @toggle-productos-{{ $bodega->id }}.window="open = $event.detail.open"
+                            style="display: none;">
+                            <td colspan="4" class="bg-gray-50 p-6">
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">Productos en {{ $bodega->nombre }}</h3>

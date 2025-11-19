@@ -221,7 +221,11 @@ class GestionBodegas extends Component
      */
     public function toggleProductos($id)
     {
-        $this->bodegaIdProductosExpandido = $this->bodegaIdProductosExpandido === $id ? null : $id;
+        $wasOpen = $this->bodegaIdProductosExpandido === $id;
+        $this->bodegaIdProductosExpandido = $wasOpen ? null : $id;
+
+        // Despachar evento para animación smooth con Alpine.js
+        $this->dispatch('toggle-productos-' . $id, open: !$wasOpen);
     }
 
     /**
