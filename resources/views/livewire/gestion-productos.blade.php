@@ -108,7 +108,7 @@
                                     {{-- Ver Lotes --}}
                                     <x-action-button
                                         type="lotes"
-                                        badge="{{ $producto->lotes->count() }}"
+                                        badge="{{ $producto->lotes_count ?? 0 }}"
                                         wire:click="toggleLotes('{{ $producto->id }}')"
                                         title="Ver lotes del producto" />
                                     {{-- Editar --}}
@@ -141,12 +141,17 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Paginación de productos --}}
+        <div class="mt-6">
+            {{ $productos->links() }}
+        </div>
     </div>
 
     {{-- Modal Ver Lotes del Producto --}}
     @if($productoIdLotesExpandido)
         @php
-            $productoSeleccionado = $productos->firstWhere('id', $productoIdLotesExpandido);
+            $productoSeleccionado = \App\Models\Producto::find($productoIdLotesExpandido);
         @endphp
         <div x-data="{ show: true, animatingOut: false }"
              x-show="show || animatingOut"
@@ -173,8 +178,8 @@
                     </button>
                 </div>
 
-                <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
-                    @if($productoSeleccionado && $productoSeleccionado->lotes->count() > 0)
+                <div class="overflow-y-auto max-h-[calc(90vh-200px)]">
+                    @if($lotesPaginados && $lotesPaginados->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full bg-white">
                                 <thead class="bg-gray-200 text-gray-600 uppercase text-xs leading-normal">
@@ -190,7 +195,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="text-gray-600 text-sm">
-                                    @foreach($productoSeleccionado->lotes as $lote)
+                                    @foreach($lotesPaginados as $lote)
                                         <tr class="border-b border-gray-200 {{ $editingLoteId === $lote->id ? 'bg-blue-50' : 'hover:bg-gray-50' }} {{ $lote->estado ? '' : 'opacity-50' }}">
                                             {{-- Bodega --}}
                                             <td class="py-3 px-4 text-left">
@@ -295,6 +300,55 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Paginación de lotes --}}
+                        @if($lotesPaginados->hasPages())
+                            <div class="mt-4 px-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm text-gray-600">
+                                        Mostrando {{ $lotesPaginados->firstItem() }} - {{ $lotesPaginados->lastItem() }} de {{ $lotesPaginados->total() }} lotes
+                                    </div>
+                                    <div class="flex gap-2">
+                                        {{-- Botón anterior --}}
+                                        @if($lotesPaginados->onFirstPage())
+                                            <button disabled class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed text-sm">
+                                                Anterior
+                                            </button>
+                                        @else
+                                            <button wire:click="goToLotesPage({{ $lotesPaginados->currentPage() - 1 }})" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm">
+                                                Anterior
+                                            </button>
+                                        @endif
+
+                                        {{-- Números de página --}}
+                                        <div class="flex gap-1">
+                                            @foreach(range(1, $lotesPaginados->lastPage()) as $page)
+                                                @if($page == $lotesPaginados->currentPage())
+                                                    <button class="px-3 py-1 bg-blue-600 text-white rounded font-semibold text-sm">
+                                                        {{ $page }}
+                                                    </button>
+                                                @else
+                                                    <button wire:click="goToLotesPage({{ $page }})" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm">
+                                                        {{ $page }}
+                                                    </button>
+                                                @endif
+                                            @endforeach
+                                        </div>
+
+                                        {{-- Botón siguiente --}}
+                                        @if($lotesPaginados->hasMorePages())
+                                            <button wire:click="goToLotesPage({{ $lotesPaginados->currentPage() + 1 }})" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm">
+                                                Siguiente
+                                            </button>
+                                        @else
+                                            <button disabled class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed text-sm">
+                                                Siguiente
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     @else
                         <div class="text-center py-8 text-gray-500">
                             <p>No hay lotes registrados para este producto.</p>
