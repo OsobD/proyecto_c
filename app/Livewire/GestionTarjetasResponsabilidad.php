@@ -14,6 +14,7 @@ class GestionTarjetasResponsabilidad extends Component
     use WithPagination;
 
     public $search = '';
+    public $tarjetaId; // ID de la tarjeta a desactivar
 
     // Para el acordeón de productos (similar a bodegas)
     public $tarjetaIdExpandida = null;
