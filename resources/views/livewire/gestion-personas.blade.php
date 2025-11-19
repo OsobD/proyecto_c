@@ -150,6 +150,16 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
+                                    {{-- Botón para ver productos consumibles solicitados --}}
+                                    <button
+                                        wire:click="toggleConsumibles({{ $persona->id }})"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 {{ $personaIdConsumiblesExpandida === $persona->id ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
+                                        title="Ver historial de productos consumibles">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                        </svg>
+                                    </button>
+
                                     <x-action-button
                                         type="edit"
                                         wire:click="edit({{ $persona->id }})"
@@ -170,6 +180,142 @@
                                 </div>
                             </td>
                         </tr>
+
+                        {{-- Expansión de productos consumibles solicitados (acordeón) --}}
+                        @if($personaIdConsumiblesExpandida === $persona->id)
+                            <tr>
+                                <td colspan="8" class="bg-green-50 p-6">
+                                    <div class="mb-4">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-800">
+                                                Historial de productos consumibles solicitados por {{ $persona->nombres }} {{ $persona->apellidos }}
+                                            </h3>
+                                        </div>
+
+                                        @php
+                                            // Obtener las salidas de la persona con productos consumibles
+                                            $salidasPersona = $persona->salidas()
+                                                ->with(['detalles.producto.categoria', 'detalles.lote.bodega', 'tipoSalida'])
+                                                ->orderBy('fecha', 'desc')
+                                                ->get();
+
+                                            // Filtrar solo los detalles de productos consumibles
+                                            $productosConsumibles = collect();
+                                            foreach ($salidasPersona as $salida) {
+                                                foreach ($salida->detalles as $detalle) {
+                                                    if ($detalle->producto && $detalle->producto->es_consumible) {
+                                                        $productosConsumibles->push([
+                                                            'salida_id' => $salida->id,
+                                                            'fecha_salida' => $salida->fecha,
+                                                            'tipo_salida' => $salida->tipoSalida ? $salida->tipoSalida->nombre : 'N/A',
+                                                            'producto_codigo' => $detalle->producto->id,
+                                                            'producto_nombre' => $detalle->producto->descripcion,
+                                                            'categoria' => $detalle->producto->categoria ? $detalle->producto->categoria->nombre : 'Sin categoría',
+                                                            'lote_id' => $detalle->lote ? $detalle->lote->id : 'N/A',
+                                                            'cantidad' => $detalle->cantidad,
+                                                            'precio_unitario' => $detalle->precio_salida,
+                                                            'total' => $detalle->cantidad * $detalle->precio_salida,
+                                                            'bodega' => $detalle->lote && $detalle->lote->bodega ? $detalle->lote->bodega->nombre : 'N/A',
+                                                            'descripcion_salida' => $salida->descripcion ?? '-',
+                                                        ]);
+                                                    }
+                                                }
+                                            }
+                                        @endphp
+
+                                        @if($productosConsumibles->count() > 0)
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full bg-white border border-gray-300">
+                                                    <thead class="bg-green-100 text-gray-700 text-sm">
+                                                        <tr>
+                                                            <th class="py-3 px-4 text-center">Salida ID</th>
+                                                            <th class="py-3 px-4 text-center">Fecha</th>
+                                                            <th class="py-3 px-4 text-left">Tipo</th>
+                                                            <th class="py-3 px-4 text-left">Código</th>
+                                                            <th class="py-3 px-4 text-left">Producto</th>
+                                                            <th class="py-3 px-4 text-left">Categoría</th>
+                                                            <th class="py-3 px-4 text-center">Lote ID</th>
+                                                            <th class="py-3 px-4 text-center">Cantidad</th>
+                                                            <th class="py-3 px-4 text-right">Precio Unit.</th>
+                                                            <th class="py-3 px-4 text-right">Total</th>
+                                                            <th class="py-3 px-4 text-left">Bodega</th>
+                                                            <th class="py-3 px-4 text-left">Descripción</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="text-gray-600 text-sm">
+                                                        @foreach($productosConsumibles as $index => $pc)
+                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" wire:key="consumible-{{ $persona->id }}-{{ $index }}">
+                                                                <td class="py-3 px-4 text-center">
+                                                                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                                                                        #{{ $pc['salida_id'] }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-center text-xs">
+                                                                    {{ \Carbon\Carbon::parse($pc['fecha_salida'])->format('d/m/Y') }}
+                                                                </td>
+                                                                <td class="py-3 px-4 text-left">
+                                                                    <span class="text-gray-700 text-xs">{{ $pc['tipo_salida'] }}</span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-left">
+                                                                    <span class="font-mono text-gray-700 font-semibold">{{ $pc['producto_codigo'] }}</span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-left">
+                                                                    <span class="font-medium text-gray-800">{{ $pc['producto_nombre'] }}</span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-left text-sm text-gray-500">
+                                                                    {{ $pc['categoria'] }}
+                                                                </td>
+                                                                <td class="py-3 px-4 text-center">
+                                                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
+                                                                        #{{ $pc['lote_id'] }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-center">
+                                                                    <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-xs font-bold">
+                                                                        {{ $pc['cantidad'] }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-right">
+                                                                    <span class="font-medium text-gray-700">Q{{ number_format($pc['precio_unitario'], 2) }}</span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-right">
+                                                                    <span class="font-semibold text-green-600">Q{{ number_format($pc['total'], 2) }}</span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-left">
+                                                                    <span class="text-gray-700">{{ $pc['bodega'] }}</span>
+                                                                </td>
+                                                                <td class="py-3 px-4 text-left text-xs text-gray-500 max-w-xs truncate">
+                                                                    {{ $pc['descripcion_salida'] }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {{-- Resumen --}}
+                                            <div class="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-gray-700 font-medium">Total de productos consumibles:</span>
+                                                        <span class="text-2xl font-bold text-green-600">{{ $productosConsumibles->count() }}</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-gray-700 font-medium">Total invertido:</span>
+                                                        <span class="text-2xl font-bold text-green-600">Q{{ number_format($productosConsumibles->sum('total'), 2) }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="text-center py-8 text-gray-500">
+                                                <p>No hay productos consumibles solicitados por esta persona.</p>
+                                                <p class="text-sm mt-2">El historial aparecerá aquí cuando se realicen salidas de productos consumibles.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="8" class="text-center py-8 text-gray-500">
