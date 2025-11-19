@@ -14,6 +14,8 @@ class GestionTarjetasResponsabilidad extends Component
     use WithPagination;
 
     public $search = '';
+    public $tarjetaId; // ID de la tarjeta a desactivar
+    public $mostrarDesactivadas = false; // Checkbox para mostrar tarjetas desactivadas
 
     // Para el acordeón de productos (similar a bodegas)
     public $tarjetaIdExpandida = null;
@@ -27,11 +29,16 @@ class GestionTarjetasResponsabilidad extends Component
         $this->resetPage();
     }
 
+    public function updatingMostrarDesactivadas()
+    {
+        $this->resetPage();
+    }
+
 
     public function render()
     {
         $query = TarjetaResponsabilidad::with('persona')
-            ->where('activo', true);
+            ->where('activo', $this->mostrarDesactivadas ? false : true);
 
         // Si hay búsqueda, filtrar por persona
         if (!empty($this->search)) {
@@ -123,6 +130,8 @@ class GestionTarjetasResponsabilidad extends Component
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'Desactivar',
+                'modelo' => 'TarjetaResponsabilidad',
+                'modelo_id' => $tarjeta->id,
                 'descripcion' => "Tarjeta de responsabilidad desactivada para: {$personaDescripcion}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
