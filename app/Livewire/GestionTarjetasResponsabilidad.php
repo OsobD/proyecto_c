@@ -324,5 +324,8 @@ class GestionTarjetasResponsabilidad extends Component
         } else {
             $this->tarjetaIdExpandida = $tarjetaId;
         }
+
+        // Despachar evento para Alpine.js
+        $this->dispatch('tarjeta-toggle-' . $tarjetaId);
     }
 }

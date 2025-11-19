@@ -88,19 +88,22 @@
                         </tr>
 
                         {{-- Expansión de productos de la tarjeta (acordeón) --}}
-                        @if($tarjetaIdExpandida === $tarjeta->id)
-                            <tr>
-                                <td colspan="6" class="bg-gray-50 p-0">
-                                    <div x-data="{ expanded: false }"
-                                         x-init="setTimeout(() => expanded = true, 50)"
-                                         class="overflow-hidden transition-all duration-500 ease-in-out"
-                                         :style="expanded ? 'max-height: 2000px; opacity: 1;' : 'max-height: 0; opacity: 0;'">
-                                        <div class="p-6">
-                                            <div class="flex justify-between items-center mb-4">
-                                            <h3 class="text-lg font-semibold text-gray-800">
-                                                Productos asignados a {{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}
-                                            </h3>
-                                        </div>
+                        <tr x-data="{ isOpen: @js($tarjetaIdExpandida === $tarjeta->id) }"
+                            x-show="isOpen"
+                            x-transition:enter="transition ease-out duration-500"
+                            x-transition:enter-start="opacity-0 transform scale-y-0"
+                            x-transition:enter-end="opacity-100 transform scale-y-100"
+                            x-transition:leave="transition ease-in duration-500"
+                            x-transition:leave-start="opacity-100 transform scale-y-100"
+                            x-transition:leave-end="opacity-0 transform scale-y-0"
+                            @tarjeta-toggle-{{ $tarjeta->id }}.window="isOpen = !isOpen"
+                            style="display: none; transform-origin: top;">
+                            <td colspan="6" class="bg-gray-50 p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-800">
+                                        Productos asignados a {{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}
+                                    </h3>
+                                </div>
 
                                         @php
                                             // Obtener los productos asignados a esta tarjeta
@@ -205,12 +208,9 @@
                                                 <p>No hay productos asignados a esta tarjeta.</p>
                                                 <p class="text-sm mt-2">Los productos aparecerán aquí cuando se realicen asignaciones.</p>
                                             </div>
-                                        @endif
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endif
+                                @endif
+                            </td>
+                        </tr>
                     @empty
                         <tr>
                             <td colspan="6" class="text-center py-4 text-gray-500">No se encontraron tarjetas de responsabilidad.</td>
@@ -227,11 +227,21 @@
     </div>
 
     {{-- Modal --}}
-    @if($showModal)
-        <div class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 flex items-center justify-center"
-             x-data
-             @click.self="$wire.closeModal()">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6" @click.stop>
+    <div x-data="{
+            show: @entangle('showModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModal"
+         wire:ignore.self>
+        <div class="relative p-6 border w-full max-w-2xl shadow-lg rounded-lg bg-white"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-xl font-semibold text-gray-800">
                         {{ $editMode ? 'Editar Tarjeta de Responsabilidad' : 'Nueva Tarjeta de Responsabilidad' }}
@@ -368,7 +378,6 @@
                 </form>
             </div>
         </div>
-    @endif
 </div>
 
 @push('scripts')
