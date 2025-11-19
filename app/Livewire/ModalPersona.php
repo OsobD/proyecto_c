@@ -24,8 +24,8 @@ class ModalPersona extends Component
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'dpi' => 'required|string|size:13|unique:persona,dpi',
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:255',
+            'telefono' => 'nullable|string|max:20|unique:persona,telefono',
+            'correo' => 'nullable|email|max:255|unique:persona,correo',
         ];
     }
 
@@ -35,7 +35,9 @@ class ModalPersona extends Component
         'dpi.required' => 'El DPI es obligatorio.',
         'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
         'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
+        'telefono.unique' => 'Ya existe una persona registrada con este teléfono.',
         'correo.email' => 'El correo debe ser una dirección válida.',
+        'correo.unique' => 'Ya existe una persona registrada con este correo.',
     ];
 
     public function abrir()
@@ -54,8 +56,21 @@ class ModalPersona extends Component
 
     public function guardar()
     {
-        // Validar los datos
-        $this->validate();
+        // Preparar reglas de validación dinámicas
+        $validationRules = $this->rules();
+
+        // Si teléfono está vacío, quitar validación unique
+        if (empty($this->telefono)) {
+            $validationRules['telefono'] = 'nullable|string|max:20';
+        }
+
+        // Si correo está vacío, quitar validación unique
+        if (empty($this->correo)) {
+            $validationRules['correo'] = 'nullable|email|max:255';
+        }
+
+        // Validar los datos con las reglas ajustadas
+        $this->validate($validationRules);
 
         try {
             DB::beginTransaction();

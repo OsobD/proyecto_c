@@ -51,7 +51,9 @@ class GestionPersonas extends Component
         'dpi.required' => 'El DPI es obligatorio.',
         'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
         'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
+        'telefono.unique' => 'Ya existe una persona registrada con este teléfono.',
         'correo.email' => 'El correo debe ser una dirección válida.',
+        'correo.unique' => 'Ya existe una persona registrada con este correo.',
     ];
 
     public function updatingSearch()
@@ -143,15 +145,35 @@ class GestionPersonas extends Component
 
     public function save()
     {
-        // Validar DPI único solo si es nueva persona o si cambió el DPI
-        $dpiRules = $this->rules;
+        // Validar campos únicos (DPI, teléfono, correo) solo si es nueva persona o si cambió el valor
+        $validationRules = $this->rules;
         if ($this->editMode) {
-            $dpiRules['dpi'] = 'required|string|size:13|unique:persona,dpi,' . $this->personaId;
+            $validationRules['dpi'] = 'required|string|size:13|unique:persona,dpi,' . $this->personaId;
+
+            // Validar teléfono único solo si no está vacío
+            if (!empty($this->telefono)) {
+                $validationRules['telefono'] = 'nullable|string|max:20|unique:persona,telefono,' . $this->personaId;
+            }
+
+            // Validar correo único solo si no está vacío
+            if (!empty($this->correo)) {
+                $validationRules['correo'] = 'nullable|email|max:255|unique:persona,correo,' . $this->personaId;
+            }
         } else {
-            $dpiRules['dpi'] = 'required|string|size:13|unique:persona,dpi';
+            $validationRules['dpi'] = 'required|string|size:13|unique:persona,dpi';
+
+            // Validar teléfono único solo si no está vacío
+            if (!empty($this->telefono)) {
+                $validationRules['telefono'] = 'nullable|string|max:20|unique:persona,telefono';
+            }
+
+            // Validar correo único solo si no está vacío
+            if (!empty($this->correo)) {
+                $validationRules['correo'] = 'nullable|email|max:255|unique:persona,correo';
+            }
         }
 
-        $this->validate($dpiRules);
+        $this->validate($validationRules);
 
         try {
             if ($this->editMode) {
