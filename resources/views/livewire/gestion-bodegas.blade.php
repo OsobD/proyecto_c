@@ -196,7 +196,6 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endif
                     @empty
                         <tr>
                             <td colspan="4" class="text-center py-4 text-gray-500">No se encontraron bodegas.</td>

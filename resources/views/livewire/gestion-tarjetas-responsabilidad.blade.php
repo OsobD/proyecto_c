@@ -221,7 +221,6 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endif
                     @empty
                         <tr>
                             <td colspan="6" class="text-center py-4 text-gray-500">No se encontraron tarjetas de responsabilidad.</td>
