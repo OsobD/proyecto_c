@@ -93,12 +93,11 @@
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
                                     {{-- Ver Lotes --}}
-                                    <button
+                                    <x-action-button
+                                        type="lotes"
+                                        badge="{{ $producto->lotes->count() }}"
                                         wire:click="toggleLotes('{{ $producto->id }}')"
-                                        class="bg-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-primary)] text-white text-xs font-semibold py-1.5 px-3 rounded transition-colors"
-                                        title="Ver lotes">
-                                        Lotes ({{ $producto->lotes->count() }})
-                                    </button>
+                                        title="Ver lotes del producto" />
                                     {{-- Editar --}}
                                     <x-action-button
                                         type="edit"
