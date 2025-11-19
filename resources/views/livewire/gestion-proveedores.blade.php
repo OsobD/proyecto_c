@@ -129,6 +129,13 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Paginación --}}
+        @if($proveedores->hasPages())
+            <div class="mt-6 px-6 py-4 border-t border-gray-200">
+                {{ $proveedores->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- Modal para crear/editar proveedor --}}

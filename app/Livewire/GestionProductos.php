@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Lote;
@@ -31,9 +32,20 @@ use Illuminate\Support\Facades\DB;
  */
 class GestionProductos extends Component
 {
+    use WithPagination;
+
     // Propiedades de búsqueda y filtrado
     /** @var string Término de búsqueda para filtrar productos */
     public $searchProducto = '';
+
+    /** @var int Número de elementos por página en la lista principal */
+    protected $perPage = 30;
+
+    /** @var int Página actual de lotes en el modal */
+    public $lotesPage = 1;
+
+    /** @var int Número de lotes por página en el modal */
+    protected $lotesPerPage = 10;
 
     // Propiedades de control de UI
     /** @var bool Controla visibilidad del modal de producto */
@@ -97,8 +109,9 @@ class GestionProductos extends Component
      */
     public function render()
     {
-        // Cargar productos con sus relaciones
-        $productos = Producto::with(['categoria', 'lotes.bodega'])
+        // Cargar productos con sus relaciones - PAGINADO
+        $productos = Producto::with(['categoria'])
+            ->withCount('lotes')
             ->when($this->searchProducto, function($query) {
                 $search = strtolower(trim($this->searchProducto));
                 $query->where(function($q) use ($search) {
@@ -110,7 +123,16 @@ class GestionProductos extends Component
                 });
             })
             ->orderBy('descripcion')
-            ->get();
+            ->paginate($this->perPage);
+
+        // Obtener lotes paginados si hay un producto expandido
+        $lotesPaginados = null;
+        if ($this->productoIdLotesExpandido) {
+            $lotesPaginados = Lote::where('id_producto', $this->productoIdLotesExpandido)
+                ->with('bodega')
+                ->orderBy('fecha_ingreso', 'desc')
+                ->paginate($this->lotesPerPage, ['*'], 'lotesPage', $this->lotesPage);
+        }
 
         $categorias = Categoria::where('activo', true)
             ->orderBy('nombre')
@@ -122,6 +144,7 @@ class GestionProductos extends Component
 
         return view('livewire.gestion-productos', [
             'productos' => $productos,
+            'lotesPaginados' => $lotesPaginados,
             'categorias' => $categorias,
             'bodegas' => $bodegas,
         ]);
@@ -243,7 +266,34 @@ class GestionProductos extends Component
      */
     public function toggleLotes($id)
     {
-        $this->productoIdLotesExpandido = $this->productoIdLotesExpandido === $id ? null : $id;
+        if ($this->productoIdLotesExpandido === $id) {
+            $this->productoIdLotesExpandido = null;
+            $this->lotesPage = 1;
+        } else {
+            $this->productoIdLotesExpandido = $id;
+            $this->lotesPage = 1; // Resetear a la primera página al abrir un nuevo producto
+        }
+    }
+
+    /**
+     * Cambia de página en la paginación de lotes
+     *
+     * @param int $page Número de página
+     * @return void
+     */
+    public function goToLotesPage($page)
+    {
+        $this->lotesPage = $page;
+    }
+
+    /**
+     * Resetea la paginación cuando cambia la búsqueda
+     *
+     * @return void
+     */
+    public function updatingSearchProducto()
+    {
+        $this->resetPage();
     }
 
     /**
