@@ -24,9 +24,9 @@ class ModalPersona extends Component
         return [
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'dpi' => 'required|string|size:13|unique:persona,dpi',
-            'telefono' => 'nullable|string|max:20|unique:persona,telefono',
-            'correo' => 'nullable|email|max:255|unique:persona,correo',
+            'dpi' => 'required|digits:13|unique:persona,dpi',
+            'telefono' => 'nullable|digits:8|unique:persona,telefono',
+            'correo' => 'nullable|email:rfc,dns|max:255|unique:persona,correo',
         ];
     }
 
@@ -34,10 +34,11 @@ class ModalPersona extends Component
         'nombres.required' => 'Los nombres son obligatorios.',
         'apellidos.required' => 'Los apellidos son obligatorios.',
         'dpi.required' => 'El DPI es obligatorio.',
-        'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
-        'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
+        'dpi.digits' => 'El DPI debe tener exactamente 13 dígitos numéricos.',
+        'dpi.unique' => 'Ya existe una persona registrada con este DPI.',
+        'telefono.digits' => 'El teléfono debe tener exactamente 8 dígitos numéricos.',
         'telefono.unique' => 'Ya existe una persona registrada con este teléfono.',
-        'correo.email' => 'El correo debe ser una dirección válida.',
+        'correo.email' => 'El correo debe ser una dirección de email válida (ej: usuario@dominio.com).',
         'correo.unique' => 'Ya existe una persona registrada con este correo.',
     ];
 
@@ -64,14 +65,14 @@ class ModalPersona extends Component
         // Preparar reglas de validación dinámicas
         $validationRules = $this->rules();
 
-        // Si teléfono está vacío, quitar validación unique
+        // Si teléfono está vacío, quitar validación unique y digits
         if (empty($this->telefono)) {
-            $validationRules['telefono'] = 'nullable|string|max:20';
+            $validationRules['telefono'] = 'nullable';
         }
 
-        // Si correo está vacío, quitar validación unique
+        // Si correo está vacío, quitar validación unique y email
         if (empty($this->correo)) {
-            $validationRules['correo'] = 'nullable|email|max:255';
+            $validationRules['correo'] = 'nullable';
         }
 
         // Validar los datos con las reglas ajustadas

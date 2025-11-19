@@ -99,11 +99,13 @@
 
                     {{-- DPI --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">DPI *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">DPI * (13 dígitos)</label>
                         <input
                             type="text"
                             wire:model="dpi"
                             maxlength="13"
+                            pattern="[0-9]{13}"
+                            inputmode="numeric"
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('dpi') border-red-500 ring-2 ring-red-200 @enderror"
                             placeholder="Ej: 1234567890101">
                         @error('dpi')
@@ -113,12 +115,15 @@
 
                     {{-- Teléfono --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono (8 dígitos)</label>
                         <input
                             type="text"
                             wire:model="telefono"
+                            maxlength="8"
+                            pattern="[0-9]{8}"
+                            inputmode="numeric"
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('telefono') border-red-500 ring-2 ring-red-200 @enderror"
-                            placeholder="Ej: 5555-5555">
+                            placeholder="Ej: 55555555">
                         @error('telefono')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
