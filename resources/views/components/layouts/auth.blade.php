@@ -26,7 +26,7 @@
         <div class="mt-8">
             <div class="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
                 <div class="flex items-center justify-center">
-                    <img src="{{ asset('images/#EstamosTrabajando@3x.png') }}"
+                    <img src="{{ asset('images/%23EstamosTrabajando@3x.png') }}"
                          alt="Estamos Trabajando"
                          class="h-16 sm:h-20 w-auto opacity-90 hover:opacity-100 transition-opacity">
                 </div>
