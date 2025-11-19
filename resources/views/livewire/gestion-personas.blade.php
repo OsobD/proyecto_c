@@ -202,12 +202,28 @@
                                             // Debug: contar salidas totales
                                             $totalSalidas = $salidasPersona->count();
                                             $totalDetalles = 0;
+                                            $todosLosProductos = collect(); // Para debug: todos los productos
+                                            $productosNoConsumibles = 0;
 
                                             // Filtrar solo los detalles de productos consumibles
                                             $productosConsumibles = collect();
                                             foreach ($salidasPersona as $salida) {
                                                 foreach ($salida->detalles as $detalle) {
                                                     $totalDetalles++;
+
+                                                    // Debug: guardar todos los productos
+                                                    if ($detalle->producto) {
+                                                        $todosLosProductos->push([
+                                                            'codigo' => $detalle->producto->id,
+                                                            'nombre' => $detalle->producto->descripcion,
+                                                            'es_consumible' => $detalle->producto->es_consumible ? 'SÍ' : 'NO',
+                                                        ]);
+
+                                                        if (!$detalle->producto->es_consumible) {
+                                                            $productosNoConsumibles++;
+                                                        }
+                                                    }
+
                                                     if ($detalle->producto && $detalle->producto->es_consumible) {
                                                         $productosConsumibles->push([
                                                             'salida_id' => $salida->id,
@@ -228,14 +244,45 @@
                                             }
                                         @endphp
 
-                                        {{-- Información de debug --}}
-                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
-                                            <p class="font-semibold text-blue-800">Información de debug:</p>
-                                            <ul class="list-disc list-inside text-blue-700 mt-2 space-y-1">
+                                        {{-- Información de debug expandida --}}
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm">
+                                            <p class="font-semibold text-blue-800 mb-3">Información de debug:</p>
+                                            <ul class="list-disc list-inside text-blue-700 space-y-1">
                                                 <li>Total de salidas encontradas: <strong>{{ $totalSalidas }}</strong></li>
                                                 <li>Total de detalles en salidas: <strong>{{ $totalDetalles }}</strong></li>
-                                                <li>Productos consumibles encontrados: <strong>{{ $productosConsumibles->count() }}</strong></li>
+                                                <li>Productos consumibles encontrados: <strong class="text-green-600">{{ $productosConsumibles->count() }}</strong></li>
+                                                <li>Productos NO consumibles: <strong class="text-orange-600">{{ $productosNoConsumibles }}</strong></li>
                                             </ul>
+
+                                            @if($todosLosProductos->count() > 0)
+                                                <div class="mt-4 bg-white rounded-lg p-3 border border-blue-300">
+                                                    <p class="font-semibold text-blue-800 mb-2">Lista de todos los productos en salidas:</p>
+                                                    <div class="max-h-40 overflow-y-auto">
+                                                        <table class="min-w-full text-xs">
+                                                            <thead class="bg-blue-100">
+                                                                <tr>
+                                                                    <th class="px-2 py-1 text-left">Código</th>
+                                                                    <th class="px-2 py-1 text-left">Nombre</th>
+                                                                    <th class="px-2 py-1 text-center">¿Es Consumible?</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($todosLosProductos as $prod)
+                                                                    <tr class="border-b">
+                                                                        <td class="px-2 py-1 font-mono">{{ $prod['codigo'] }}</td>
+                                                                        <td class="px-2 py-1">{{ $prod['nombre'] }}</td>
+                                                                        <td class="px-2 py-1 text-center">
+                                                                            <span class="{{ $prod['es_consumible'] === 'SÍ' ? 'text-green-600 font-bold' : 'text-red-600' }}">
+                                                                                {{ $prod['es_consumible'] }}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
 
                                         @if($productosConsumibles->count() > 0)
