@@ -150,11 +150,11 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
-                                    {{-- Botón para ver productos consumibles solicitados --}}
+                                    {{-- Botón para ver productos solicitados --}}
                                     <button
                                         wire:click="toggleConsumibles({{ $persona->id }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200 {{ $personaIdConsumiblesExpandida === $persona->id ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
-                                        title="Ver historial de productos consumibles">
+                                        title="Ver historial de productos solicitados">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                         </svg>
@@ -188,50 +188,30 @@
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">
-                                                Historial de productos consumibles solicitados por {{ $persona->nombres }} {{ $persona->apellidos }}
+                                                Historial de productos solicitados por {{ $persona->nombres }} {{ $persona->apellidos }}
                                             </h3>
                                         </div>
 
                                         @php
-                                            // Obtener las salidas de la persona con productos consumibles
+                                            // Obtener las salidas de la persona
                                             $salidasPersona = $persona->salidas()
                                                 ->with(['detalles.producto.categoria', 'detalles.lote.bodega', 'tipoSalida'])
                                                 ->orderBy('fecha', 'desc')
                                                 ->get();
 
-                                            // Debug: contar salidas totales
-                                            $totalSalidas = $salidasPersona->count();
-                                            $totalDetalles = 0;
-                                            $todosLosProductos = collect(); // Para debug: todos los productos
-                                            $productosNoConsumibles = 0;
-
-                                            // Filtrar solo los detalles de productos consumibles
-                                            $productosConsumibles = collect();
+                                            // Obtener TODOS los productos de las salidas
+                                            $productosSalidas = collect();
                                             foreach ($salidasPersona as $salida) {
                                                 foreach ($salida->detalles as $detalle) {
-                                                    $totalDetalles++;
-
-                                                    // Debug: guardar todos los productos
                                                     if ($detalle->producto) {
-                                                        $todosLosProductos->push([
-                                                            'codigo' => $detalle->producto->id,
-                                                            'nombre' => $detalle->producto->descripcion,
-                                                            'es_consumible' => $detalle->producto->es_consumible ? 'SÍ' : 'NO',
-                                                        ]);
-
-                                                        if (!$detalle->producto->es_consumible) {
-                                                            $productosNoConsumibles++;
-                                                        }
-                                                    }
-
-                                                    if ($detalle->producto && $detalle->producto->es_consumible) {
-                                                        $productosConsumibles->push([
+                                                        $productosSalidas->push([
                                                             'salida_id' => $salida->id,
                                                             'fecha_salida' => $salida->fecha,
                                                             'tipo_salida' => $salida->tipoSalida ? $salida->tipoSalida->nombre : 'N/A',
                                                             'producto_codigo' => $detalle->producto->id,
                                                             'producto_nombre' => $detalle->producto->descripcion,
                                                             'categoria' => $detalle->producto->categoria ? $detalle->producto->categoria->nombre : 'Sin categoría',
+                                                            'es_consumible' => $detalle->producto->es_consumible,
                                                             'lote_id' => $detalle->lote ? $detalle->lote->id : 'N/A',
                                                             'cantidad' => $detalle->cantidad,
                                                             'precio_unitario' => $detalle->precio_salida,
@@ -244,48 +224,7 @@
                                             }
                                         @endphp
 
-                                        {{-- Información de debug expandida --}}
-                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm">
-                                            <p class="font-semibold text-blue-800 mb-3">Información de debug:</p>
-                                            <ul class="list-disc list-inside text-blue-700 space-y-1">
-                                                <li>Total de salidas encontradas: <strong>{{ $totalSalidas }}</strong></li>
-                                                <li>Total de detalles en salidas: <strong>{{ $totalDetalles }}</strong></li>
-                                                <li>Productos consumibles encontrados: <strong class="text-green-600">{{ $productosConsumibles->count() }}</strong></li>
-                                                <li>Productos NO consumibles: <strong class="text-orange-600">{{ $productosNoConsumibles }}</strong></li>
-                                            </ul>
-
-                                            @if($todosLosProductos->count() > 0)
-                                                <div class="mt-4 bg-white rounded-lg p-3 border border-blue-300">
-                                                    <p class="font-semibold text-blue-800 mb-2">Lista de todos los productos en salidas:</p>
-                                                    <div class="max-h-40 overflow-y-auto">
-                                                        <table class="min-w-full text-xs">
-                                                            <thead class="bg-blue-100">
-                                                                <tr>
-                                                                    <th class="px-2 py-1 text-left">Código</th>
-                                                                    <th class="px-2 py-1 text-left">Nombre</th>
-                                                                    <th class="px-2 py-1 text-center">¿Es Consumible?</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @foreach($todosLosProductos as $prod)
-                                                                    <tr class="border-b">
-                                                                        <td class="px-2 py-1 font-mono">{{ $prod['codigo'] }}</td>
-                                                                        <td class="px-2 py-1">{{ $prod['nombre'] }}</td>
-                                                                        <td class="px-2 py-1 text-center">
-                                                                            <span class="{{ $prod['es_consumible'] === 'SÍ' ? 'text-green-600 font-bold' : 'text-red-600' }}">
-                                                                                {{ $prod['es_consumible'] }}
-                                                                            </span>
-                                                                        </td>
-                                                                    </tr>
-                                                                @endforeach
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        @if($productosConsumibles->count() > 0)
+                                        @if($productosSalidas->count() > 0)
                                             <div class="overflow-x-auto">
                                                 <table class="min-w-full bg-white border border-gray-300">
                                                     <thead class="bg-green-100 text-gray-700 text-sm">
@@ -305,8 +244,8 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody class="text-gray-600 text-sm">
-                                                        @foreach($productosConsumibles as $index => $pc)
-                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" wire:key="consumible-{{ $persona->id }}-{{ $index }}">
+                                                        @foreach($productosSalidas as $index => $pc)
+                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" wire:key="salida-{{ $persona->id }}-{{ $index }}">
                                                                 <td class="py-3 px-4 text-center">
                                                                     <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
                                                                         #{{ $pc['salida_id'] }}
@@ -359,19 +298,19 @@
                                             <div class="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
                                                 <div class="grid grid-cols-2 gap-4">
                                                     <div class="flex items-center justify-between">
-                                                        <span class="text-gray-700 font-medium">Total de productos consumibles:</span>
-                                                        <span class="text-2xl font-bold text-green-600">{{ $productosConsumibles->count() }}</span>
+                                                        <span class="text-gray-700 font-medium">Total de productos:</span>
+                                                        <span class="text-2xl font-bold text-green-600">{{ $productosSalidas->count() }}</span>
                                                     </div>
                                                     <div class="flex items-center justify-between">
                                                         <span class="text-gray-700 font-medium">Total invertido:</span>
-                                                        <span class="text-2xl font-bold text-green-600">Q{{ number_format($productosConsumibles->sum('total'), 2) }}</span>
+                                                        <span class="text-2xl font-bold text-green-600">Q{{ number_format($productosSalidas->sum('total'), 2) }}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         @else
                                             <div class="text-center py-8 text-gray-500">
-                                                <p>No hay productos consumibles solicitados por esta persona.</p>
-                                                <p class="text-sm mt-2">El historial aparecerá aquí cuando se realicen salidas de productos consumibles.</p>
+                                                <p>No hay productos solicitados por esta persona.</p>
+                                                <p class="text-sm mt-2">El historial aparecerá aquí cuando se realicen salidas de productos.</p>
                                             </div>
                                         @endif
                                     </div>
