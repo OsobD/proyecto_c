@@ -13,7 +13,7 @@
             <div class="flex justify-center mb-4">
                 <img src="{{ asset('images/EEMQ@3x.png') }}" alt="Logo EEMQ" class="h-20 w-auto">
             </div>
-            <p class="mt-2 text-sm text-gray-600">
+            <p class="mt-2 text-lg font-bold text-gray-800">
                 Sistema de Gestión de Inventario
             </p>
         </div>
@@ -23,17 +23,17 @@
         </div>
 
         {{-- Footer con logos institucionales --}}
-        <div class="mt-8">
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
+        <div class="mt-12 bg-white shadow-lg rounded-lg px-6 py-6">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
                 <div class="flex items-center justify-center">
                     <img src="{{ asset('images/%23EstamosTrabajando@3x.png') }}"
                          alt="Estamos Trabajando"
-                         class="h-16 sm:h-20 w-auto opacity-90 hover:opacity-100 transition-opacity">
+                         class="h-14 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity">
                 </div>
                 <div class="flex items-center justify-center">
                     <img src="{{ asset('images/Administración 24-28@3x.png') }}"
                          alt="Administración 2024-2028"
-                         class="h-16 sm:h-20 w-auto opacity-90 hover:opacity-100 transition-opacity">
+                         class="h-14 sm:h-16 w-auto opacity-90 hover:opacity-100 transition-opacity">
                 </div>
             </div>
         </div>
