@@ -199,10 +199,15 @@
                                                 ->orderBy('fecha', 'desc')
                                                 ->get();
 
+                                            // Debug: contar salidas totales
+                                            $totalSalidas = $salidasPersona->count();
+                                            $totalDetalles = 0;
+
                                             // Filtrar solo los detalles de productos consumibles
                                             $productosConsumibles = collect();
                                             foreach ($salidasPersona as $salida) {
                                                 foreach ($salida->detalles as $detalle) {
+                                                    $totalDetalles++;
                                                     if ($detalle->producto && $detalle->producto->es_consumible) {
                                                         $productosConsumibles->push([
                                                             'salida_id' => $salida->id,
@@ -222,6 +227,16 @@
                                                 }
                                             }
                                         @endphp
+
+                                        {{-- Información de debug --}}
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
+                                            <p class="font-semibold text-blue-800">Información de debug:</p>
+                                            <ul class="list-disc list-inside text-blue-700 mt-2 space-y-1">
+                                                <li>Total de salidas encontradas: <strong>{{ $totalSalidas }}</strong></li>
+                                                <li>Total de detalles en salidas: <strong>{{ $totalDetalles }}</strong></li>
+                                                <li>Productos consumibles encontrados: <strong>{{ $productosConsumibles->count() }}</strong></li>
+                                            </ul>
+                                        </div>
 
                                         @if($productosConsumibles->count() > 0)
                                             <div class="overflow-x-auto">
