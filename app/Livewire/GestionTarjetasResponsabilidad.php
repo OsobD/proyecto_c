@@ -267,10 +267,10 @@ class GestionTarjetasResponsabilidad extends Component
      */
     public function toggleProductos($tarjetaId)
     {
-        $wasOpen = $this->tarjetaIdExpandida === $tarjetaId;
-        $this->tarjetaIdExpandida = $wasOpen ? null : $tarjetaId;
-
-        // Despachar evento para animación smooth con Alpine.js
-        $this->dispatch('toggle-tarjeta-productos-' . $tarjetaId, open: !$wasOpen);
+        if ($this->tarjetaIdExpandida === $tarjetaId) {
+            $this->tarjetaIdExpandida = null;
+        } else {
+            $this->tarjetaIdExpandida = $tarjetaId;
+        }
     }
 }
