@@ -21,19 +21,19 @@
         </div>
         <button
             wire:click="abrirModal"
-            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-150">
+            class="bg-[var(--color-eemq-primary)] hover:bg-[var(--color-eemq-primary-dark)] text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-150">
             + Nuevo Producto
         </button>
     </div>
 
     {{-- Alertas de éxito y error para operaciones CRUD --}}
     @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <div class="bg-green-50 border border-[var(--color-eemq-interactive)] text-[var(--color-eemq-primary)] px-4 py-3 rounded mb-4">
             {{ session('message') }}
         </div>
     @endif
     @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div class="bg-red-50 border border-[var(--color-eemq-accent)] text-[var(--color-eemq-accent-dark)] px-4 py-3 rounded mb-4">
             {{ session('error') }}
         </div>
     @endif
@@ -45,14 +45,14 @@
             <input
                 type="text"
                 wire:model.live.debounce.300ms="searchProducto"
-                class="w-full md:w-1/2 px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full md:w-1/2 px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent"
                 placeholder="Buscar por código, descripción o categoría...">
         </div>
 
         {{-- Tabla de listado de productos --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
-                <thead class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                <thead class="bg-[var(--color-eemq-primary)] text-white uppercase text-sm leading-normal">
                     <tr>
                         <th class="py-3 px-6 text-left">Código</th>
                         <th class="py-3 px-6 text-left">Descripción</th>
@@ -72,7 +72,7 @@
                                 {{ $producto->descripcion }}
                             </td>
                             <td class="py-3 px-6 text-left">
-                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                                <span class="bg-[var(--color-eemq-bg)] text-[var(--color-eemq-primary)] border border-[var(--color-eemq-secondary)] text-xs font-semibold px-2 py-1 rounded">
                                     {{ $producto->categoria->nombre ?? 'Sin categoría' }}
                                 </span>
                             </td>
@@ -93,12 +93,11 @@
                             <td class="py-3 px-6 text-center">
                                 <div class="flex item-center justify-center gap-2">
                                     {{-- Ver Lotes --}}
-                                    <button
+                                    <x-action-button
+                                        type="lotes"
+                                        badge="{{ $producto->lotes->count() }}"
                                         wire:click="toggleLotes('{{ $producto->id }}')"
-                                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 px-3 rounded"
-                                        title="Ver lotes">
-                                        Lotes ({{ $producto->lotes->count() }})
-                                    </button>
+                                        title="Ver lotes del producto" />
                                     {{-- Editar --}}
                                     <x-action-button
                                         type="edit"
@@ -163,7 +162,7 @@
                     @if($productoSeleccionado && $productoSeleccionado->lotes->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full bg-white">
-                                <thead class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                                <thead class="bg-[var(--color-eemq-primary)] text-white uppercase text-xs leading-normal">
                                     <tr>
                                         <th class="py-3 px-4 text-left">Bodega</th>
                                         <th class="py-3 px-4 text-center">Cantidad Disponible</th>
@@ -244,7 +243,7 @@
                                                 @if($editingLoteId === $lote->id)
                                                     {{-- Modo edición: mostrar guardar y cancelar --}}
                                                     <div class="flex item-center justify-center gap-1">
-                                                        <button wire:click="guardarLote" class="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded" title="Guardar cambios">
+                                                        <button wire:click="guardarLote" class="bg-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-primary)] text-white p-1.5 rounded transition-colors" title="Guardar cambios">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                                             </svg>
@@ -328,7 +327,7 @@
                         id="codigo"
                         wire:model="codigo"
                         {{ $editingId ? 'disabled' : '' }}
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('codigo') border-red-500 @enderror {{ $editingId ? 'bg-gray-100 cursor-not-allowed' : '' }}"
+                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('codigo') border-[var(--color-eemq-accent)] @enderror {{ $editingId ? 'bg-gray-100 cursor-not-allowed' : '' }}"
                         placeholder="Ej: PROD-001">
                     @error('codigo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -344,7 +343,7 @@
                         type="text"
                         id="descripcion"
                         wire:model="descripcion"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('descripcion') border-red-500 @enderror"
+                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('descripcion') border-[var(--color-eemq-accent)] @enderror"
                         placeholder="Ej: Tornillos de acero inoxidable">
                     @error('descripcion')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -360,14 +359,14 @@
                         <button
                             type="button"
                             wire:click="abrirSubModalCategoria"
-                            class="text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                            class="text-[var(--color-eemq-interactive)] hover:text-[var(--color-eemq-primary)] text-sm font-semibold transition-colors">
                             + Crear Categoría
                         </button>
                     </div>
                     <select
                         id="categoriaId"
                         wire:model="categoriaId"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('categoriaId') border-red-500 @enderror">
+                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('categoriaId') border-[var(--color-eemq-accent)] @enderror">
                         <option value="">Seleccione una categoría</option>
                         @foreach($categorias as $categoria)
                             <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
@@ -384,7 +383,7 @@
                         <input
                             type="checkbox"
                             wire:model="esConsumible"
-                            class="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                            class="w-5 h-5 text-[var(--color-eemq-interactive)] border-2 border-[var(--color-eemq-secondary)] rounded focus:ring-2 focus:ring-[var(--color-eemq-interactive)]">
                         <span class="text-sm font-medium text-gray-700">
                             Este producto es consumible
                         </span>
@@ -398,12 +397,12 @@
                     <button
                         type="button"
                         wire:click="closeModal"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        class="bg-[var(--color-eemq-secondary)] hover:bg-[var(--color-heather)] text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        class="bg-[var(--color-eemq-primary)] hover:bg-[var(--color-eemq-primary-dark)] text-white font-semibold py-3 px-6 rounded-lg transition-colors">
                         {{ $editingId ? 'Actualizar' : 'Crear' }}
                     </button>
                 </div>
@@ -417,6 +416,7 @@
             animatingOut: false
          }"
          x-show="show || animatingOut"
+         x-cloak
          x-init="$watch('show', value => { if (!value) animatingOut = true; })"
          @animationend="if (!show) animatingOut = false"
          class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
@@ -444,7 +444,7 @@
                         type="text"
                         id="nuevaCategoriaNombre"
                         wire:model="nuevaCategoriaNombre"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nuevaCategoriaNombre') border-red-500 @enderror"
+                        class="w-full px-4 py-2 border-2 border-[var(--color-eemq-secondary)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-eemq-interactive)] focus:border-transparent @error('nuevaCategoriaNombre') border-[var(--color-eemq-accent)] @enderror"
                         placeholder="Ej: Equipos de Protección">
                     @error('nuevaCategoriaNombre')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -455,12 +455,12 @@
                     <button
                         type="button"
                         wire:click="closeSubModalCategoria"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        class="bg-[var(--color-eemq-secondary)] hover:bg-[var(--color-heather)] text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors">
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        class="bg-[var(--color-eemq-primary)] hover:bg-[var(--color-eemq-primary-dark)] text-white font-semibold py-3 px-6 rounded-lg transition-colors">
                         Crear
                     </button>
                 </div>
