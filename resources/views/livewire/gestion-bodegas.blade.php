@@ -79,14 +79,14 @@
 
                         {{-- Expansión de productos de la bodega --}}
                         @if($bodegaIdProductosExpandido === $bodega->id)
-                            <tr x-data="{ show: false }"
-                                x-init="$nextTick(() => show = true)"
-                                x-show="show"
-                                x-collapse
-                                x-cloak>
-                                <td colspan="4" class="bg-gray-50 p-6">
-                                    <div class="mb-4">
-                                        <div class="flex justify-between items-center mb-4">
+                            <tr>
+                                <td colspan="4" class="bg-gray-50 p-0">
+                                    <div x-data="{ expanded: false }"
+                                         x-init="setTimeout(() => expanded = true, 50)"
+                                         class="overflow-hidden transition-all duration-500 ease-in-out"
+                                         :style="expanded ? 'max-height: 2000px; opacity: 1;' : 'max-height: 0; opacity: 0;'">
+                                        <div class="p-6">
+                                            <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">Productos en {{ $bodega->nombre }}</h3>
                                             <button
                                                 wire:click="abrirModalProducto"
@@ -181,6 +181,7 @@
                                                 <p class="text-sm mt-2">Los productos aparecerán aquí cuando se registren compras.</p>
                                             </div>
                                         @endif
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

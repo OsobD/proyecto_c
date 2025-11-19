@@ -31,6 +31,10 @@ class GestionTarjetasResponsabilidad extends Component
     // Para mostrar la persona seleccionada en el modal
     public $personaSeleccionada = null;
 
+    // Para buscar personas disponibles
+    public $searchPersona = '';
+    public $personasDisponibles = [];
+
     // Para el acordeón de productos (similar a bodegas)
     public $tarjetaIdExpandida = null;
 
@@ -259,7 +263,55 @@ class GestionTarjetasResponsabilidad extends Component
         $this->fecha_creacion = '';
         $this->total = 0;
         $this->personaSeleccionada = null;
+        $this->searchPersona = '';
+        $this->personasDisponibles = [];
         $this->resetErrorBag();
+    }
+
+    /**
+     * Actualiza la lista de personas disponibles cuando se escribe en el buscador
+     */
+    public function updatedSearchPersona()
+    {
+        if (empty($this->searchPersona)) {
+            $this->personasDisponibles = [];
+            return;
+        }
+
+        // Buscar personas que no tengan tarjeta activa
+        $this->personasDisponibles = Persona::where('estado', true)
+            ->whereDoesntHave('tarjetaResponsabilidad', function($query) {
+                $query->where('activo', true);
+            })
+            ->where(function($query) {
+                $query->where('nombres', 'like', '%' . $this->searchPersona . '%')
+                    ->orWhere('apellidos', 'like', '%' . $this->searchPersona . '%')
+                    ->orWhere('correo', 'like', '%' . $this->searchPersona . '%');
+            })
+            ->limit(5)
+            ->get();
+    }
+
+    /**
+     * Selecciona una persona de la lista
+     */
+    public function selectPersona($personaId)
+    {
+        $this->personaSeleccionada = Persona::find($personaId);
+        $this->id_persona = $personaId;
+        $this->searchPersona = '';
+        $this->personasDisponibles = [];
+    }
+
+    /**
+     * Limpia la selección de persona
+     */
+    public function clearPersona()
+    {
+        $this->personaSeleccionada = null;
+        $this->id_persona = null;
+        $this->searchPersona = '';
+        $this->personasDisponibles = [];
     }
 
     /**
