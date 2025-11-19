@@ -31,10 +31,8 @@ class GestionTarjetasResponsabilidad extends Component
     // Para mostrar la persona seleccionada en el modal
     public $personaSeleccionada = null;
 
-    // Para el modal de productos
-    public $showProductosModal = false;
-    public $tarjetaProductos = [];
-    public $tarjetaNombre = '';
+    // Para el acordeón de productos (similar a bodegas)
+    public $tarjetaIdExpandida = null;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -265,51 +263,14 @@ class GestionTarjetasResponsabilidad extends Component
     }
 
     /**
-     * Muestra el modal con los productos asignados a una tarjeta
+     * Toggle para expandir/contraer la lista de productos de una tarjeta
      */
-    public function verProductos($tarjetaId)
+    public function toggleProductos($tarjetaId)
     {
-        $tarjeta = TarjetaResponsabilidad::with(['persona', 'tarjetasProducto.producto', 'tarjetasProducto.lote.bodega'])
-            ->findOrFail($tarjetaId);
-
-        $this->tarjetaNombre = "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}";
-        $this->tarjetaProductos = $tarjeta->tarjetasProducto->map(function($tp) {
-            $lote = $tp->lote;
-            $producto = $tp->producto;
-
-            // Calcular la cantidad asignada dividiendo el precio de asignación entre el precio de ingreso
-            $cantidadAsignada = 0;
-            if ($lote && $lote->precio_ingreso > 0) {
-                $cantidadAsignada = round($tp->precio_asignacion / $lote->precio_ingreso);
-            }
-
-            return [
-                'id' => $tp->id,
-                'producto_codigo' => $producto ? $producto->id : 'N/A',
-                'producto_nombre' => $producto ? $producto->descripcion : 'N/A',
-                'lote_id' => $lote ? $lote->id : 'N/A',
-                'cantidad_asignada' => $cantidadAsignada,
-                'cantidad_disponible' => $lote ? $lote->cantidad : 0,
-                'cantidad_inicial' => $lote ? $lote->cantidad_inicial : 0,
-                'precio_ingreso' => $lote ? $lote->precio_ingreso : 0,
-                'precio_asignacion' => $tp->precio_asignacion,
-                'fecha_ingreso' => $lote && $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y H:i') : 'N/A',
-                'bodega' => $lote && $lote->bodega ? $lote->bodega->nombre : 'N/A',
-                'estado' => $lote ? ($lote->estado ? 'Activo' : 'Inactivo') : 'N/A',
-                'observaciones' => $lote ? ($lote->observaciones ?? '-') : '-',
-            ];
-        })->toArray();
-
-        $this->showProductosModal = true;
-    }
-
-    /**
-     * Cierra el modal de productos
-     */
-    public function cerrarProductosModal()
-    {
-        $this->showProductosModal = false;
-        $this->tarjetaProductos = [];
-        $this->tarjetaNombre = '';
+        if ($this->tarjetaIdExpandida === $tarjetaId) {
+            $this->tarjetaIdExpandida = null;
+        } else {
+            $this->tarjetaIdExpandida = $tarjetaId;
+        }
     }
 }

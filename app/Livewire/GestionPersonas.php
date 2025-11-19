@@ -22,6 +22,9 @@ class GestionPersonas extends Component
     public $sortField = null;  // 'id', 'nombres', 'apellidos', 'dpi'
     public $sortDirection = null;  // 'asc' o 'desc'
 
+    // Para el acordeón de productos consumibles
+    public $personaIdConsumiblesExpandida = null;
+
     // Campos del formulario
     public $personaId;
     public $nombres;
@@ -293,5 +296,17 @@ class GestionPersonas extends Component
     {
         // Establecer el mensaje flash
         session()->flash('message', $mensaje);
+    }
+
+    /**
+     * Toggle para expandir/contraer la lista de productos consumibles solicitados por una persona
+     */
+    public function toggleConsumibles($personaId)
+    {
+        if ($this->personaIdConsumiblesExpandida === $personaId) {
+            $this->personaIdConsumiblesExpandida = null;
+        } else {
+            $this->personaIdConsumiblesExpandida = $personaId;
+        }
     }
 }
