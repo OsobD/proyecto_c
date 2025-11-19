@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Proveedor;
 use App\Models\RegimenTributario;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -25,6 +26,8 @@ use Illuminate\Support\Facades\DB;
  */
 class GestionProveedores extends Component
 {
+    use WithPagination;
+
     // Propiedades de búsqueda y filtrado
     /** @var string Término de búsqueda para filtrar proveedores */
     public $searchProveedor = '';
@@ -53,6 +56,16 @@ class GestionProveedores extends Component
     public $nombre = '';
 
     /**
+     * Resetea la paginación cuando cambia la búsqueda
+     *
+     * @return void
+     */
+    public function updatingSearchProveedor()
+    {
+        $this->resetPage();
+    }
+
+    /**
      * Renderiza la vista del componente con datos desde BD
      *
      * @return \Illuminate\View\View
@@ -72,7 +85,7 @@ class GestionProveedores extends Component
                 });
             })
             ->orderBy('nombre')
-            ->get();
+            ->paginate(30);
 
         $regimenesTributarios = RegimenTributario::orderBy('nombre')
             ->get();

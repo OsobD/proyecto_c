@@ -94,7 +94,7 @@ class GestionTarjetasResponsabilidad extends Component
                       });
             })
             ->orderBy('fecha_creacion', 'desc')
-            ->paginate(10);
+            ->paginate(30);
 
         return view('livewire.gestion-tarjetas-responsabilidad', [
             'tarjetas' => $tarjetas

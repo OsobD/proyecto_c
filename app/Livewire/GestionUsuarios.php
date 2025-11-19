@@ -686,7 +686,7 @@ class GestionUsuarios extends Component
             $query->orderBy('nombre_usuario', 'asc');
         }
 
-        return $query->paginate(10);
+        return $query->paginate(30);
     }
 
     /**

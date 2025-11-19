@@ -18,6 +18,11 @@ class GestionPuestos extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
     protected function rules()
     {
         return [
@@ -40,7 +45,7 @@ class GestionPuestos extends Component
     {
         $puestos = Puesto::where('nombre', 'like', '%' . $this->search . '%')
             ->orderBy('nombre', 'asc')
-            ->paginate(15);
+            ->paginate(30);
 
         return view('livewire.gestion-puestos', [
             'puestos' => $puestos

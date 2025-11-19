@@ -79,7 +79,7 @@ class GestionBodegas extends Component
         $bodegas = Bodega::where('activo', true)
             ->where('nombre', 'like', '%' . $this->search . '%')
             ->orderBy('nombre', 'asc')
-            ->paginate(10);
+            ->paginate(30);
 
         return view('livewire.gestion-bodegas', [
             'bodegas' => $bodegas
