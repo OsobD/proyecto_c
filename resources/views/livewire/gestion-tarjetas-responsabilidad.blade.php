@@ -72,16 +72,20 @@
                         <tr class="border-b border-gray-200 hover:bg-gray-100">
                             <td class="py-3 px-6 text-left whitespace-nowrap">{{ $tarjeta->id }}</td>
                             <td class="py-3 px-6 text-left">
-                                <strong>{{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}</strong>
-                                @if($tarjeta->persona->correo || $tarjeta->persona->telefono)
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        @if($tarjeta->persona->correo)
-                                            <div>{{ $tarjeta->persona->correo }}</div>
-                                        @endif
-                                        @if($tarjeta->persona->telefono)
-                                            <div>{{ $tarjeta->persona->telefono }}</div>
-                                        @endif
-                                    </div>
+                                @if($tarjeta->persona)
+                                    <strong>{{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}</strong>
+                                    @if($tarjeta->persona->correo || $tarjeta->persona->telefono)
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            @if($tarjeta->persona->correo)
+                                                <div>{{ $tarjeta->persona->correo }}</div>
+                                            @endif
+                                            @if($tarjeta->persona->telefono)
+                                                <div>{{ $tarjeta->persona->telefono }}</div>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="text-red-500 text-sm">Sin persona asignada</span>
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($tarjeta->fecha_creacion)->format('d/m/Y H:i') }}</td>
@@ -120,7 +124,7 @@
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">
-                                                Productos asignados a {{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}
+                                                Productos asignados a {{ $tarjeta->persona ? $tarjeta->persona->nombres . ' ' . $tarjeta->persona->apellidos : 'Tarjeta #' . $tarjeta->id }}
                                             </h3>
                                         </div>
 
@@ -284,19 +288,25 @@
 
                         @if($editMode)
                             {{-- En modo edición, solo mostrar la persona (no editable) --}}
-                            <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                                <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                    <div>
-                                        <strong>{{ $personaSeleccionada->nombres }} {{ $personaSeleccionada->apellidos }}</strong>
-                                        @if($personaSeleccionada->correo)
-                                            <div class="text-sm text-gray-600">{{ $personaSeleccionada->correo }}</div>
-                                        @endif
+                            @if($personaSeleccionada)
+                                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <div>
+                                            <strong>{{ $personaSeleccionada->nombres }} {{ $personaSeleccionada->apellidos }}</strong>
+                                            @if($personaSeleccionada->correo)
+                                                <div class="text-sm text-gray-600">{{ $personaSeleccionada->correo }}</div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @else
+                                <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                                    <p class="text-red-700 text-sm">Error: No se pudo cargar la información de la persona.</p>
+                                </div>
+                            @endif
                         @else
                             {{-- En modo crear, permitir búsqueda --}}
                             <div class="relative">
