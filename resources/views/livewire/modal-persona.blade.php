@@ -25,11 +25,26 @@
             </div>
 
             <form wire:submit.prevent="guardar">
+                {{-- Mensaje de error del componente --}}
+                @if ($errorMessage)
+                    <div class="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <svg class="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-red-800 mb-1">Error:</p>
+                                <p class="text-sm text-red-700">{{ $errorMessage }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Resumen de errores de validación --}}
                 @if ($errors->any())
                     <div class="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
                         <div class="flex items-start gap-2">
-                            <svg class="h-5 w-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                             </svg>
                             <div>
@@ -84,11 +99,13 @@
 
                     {{-- DPI --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">DPI *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">DPI * (13 dígitos)</label>
                         <input
                             type="text"
                             wire:model="dpi"
                             maxlength="13"
+                            pattern="[0-9]{13}"
+                            inputmode="numeric"
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('dpi') border-red-500 ring-2 ring-red-200 @enderror"
                             placeholder="Ej: 1234567890101">
                         @error('dpi')
@@ -98,12 +115,15 @@
 
                     {{-- Teléfono --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono (8 dígitos)</label>
                         <input
                             type="text"
                             wire:model="telefono"
+                            maxlength="8"
+                            pattern="[0-9]{8}"
+                            inputmode="numeric"
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('telefono') border-red-500 ring-2 ring-red-200 @enderror"
-                            placeholder="Ej: 5555-5555">
+                            placeholder="Ej: 55555555">
                         @error('telefono')
                             <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                         @enderror
