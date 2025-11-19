@@ -13,8 +13,8 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     {{-- Logo de EEMQ --}}
-                    <a href="/" class="flex items-center">
-                        <img src="{{ asset('images/EEMQ@3x.png') }}" alt="Logo EEMQ" class="h-10 w-auto">
+                    <a href="/" class="flex items-center bg-white px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-shadow">
+                        <img src="{{ asset('images/EEMQ@3x.png') }}" alt="Logo EEMQ" class="h-8 w-auto">
                     </a>
                 </div>
                 <div class="hidden md:flex items-center space-x-4">
