@@ -15,6 +15,7 @@ class ModalPersona extends Component
     public $dpi = '';
     public $telefono = '';
     public $correo = '';
+    public $errorMessage = ''; // Para mostrar errores sin cerrar el modal
 
     protected $listeners = ['abrirModalPersona' => 'abrir'];
 
@@ -44,6 +45,7 @@ class ModalPersona extends Component
     {
         $this->resetValidation();
         $this->resetForm();
+        $this->errorMessage = ''; // Limpiar mensajes de error
         $this->showModal = true;
     }
 
@@ -56,6 +58,9 @@ class ModalPersona extends Component
 
     public function guardar()
     {
+        // Limpiar mensaje de error previo
+        $this->errorMessage = '';
+
         // Preparar reglas de validación dinámicas
         $validationRules = $this->rules();
 
@@ -125,7 +130,8 @@ class ModalPersona extends Component
                 'trace' => $e->getTraceAsString()
             ]);
 
-            session()->flash('error', 'Error al crear la persona: ' . $e->getMessage());
+            // Mostrar error en el modal sin cerrarlo
+            $this->errorMessage = 'Error al crear la persona: ' . $e->getMessage();
         }
     }
 
