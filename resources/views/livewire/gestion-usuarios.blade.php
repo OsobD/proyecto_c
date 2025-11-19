@@ -161,6 +161,7 @@
                                     {{-- Resetear Contraseña --}}
                                     <button
                                         wire:click="resetearPassword({{ $usuario->id }})"
+                                        wire:confirm="¿Está seguro de que desea resetear la contraseña para {{ $usuario->persona ? $usuario->persona->nombres . ' ' . $usuario->persona->apellidos : $usuario->nombre_usuario }}?\n\nSe generará una nueva contraseña temporal que deberá ser comunicada al usuario."
                                         class="w-8 h-8 flex items-center justify-center rounded-md bg-white hover:bg-gray-300 border border-gray-300 text-blue-500 transition-all duration-150"
                                         title="Resetear contraseña">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -795,18 +796,3 @@
         }
     </style>
 </div>
-
-@push('scripts')
-<script>
-    document.addEventListener('livewire:init', () => {
-        Livewire.on('confirm-reset-password', (data) => {
-            const nombre = data[0].nombre || 'este usuario';
-            const usuario = data[0].usuario || '';
-
-            if (confirm(`¿Está seguro de que desea resetear la contraseña para ${nombre} (${usuario})?\n\nSe generará una nueva contraseña temporal que deberá ser comunicada al usuario.`)) {
-                @this.call('confirmarResetPassword');
-            }
-        });
-    });
-</script>
-@endpush

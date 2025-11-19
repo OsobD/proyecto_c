@@ -571,7 +571,7 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Solicita confirmación antes de resetear contraseña
+     * Resetea (genera nueva) contraseña de un usuario
      */
     public function resetearPassword($id)
     {
@@ -584,25 +584,6 @@ class GestionUsuarios extends Component
 
         $this->usuarioId = $id;
         $this->nombre_usuario = $usuario->nombre_usuario;
-
-        // Emitir evento para mostrar confirmación
-        $this->dispatch('confirm-reset-password', [
-            'nombre' => "{$usuario->persona->nombres} {$usuario->persona->apellidos}",
-            'usuario' => $usuario->nombre_usuario
-        ]);
-    }
-
-    /**
-     * Ejecuta el reseteo de contraseña después de confirmación
-     */
-    public function confirmarResetPassword()
-    {
-        if (!$this->usuarioId) {
-            session()->flash('error', 'Error: No se ha seleccionado un usuario.');
-            return;
-        }
-
-        $usuario = Usuario::findOrFail($this->usuarioId);
 
         // Generar nueva contraseña
         $this->generarPassword();
@@ -620,7 +601,7 @@ class GestionUsuarios extends Component
                 'accion' => 'resetear_password',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
-                'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario}",
+                'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario} ({$usuario->persona->nombres} {$usuario->persona->apellidos})",
                 'id_usuario' => auth()->id() ?? 1,
                 'created_at' => now(),
             ]);
