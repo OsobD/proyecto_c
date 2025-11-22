@@ -40,18 +40,21 @@ class GestionPersonas extends Component
     protected $rules = [
         'nombres' => 'required|string|max:255',
         'apellidos' => 'required|string|max:255',
-        'dpi' => 'required|string|size:13',
-        'telefono' => 'nullable|string|max:20',
-        'correo' => 'nullable|email|max:255',
+        'dpi' => 'required|digits:13',
+        'telefono' => 'nullable|digits:8',
+        'correo' => 'nullable|email:rfc,dns|max:255',
     ];
 
     protected $messages = [
         'nombres.required' => 'Los nombres son obligatorios.',
         'apellidos.required' => 'Los apellidos son obligatorios.',
         'dpi.required' => 'El DPI es obligatorio.',
-        'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
-        'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
-        'correo.email' => 'El correo debe ser una dirección válida.',
+        'dpi.digits' => 'El DPI debe tener exactamente 13 dígitos numéricos.',
+        'dpi.unique' => 'Ya existe una persona registrada con este DPI.',
+        'telefono.digits' => 'El teléfono debe tener exactamente 8 dígitos numéricos.',
+        'telefono.unique' => 'Ya existe una persona registrada con este teléfono.',
+        'correo.email' => 'El correo debe ser una dirección de email válida (ej: usuario@dominio.com).',
+        'correo.unique' => 'Ya existe una persona registrada con este correo.',
     ];
 
     public function updatingSearch()
@@ -143,15 +146,43 @@ class GestionPersonas extends Component
 
     public function save()
     {
-        // Validar DPI único solo si es nueva persona o si cambió el DPI
-        $dpiRules = $this->rules;
+        // Validar campos únicos (DPI, teléfono, correo) solo si es nueva persona o si cambió el valor
+        $validationRules = $this->rules;
         if ($this->editMode) {
-            $dpiRules['dpi'] = 'required|string|size:13|unique:persona,dpi,' . $this->personaId;
+            $validationRules['dpi'] = 'required|digits:13|unique:persona,dpi,' . $this->personaId;
+
+            // Validar teléfono único solo si no está vacío
+            if (!empty($this->telefono)) {
+                $validationRules['telefono'] = 'nullable|digits:8|unique:persona,telefono,' . $this->personaId;
+            } else {
+                $validationRules['telefono'] = 'nullable';
+            }
+
+            // Validar correo único solo si no está vacío
+            if (!empty($this->correo)) {
+                $validationRules['correo'] = 'nullable|email:rfc,dns|max:255|unique:persona,correo,' . $this->personaId;
+            } else {
+                $validationRules['correo'] = 'nullable';
+            }
         } else {
-            $dpiRules['dpi'] = 'required|string|size:13|unique:persona,dpi';
+            $validationRules['dpi'] = 'required|digits:13|unique:persona,dpi';
+
+            // Validar teléfono único solo si no está vacío
+            if (!empty($this->telefono)) {
+                $validationRules['telefono'] = 'nullable|digits:8|unique:persona,telefono';
+            } else {
+                $validationRules['telefono'] = 'nullable';
+            }
+
+            // Validar correo único solo si no está vacío
+            if (!empty($this->correo)) {
+                $validationRules['correo'] = 'nullable|email:rfc,dns|max:255|unique:persona,correo';
+            } else {
+                $validationRules['correo'] = 'nullable';
+            }
         }
 
-        $this->validate($dpiRules);
+        $this->validate($validationRules);
 
         try {
             if ($this->editMode) {

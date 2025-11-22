@@ -32,12 +32,12 @@ class TarjetaResponsabilidad extends Model
     // Relaciones de auditoría
     public function creador()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(Usuario::class, 'created_by');
     }
 
     public function editor()
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(Usuario::class, 'updated_by');
     }
 
     // Relaciones de negocio

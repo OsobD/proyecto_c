@@ -43,9 +43,6 @@
                         </div>
                     </div>
 
-                    {{-- Ruta hacia reportes --}}
-                    <a href="{{ route('reportes') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('reportes') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Reportes</a>
-
                     {{-- Dropdown de Traslados --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                         <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['traslados', 'traslados.*', 'requisiciones', 'requisiciones.*', 'devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
@@ -146,6 +143,10 @@
                     </div>
                     
                     <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Bitácora</a>
+                    {{-- Ruta hacia reportes --}}
+                    <a href="{{ route('reportes') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('reportes') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Reportes</a>
+
+                    {{-- Ruta hacia configuración --}}
                     <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Configuración</a>
                 </div>
 
@@ -182,5 +183,6 @@
     </main>
 
     @livewireScripts
+    @stack('scripts')
 </body>
 </html>

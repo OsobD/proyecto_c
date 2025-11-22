@@ -575,8 +575,14 @@ class GestionUsuarios extends Component
      */
     public function resetearPassword($id)
     {
+        $usuario = Usuario::with('persona')->findOrFail($id);
+
+        if (!$usuario->persona) {
+            session()->flash('error', 'Error: El usuario no tiene una persona asignada.');
+            return;
+        }
+
         $this->usuarioId = $id;
-        $usuario = Usuario::findOrFail($id);
         $this->nombre_usuario = $usuario->nombre_usuario;
 
         // Generar nueva contraseña
@@ -595,7 +601,7 @@ class GestionUsuarios extends Component
                 'accion' => 'resetear_password',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
-                'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario}",
+                'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario} ({$usuario->persona->nombres} {$usuario->persona->apellidos})",
                 'id_usuario' => auth()->id() ?? 1,
                 'created_at' => now(),
             ]);

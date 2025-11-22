@@ -15,6 +15,7 @@ class ModalPersona extends Component
     public $dpi = '';
     public $telefono = '';
     public $correo = '';
+    public $errorMessage = ''; // Para mostrar errores sin cerrar el modal
 
     protected $listeners = ['abrirModalPersona' => 'abrir'];
 
@@ -23,9 +24,9 @@ class ModalPersona extends Component
         return [
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'dpi' => 'required|string|size:13|unique:persona,dpi',
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:255',
+            'dpi' => 'required|digits:13|unique:persona,dpi',
+            'telefono' => 'nullable|digits:8|unique:persona,telefono',
+            'correo' => 'nullable|email:rfc,dns|max:255|unique:persona,correo',
         ];
     }
 
@@ -33,15 +34,19 @@ class ModalPersona extends Component
         'nombres.required' => 'Los nombres son obligatorios.',
         'apellidos.required' => 'Los apellidos son obligatorios.',
         'dpi.required' => 'El DPI es obligatorio.',
-        'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
-        'dpi.unique' => 'Ya existe una persona registrada con este DPI. El DPI debe ser único.',
-        'correo.email' => 'El correo debe ser una dirección válida.',
+        'dpi.digits' => 'El DPI debe tener exactamente 13 dígitos numéricos.',
+        'dpi.unique' => 'Ya existe una persona registrada con este DPI.',
+        'telefono.digits' => 'El teléfono debe tener exactamente 8 dígitos numéricos.',
+        'telefono.unique' => 'Ya existe una persona registrada con este teléfono.',
+        'correo.email' => 'El correo debe ser una dirección de email válida (ej: usuario@dominio.com).',
+        'correo.unique' => 'Ya existe una persona registrada con este correo.',
     ];
 
     public function abrir()
     {
         $this->resetValidation();
         $this->resetForm();
+        $this->errorMessage = ''; // Limpiar mensajes de error
         $this->showModal = true;
     }
 
@@ -54,8 +59,24 @@ class ModalPersona extends Component
 
     public function guardar()
     {
-        // Validar los datos
-        $this->validate();
+        // Limpiar mensaje de error previo
+        $this->errorMessage = '';
+
+        // Preparar reglas de validación dinámicas
+        $validationRules = $this->rules();
+
+        // Si teléfono está vacío, quitar validación unique y digits
+        if (empty($this->telefono)) {
+            $validationRules['telefono'] = 'nullable';
+        }
+
+        // Si correo está vacío, quitar validación unique y email
+        if (empty($this->correo)) {
+            $validationRules['correo'] = 'nullable';
+        }
+
+        // Validar los datos con las reglas ajustadas
+        $this->validate($validationRules);
 
         try {
             DB::beginTransaction();
@@ -110,7 +131,8 @@ class ModalPersona extends Component
                 'trace' => $e->getTraceAsString()
             ]);
 
-            session()->flash('error', 'Error al crear la persona: ' . $e->getMessage());
+            // Mostrar error en el modal sin cerrarlo
+            $this->errorMessage = 'Error al crear la persona: ' . $e->getMessage();
         }
     }
 

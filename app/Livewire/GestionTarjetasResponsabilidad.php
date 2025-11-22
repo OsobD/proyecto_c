@@ -14,228 +14,57 @@ class GestionTarjetasResponsabilidad extends Component
     use WithPagination;
 
     public $search = '';
-    public $showModal = false;
-    public $editMode = false;
-
-    // Campos del formulario
-    public $tarjetaId;
-    public $id_persona;
-    public $fecha_creacion;
-    public $total = 0;
-
-    // Para crear persona nueva con la tarjeta
-    public $nombres;
-    public $apellidos;
-    public $dpi;
-
-    // Para mostrar la persona seleccionada en el modal
-    public $personaSeleccionada = null;
-
-    // Para búsqueda de personas
-    public $searchPersona = '';
-    public $personasDisponibles = [];
+    public $tarjetaId; // ID de la tarjeta a desactivar
+    public $mostrarDesactivadas = false; // Checkbox para mostrar tarjetas desactivadas
 
     // Para el acordeón de productos (similar a bodegas)
     public $tarjetaIdExpandida = null;
 
     protected $paginationTheme = 'bootstrap';
 
-    protected $rules = [
-        'nombres' => 'required|string|max:255',
-        'apellidos' => 'required|string|max:255',
-        'dpi' => 'required|string|size:13',
-        'fecha_creacion' => 'required|date',
-    ];
-
-    protected $messages = [
-        'nombres.required' => 'Los nombres son obligatorios.',
-        'apellidos.required' => 'Los apellidos son obligatorios.',
-        'dpi.required' => 'El DPI es obligatorio.',
-        'dpi.size' => 'El DPI debe tener exactamente 13 dígitos.',
-        'fecha_creacion.required' => 'La fecha de creación es obligatoria.',
-        'fecha_creacion.date' => 'La fecha de creación debe ser válida.',
-    ];
+    protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
 
     public function updatingSearch()
     {
         $this->resetPage();
     }
 
-    public function updatedSearchPersona()
+    public function updatingMostrarDesactivadas()
     {
-        if (strlen($this->searchPersona) >= 2) {
-            // Buscar personas que no tengan tarjeta de responsabilidad activa
-            $this->personasDisponibles = Persona::where('estado', true)
-                ->whereDoesntHave('tarjetasResponsabilidad', function($query) {
-                    $query->where('activo', true);
-                })
-                ->where(function($query) {
-                    $query->where('nombres', 'like', '%' . $this->searchPersona . '%')
-                          ->orWhere('apellidos', 'like', '%' . $this->searchPersona . '%')
-                          ->orWhere('correo', 'like', '%' . $this->searchPersona . '%');
-                })
-                ->limit(10)
-                ->get();
-        } else {
-            $this->personasDisponibles = [];
-        }
+        $this->resetPage();
     }
 
 
     public function render()
     {
-        $tarjetas = TarjetaResponsabilidad::with('persona')
-            ->where('activo', true)
-            ->whereHas('persona', function($query) {
-                $query->where('estado', true)
-                      ->where(function($q) {
-                          $q->where('nombres', 'like', '%' . $this->search . '%')
-                            ->orWhere('apellidos', 'like', '%' . $this->search . '%');
-                      });
-            })
-            ->orderBy('fecha_creacion', 'desc')
-            ->paginate(30);
+        $query = TarjetaResponsabilidad::with('persona')
+            ->where('activo', $this->mostrarDesactivadas ? false : true);
+
+        // Si hay búsqueda, filtrar por persona
+        if (!empty($this->search)) {
+            $query->whereHas('persona', function($q) {
+                $q->where('estado', true)
+                  ->where(function($subq) {
+                      $subq->where('nombres', 'like', '%' . $this->search . '%')
+                           ->orWhere('apellidos', 'like', '%' . $this->search . '%');
+                  });
+            });
+        } else {
+            // Sin búsqueda, mostrar todas las tarjetas activas con persona activa
+            $query->where(function($q) {
+                $q->whereHas('persona', function($subq) {
+                    $subq->where('estado', true);
+                })
+                ->orWhereNull('id_persona'); // Incluir tarjetas sin persona para detectar errores
+            });
+        }
+
+        $tarjetas = $query->orderBy('fecha_creacion', 'desc')
+                          ->paginate(30);
 
         return view('livewire.gestion-tarjetas-responsabilidad', [
             'tarjetas' => $tarjetas
         ]);
-    }
-
-    public function openModal()
-    {
-        $this->resetForm();
-        $this->editMode = false;
-        $this->fecha_creacion = now()->format('Y-m-d');
-        $this->showModal = true;
-    }
-
-    public function edit($id)
-    {
-        $tarjeta = TarjetaResponsabilidad::with('persona')->findOrFail($id);
-
-        $this->tarjetaId = $tarjeta->id;
-        $this->id_persona = $tarjeta->id_persona;
-        $this->fecha_creacion = $tarjeta->fecha_creacion->format('Y-m-d');
-        $this->nombres = $tarjeta->persona->nombres;
-        $this->apellidos = $tarjeta->persona->apellidos;
-        $this->dpi = $tarjeta->persona->dpi;
-
-        // Establecer la persona seleccionada para mostrar en el modal
-        $this->personaSeleccionada = $tarjeta->persona;
-
-        $this->editMode = true;
-        $this->showModal = true;
-    }
-
-    public function save()
-    {
-        try {
-            if ($this->editMode) {
-                // En modo edición solo validar fecha
-                $this->validate([
-                    'fecha_creacion' => 'required|date',
-                ]);
-
-                $tarjeta = TarjetaResponsabilidad::findOrFail($this->tarjetaId);
-
-                $tarjeta->update([
-                    'fecha_creacion' => $this->fecha_creacion,
-                    'updated_by' => Auth::id(),
-                ]);
-
-                $persona = Persona::find($tarjeta->id_persona);
-
-                // Registrar en bitácora
-                Bitacora::create([
-                    'accion' => 'Actualizar',
-                    'modelo' => 'TarjetaResponsabilidad',
-                    'modelo_id' => $tarjeta->id,
-                    'descripcion' => "Tarjeta de responsabilidad actualizada para: {$persona->nombres} {$persona->apellidos}",
-                    'id_usuario' => Auth::id(),
-                    'created_at' => now(),
-                ]);
-
-                $mensaje = 'Tarjeta de responsabilidad actualizada correctamente.';
-            } else {
-                // Modo crear
-                if ($this->personaSeleccionada) {
-                    // Validar solo id_persona y fecha cuando se seleccionó una persona existente
-                    $this->validate([
-                        'id_persona' => 'required|exists:persona,id',
-                        'fecha_creacion' => 'required|date',
-                    ]);
-
-                    // Usar la persona seleccionada
-                    $persona = $this->personaSeleccionada;
-
-                    // Crear tarjeta para persona existente
-                    $tarjeta = TarjetaResponsabilidad::create([
-                        'nombre' => "{$persona->nombres} {$persona->apellidos}",
-                        'id_persona' => $persona->id,
-                        'fecha_creacion' => $this->fecha_creacion,
-                        'total' => 0,
-                        'activo' => true,
-                        'created_by' => Auth::id(),
-                    ]);
-
-                    // Registrar en bitácora
-                    Bitacora::create([
-                        'accion' => 'Crear',
-                        'modelo' => 'TarjetaResponsabilidad',
-                        'modelo_id' => $tarjeta->id,
-                        'descripcion' => "Tarjeta de responsabilidad creada para: {$persona->nombres} {$persona->apellidos}",
-                        'id_usuario' => Auth::id(),
-                        'created_at' => now(),
-                    ]);
-
-                    $mensaje = 'Tarjeta de responsabilidad creada correctamente.';
-                } else {
-                    // Validar todos los campos cuando se crea una persona nueva
-                    $this->validate([
-                        'nombres' => 'required|string|max:255',
-                        'apellidos' => 'required|string|max:255',
-                        'dpi' => 'required|string|size:13|unique:persona,dpi',
-                        'fecha_creacion' => 'required|date',
-                    ]);
-
-                    // Crear la persona nueva
-                    $persona = Persona::create([
-                        'nombres' => $this->nombres,
-                        'apellidos' => $this->apellidos,
-                        'dpi' => $this->dpi,
-                        'estado' => true,
-                    ]);
-
-                    // Crear tarjeta para la persona nueva
-                    $tarjeta = TarjetaResponsabilidad::create([
-                        'nombre' => "{$this->nombres} {$this->apellidos}",
-                        'id_persona' => $persona->id,
-                        'fecha_creacion' => $this->fecha_creacion,
-                        'total' => 0,
-                        'activo' => true,
-                        'created_by' => Auth::id(),
-                    ]);
-
-                    // Registrar en bitácora
-                    Bitacora::create([
-                        'accion' => 'Crear',
-                        'modelo' => 'TarjetaResponsabilidad',
-                        'modelo_id' => $tarjeta->id,
-                        'descripcion' => "Tarjeta y persona creadas: {$persona->nombres} {$persona->apellidos}",
-                        'id_usuario' => Auth::id(),
-                        'created_at' => now(),
-                    ]);
-
-                    $mensaje = 'Persona y tarjeta de responsabilidad creadas correctamente.';
-                }
-            }
-
-            $this->closeModal();
-            $this->dispatch('tarjeta-saved');
-            session()->flash('message', $mensaje);
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar la tarjeta: ' . $e->getMessage());
-        }
     }
 
     public function confirmDelete($id)
@@ -294,10 +123,16 @@ class GestionTarjetasResponsabilidad extends Component
                 'updated_by' => Auth::id(),
             ]);
 
+            $personaDescripcion = $tarjeta->persona
+                ? "{$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}"
+                : "Tarjeta #{$tarjeta->id}";
+
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'Desactivar',
-                'descripcion' => "Tarjeta de responsabilidad desactivada para: {$tarjeta->persona->nombres} {$tarjeta->persona->apellidos}",
+                'modelo' => 'TarjetaResponsabilidad',
+                'modelo_id' => $tarjeta->id,
+                'descripcion' => "Tarjeta de responsabilidad desactivada para: {$personaDescripcion}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
             ]);
@@ -308,49 +143,11 @@ class GestionTarjetasResponsabilidad extends Component
         }
     }
 
-    public function selectPersona($personaId)
+    public function handlePersonaCreada($personaData, $mensaje)
     {
-        $this->personaSeleccionada = Persona::find($personaId);
-        if ($this->personaSeleccionada) {
-            $this->id_persona = $this->personaSeleccionada->id;
-            $this->nombres = $this->personaSeleccionada->nombres;
-            $this->apellidos = $this->personaSeleccionada->apellidos;
-            $this->dpi = $this->personaSeleccionada->dpi;
-            $this->personasDisponibles = [];
-            $this->searchPersona = '';
-        }
-    }
-
-    public function clearPersona()
-    {
-        $this->personaSeleccionada = null;
-        $this->id_persona = null;
-        $this->nombres = '';
-        $this->apellidos = '';
-        $this->dpi = '';
-        $this->searchPersona = '';
-        $this->personasDisponibles = [];
-    }
-
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    private function resetForm()
-    {
-        $this->tarjetaId = null;
-        $this->id_persona = null;
-        $this->nombres = '';
-        $this->apellidos = '';
-        $this->dpi = '';
-        $this->fecha_creacion = '';
-        $this->total = 0;
-        $this->personaSeleccionada = null;
-        $this->searchPersona = '';
-        $this->personasDisponibles = [];
-        $this->resetErrorBag();
+        // Cuando se crea una persona desde ModalPersona, mostrar mensaje de éxito
+        session()->flash('message', $mensaje);
+        $this->reset(['search']); // Limpiar búsqueda para mostrar todas las tarjetas
     }
 
     /**

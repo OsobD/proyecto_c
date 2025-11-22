@@ -31,7 +31,11 @@
                         type="text"
                         wire:model.live.debounce.300ms="search"
                         class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        placeholder="Nombre de usuario, nombre completo o email...">
+                        placeholder="Nombre de usuario, nombre completo o email..."
+                        autocomplete="off"
+                        data-bwignore
+                        data-lpignore="true"
+                        data-1p-ignore>
                 </div>
             </div>
 
@@ -161,6 +165,7 @@
                                     {{-- Resetear Contraseña --}}
                                     <button
                                         wire:click="resetearPassword({{ $usuario->id }})"
+                                        wire:confirm="¿Está seguro de que desea resetear la contraseña para {{ $usuario->persona ? $usuario->persona->nombres . ' ' . $usuario->persona->apellidos : $usuario->nombre_usuario }}?\n\nSe generará una nueva contraseña temporal que deberá ser comunicada al usuario."
                                         class="w-8 h-8 flex items-center justify-center rounded-md bg-white hover:bg-gray-300 border border-gray-300 text-blue-500 transition-all duration-150"
                                         title="Resetear contraseña">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
