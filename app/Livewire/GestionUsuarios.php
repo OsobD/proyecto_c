@@ -74,6 +74,9 @@ class GestionUsuarios extends Component
     public $selectedPersona = null;
     public $personaId = null;
 
+    // Key para forzar recreación de componentes al abrir modal
+    public $modalKey = 0;
+
     protected $paginationTheme = 'tailwind';
 
     protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
@@ -281,13 +284,16 @@ class GestionUsuarios extends Component
     /**
      * Obtiene personas filtradas para el autocompletado
      * Solo muestra personas activas que NO tienen usuario asignado
+     * Límite dinámico: 7 sin búsqueda, 25 con búsqueda activa
      */
     public function getPersonaResultsProperty()
     {
         $query = Persona::where('estado', true)
             ->whereDoesntHave('usuario'); // Solo personas sin usuario
 
-        if (!empty($this->searchPersona)) {
+        $hasSearch = !empty($this->searchPersona);
+
+        if ($hasSearch) {
             $search = $this->searchPersona;
             $query->where(function ($q) use ($search) {
                 $q->where('nombres', 'like', '%' . $search . '%')
@@ -296,7 +302,10 @@ class GestionUsuarios extends Component
             });
         }
 
-        return $query->orderBy('nombres')->limit(7)->get()->map(function($persona) {
+        // Límite dinámico: 7 sin búsqueda (para no abrumar), 25 con búsqueda (ya filtrado)
+        $limit = $hasSearch ? 25 : 7;
+
+        return $query->orderBy('nombres')->limit($limit)->get()->map(function($persona) {
             return [
                 'id' => $persona->id,
                 'label' => "{$persona->nombres} {$persona->apellidos}",
@@ -394,6 +403,7 @@ class GestionUsuarios extends Component
         $this->resetValidation();
         $this->resetForm();
         $this->editMode = false;
+        $this->modalKey++; // Incrementar key para forzar recreación de componentes
         $this->showModal = true;
     }
 
