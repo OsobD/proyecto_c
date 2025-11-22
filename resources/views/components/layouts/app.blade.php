@@ -21,7 +21,7 @@
 
                     {{-- Dropdown de Compras --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['compras', 'compras.*']) ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['compras', 'compras.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
                             Compras
                             <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -45,7 +45,7 @@
 
                     {{-- Dropdown de Traslados --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['traslados', 'traslados.*', 'requisiciones', 'requisiciones.*', 'devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['traslados', 'traslados.*', 'requisiciones', 'requisiciones.*', 'devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
                             Traslados
                             <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -75,7 +75,7 @@
 
                     {{-- Dropdown de Productos y derivados--}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['proveedores', 'productos', 'productos.*']) ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['proveedores', 'productos', 'productos.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
                             Catálogo
                             <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -99,7 +99,7 @@
 
                     {{-- Dropdown de gestión de personas, usuarios y puestos --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['personas', 'personas.*', 'usuarios', 'usuarios.*', 'puestos', 'puestos.*']) ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['personas', 'personas.*', 'usuarios', 'usuarios.*', 'puestos', 'puestos.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
                             Colaboradores
                             <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -123,7 +123,7 @@
 
                     {{-- Dropdown de Almacenes (Bodegas y Tarjetas de Responsabilidad) --}}
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['bodegas', 'bodegas.*', 'tarjetas.responsabilidad', 'tarjetas.*']) ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
+                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['bodegas', 'bodegas.*', 'tarjetas.responsabilidad', 'tarjetas.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
                             Almacenes
                             <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -142,12 +142,12 @@
                         </div>
                     </div>
                     
-                    <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Bitácora</a>
+                    <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Bitácora</a>
                     {{-- Ruta hacia reportes --}}
-                    <a href="{{ route('reportes') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('reportes') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Reportes</a>
+                    <a href="{{ route('reportes') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('reportes') ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Reportes</a>
 
                     {{-- Ruta hacia configuración --}}
-                    <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-[var(--color-eemq-interactive)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Configuración</a>
+                    <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Configuración</a>
                 </div>
 
                 <div class="flex items-center">
