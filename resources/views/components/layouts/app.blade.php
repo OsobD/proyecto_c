@@ -31,13 +31,13 @@
                              x-cloak
                              x-transition
                              class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
-                            <a href="{{ route('compras') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras') && !request()->routeIs('compras.*') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('compras') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras') && !request()->routeIs('compras.*') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Inicio
                             </a>
-                            <a href="{{ route('compras.nueva') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras.nueva') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('compras.nueva') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras.nueva') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Nueva Compra
                             </a>
-                            <a href="{{ route('compras.historial') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras.historial') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('compras.historial') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras.historial') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Historial
                             </a>
                         </div>
@@ -55,19 +55,19 @@
                              x-cloak
                              x-transition
                              class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
-                            <a href="{{ route('traslados') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('traslados') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Inicio
                             </a>
-                            <a href="{{ route('requisiciones') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs(['requisiciones', 'requisiciones.*']) ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('requisiciones') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs(['requisiciones', 'requisiciones.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Requisición
                             </a>
-                            <a href="{{ route('devoluciones') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs(['devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('devoluciones') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs(['devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Devolución
                             </a>
-                            <a href="{{ route('traslados.nuevo') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados.nuevo') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('traslados.nuevo') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados.nuevo') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Nuevo Traslado
                             </a>
-                            <a href="{{ route('traslados.historial') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados.historial') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('traslados.historial') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados.historial') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Historial
                             </a>
                         </div>
@@ -85,13 +85,13 @@
                              x-cloak
                              x-transition
                              class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
-                            <a href="{{ route('productos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos') && !request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('productos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos') && !request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Productos
                             </a>
-                            <a href="{{ route('productos.categorias') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('productos.categorias') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Categorías
                             </a>
-                            <a href="{{ route('proveedores') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('proveedores') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('proveedores') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('proveedores') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Proveedores
                             </a>
                         </div>
@@ -109,13 +109,13 @@
                              x-cloak
                              x-transition
                              class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
-                             <a href="{{ route('personas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('personas') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                             <a href="{{ route('personas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('personas') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Personas
                             </a>
-                            <a href="{{ route('usuarios') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('usuarios') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('usuarios') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('usuarios') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Usuarios
                             </a>
-                            <a href="{{ route('puestos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('puestos') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('puestos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('puestos') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Puestos
                             </a>
                         </div>
@@ -133,10 +133,10 @@
                              x-cloak
                              x-transition
                              class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
-                            <a href="{{ route('bodegas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('bodegas') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('bodegas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('bodegas') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Bodegas
                             </a>
-                            <a href="{{ route('tarjetas.responsabilidad') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('tarjetas.responsabilidad') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                            <a href="{{ route('tarjetas.responsabilidad') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('tarjetas.responsabilidad') ? 'bg-[var(--color-eemq-primary-dark)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Tarjetas de Responsabilidad
                             </a>
                         </div>
