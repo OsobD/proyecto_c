@@ -296,7 +296,7 @@ class GestionUsuarios extends Component
             });
         }
 
-        return $query->orderBy('nombres')->limit(10)->get()->map(function($persona) {
+        return $query->orderBy('nombres')->limit(7)->get()->map(function($persona) {
             return [
                 'id' => $persona->id,
                 'label' => "{$persona->nombres} {$persona->apellidos}",

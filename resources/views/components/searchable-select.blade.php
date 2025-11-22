@@ -13,11 +13,21 @@
     'disabled' => false,
 ])
 
-<div 
-    x-data="{ 
-        open: false, 
-        search: @entangle($searchModel).live.debounce.300ms 
-    }" 
+<div
+    x-data="{
+        open: false,
+        search: @entangle($searchModel).live.debounce.300ms,
+        closeTimeout: null,
+        scheduleClose() {
+            this.closeTimeout = setTimeout(() => { this.open = false; }, 150);
+        },
+        cancelClose() {
+            if (this.closeTimeout) {
+                clearTimeout(this.closeTimeout);
+                this.closeTimeout = null;
+            }
+        }
+    }"
     @click.outside="open = false"
     class="relative"
 >
@@ -50,8 +60,9 @@
                 <input
                     type="text"
                     x-model="search"
-                    @click="open = true"
-                    @focus="open = true"
+                    @click="open = true; cancelClose()"
+                    @focus="open = true; cancelClose()"
+                    @blur="scheduleClose()"
                     @keydown.escape="open = false"
                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @if($error) border-red-500 ring-2 ring-red-200 @endif {{ $disabled ? 'bg-gray-100 cursor-not-allowed' : '' }}"
                     placeholder="{{ $placeholder }}"
@@ -59,14 +70,16 @@
                 >
                 
                 {{-- Dropdown --}}
-                <div 
-                    x-show="open" 
+                <div
+                    x-show="open"
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 translate-y-1"
                     x-transition:enter-end="opacity-100 translate-y-0"
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 translate-y-1"
+                    @mouseenter="cancelClose()"
+                    @mouseleave="scheduleClose()"
                     x-cloak
                     class="absolute z-50 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg"
                 >
