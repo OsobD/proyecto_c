@@ -126,6 +126,8 @@
                             </button>
                         </th>
                         <th class="py-3 px-6 text-left">Email</th>
+                        <th class="py-3 px-6 text-left">Rol</th>
+
                         <th class="py-3 px-6 text-left">Puesto</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
@@ -144,8 +146,13 @@
                                 {{ $usuario->persona->correo }}
                             </td>
                             <td class="py-3 px-6 text-left">
-                                <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                    {{ $usuario->puesto->nombre }}
+                                <span class="bg-purple-100 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                    {{ $usuario->rol ? $usuario->rol->nombre : 'Sin Rol' }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                <span class="text-gray-700 font-medium text-sm">
+                                    {{ $usuario->puesto ? $usuario->puesto->nombre : 'Sin Puesto' }}
                                 </span>
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -255,61 +262,30 @@
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Información Personal</h4>
 
                     <label class="block text-sm font-medium text-gray-700 mb-2">Persona</label>
-                    <div class="relative">
-                        @if($selectedPersona)
-                            <div wire:click="clearPersona" class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-colors @error('personaId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="font-medium">{{ $selectedPersona['nombre_completo'] }}</span>
-                                    <span class="text-xs text-gray-500">DPI: {{ $selectedPersona['dpi'] }}</span>
-                                </div>
-                                <span class="text-gray-400 text-xl">⟲</span>
-                            </div>
-                        @else
-                            <div class="relative" x-data="{ open: @entangle('showPersonaDropdown').live }" @click.outside="open = false">
-                                <input
-                                    type="text"
-                                    wire:model.live.debounce.300ms="searchPersona"
-                                    @click="open = true"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('personaId') border-red-500 ring-2 ring-red-200 @enderror"
-                                    placeholder="Buscar por nombre, apellidos o DPI...">
-                                <div x-show="open"
-                                     x-transition
-                                     class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
-                                    <ul>
-                                        @forelse ($this->personaResults as $persona)
-                                            <li wire:click.prevent="selectPersona({{ $persona->id }})"
-                                                class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                <div class="font-medium">{{ $persona->nombres }} {{ $persona->apellidos }}</div>
-                                                <div class="text-xs text-gray-500">DPI: {{ $persona->dpi }}</div>
-                                            </li>
-                                        @empty
-                                            <li class="px-3 py-2 text-sm text-gray-500 text-center">
-                                                No se encontraron personas
-                                            </li>
-                                        @endforelse
-                                    </ul>
-                                    {{-- Botón para crear nueva persona --}}
-                                    <div class="border-t border-gray-200">
-                                        <button
-                                            type="button"
-                                            wire:click="$dispatch('abrirModalPersona')"
-                                            class="w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2">
-                                            <span>+</span>
-                                            <span>Crear nueva persona</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    @error('personaId')
-                        <p class="text-red-500 text-xs mt-2 flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                            </svg>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                    <x-searchable-select
+                        placeholder="Buscar por nombre, apellidos o DPI..."
+                        search-model="searchPersona"
+                        :results="$this->personaResults"
+                        :selected-value="$selectedPersona ? $selectedPersona['id'] : null"
+                        :selected-label="$selectedPersona ? $selectedPersona['nombre_completo'] : null"
+                        :selected-subtitle="$selectedPersona ? 'DPI: ' . $selectedPersona['dpi'] : null"
+                        on-select="selectPersona"
+                        on-clear="clearPersona"
+                        :error="$errors->first('personaId')"
+                    >
+
+
+                        <x-slot:footer>
+                            <button
+                                type="button"
+                                wire:click="$dispatch('abrirModalPersona')"
+                                class="w-full px-4 py-3 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2 transition-colors"
+                            >
+                                <span class="text-xl">+</span>
+                                <span>Crear nueva persona</span>
+                            </button>
+                        </x-slot:footer>
+                    </x-searchable-select>
                 </div>
 
                 {{-- Sección: Datos de Usuario --}}
@@ -338,44 +314,32 @@
                         {{-- Puesto --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
-                            <div class="relative">
-                                @if($selectedPuesto)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <span class="font-medium">{{ $selectedPuesto['nombre'] }}</span>
-                                        <button type="button" wire:click.prevent="clearPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
-                                            ×
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="relative" x-data="{ open: @entangle('showPuestoDropdown').live }" @click.outside="open = false">
-                                        <input
-                                            type="text"
-                                            wire:model.live.debounce.300ms="searchPuesto"
-                                            @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar puesto...">
-                                        <div x-show="open"
-                                             x-transition
-                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
-                                            <ul>
-                                                @foreach (array_slice($this->puestoResults, 0, 6) as $puesto)
-                                                    <li wire:click.prevent="selectPuesto({{ $puesto['id'] }})"
-                                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                        {{ $puesto['nombre'] }}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
+                            <select
+                                wire:model="puestoId"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
+                                <option value="">Seleccionar Puesto...</option>
+                                @foreach($puestos as $puesto)
+                                    <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
+                                @endforeach
+                            </select>
                             @error('puestoId')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Rol --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol de Sistema *</label>
+                            <select
+                                wire:model="rolId"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
+                                <option value="">Seleccionar Rol...</option>
+                                @foreach($roles as $rol)
+                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
+                                @endforeach
+                            </select>
+                            @error('rolId')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
@@ -541,49 +505,37 @@
                         {{-- Puesto --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
-                            <div class="relative">
-                                @if($selectedPuesto)
-                                    <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
-                                        <span class="font-medium">{{ $selectedPuesto['nombre'] }}</span>
-                                        <button type="button" wire:click.prevent="clearPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
-                                            ×
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="relative" x-data="{ open: @entangle('showPuestoDropdown').live }" @click.outside="open = false">
-                                        <input
-                                            type="text"
-                                            wire:model.live.debounce.300ms="searchPuesto"
-                                            @click="open = true"
-                                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror"
-                                            placeholder="Buscar puesto...">
-                                        <div x-show="open"
-                                             x-transition
-                                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
-                                            <ul>
-                                                @foreach (array_slice($this->puestoResults, 0, 6) as $puesto)
-                                                    <li wire:click.prevent="selectPuesto({{ $puesto['id'] }})"
-                                                        class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                        {{ $puesto['nombre'] }}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
+                            <select
+                                wire:model="puestoId"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
+                                <option value="">Seleccionar Puesto...</option>
+                                @foreach($puestos as $puesto)
+                                    <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
+                                @endforeach
+                            </select>
                             @error('puestoId')
-                                <p class="text-red-500 text-xs mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Rol --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol de Sistema *</label>
+                            <select
+                                wire:model="rolId"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
+                                <option value="">Seleccionar Rol...</option>
+                                @foreach($roles as $rol)
+                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
+                                @endforeach
+                            </select>
+                            @error('rolId')
+                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Estado --}}
-                        <div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
                             <div class="flex items-center mt-3">
                                 <input

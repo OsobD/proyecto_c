@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         // 1. Seguridad y Usuarios
         $this->call([
             RolesPermisosSeeder::class,
+            PuestoSeeder::class,
             UsuarioAdminSeeder::class,
         ]);
 

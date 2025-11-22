@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Usuario;
 use App\Models\Persona;
 use App\Models\Puesto;
+use App\Models\Rol;
 use App\Models\Bitacora;
 use App\Models\TarjetaResponsabilidad;
 use Illuminate\Support\Facades\Hash;
@@ -49,6 +50,7 @@ class GestionUsuarios extends Component
     // Datos de Usuario
     public $nombre_usuario = '';
     public $puestoId = '';
+    public $rolId = ''; // Nuevo campo Rol
     public $contrasena = '';
     public $estado = true;
 
@@ -96,6 +98,7 @@ class GestionUsuarios extends Component
                 'correo' => 'nullable|email|max:255',
                 'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
                 'puestoId' => 'required|exists:puesto,id',
+                'rolId' => 'required|exists:rol,id',
             ];
         }
 
@@ -103,6 +106,7 @@ class GestionUsuarios extends Component
             'personaId' => 'required|exists:persona,id',
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
             'puestoId' => 'required|exists:puesto,id',
+            'rolId' => 'required|exists:rol,id',
         ];
     }
 
@@ -121,6 +125,8 @@ class GestionUsuarios extends Component
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
         'puestoId.required' => 'Debe seleccionar un puesto.',
         'puestoId.exists' => 'El puesto seleccionado no es válido.',
+        'rolId.required' => 'Debe seleccionar un rol.',
+        'rolId.exists' => 'El rol seleccionado no es válido.',
         'personaId.required' => 'Debe seleccionar una persona.',
         'personaId.exists' => 'La persona seleccionada no es válida.',
     ];
@@ -290,7 +296,14 @@ class GestionUsuarios extends Component
             });
         }
 
-        return $query->orderBy('nombres')->limit(10)->get();
+        return $query->orderBy('nombres')->limit(10)->get()->map(function($persona) {
+            return [
+                'id' => $persona->id,
+                'label' => "{$persona->nombres} {$persona->apellidos}",
+                'sublabel' => "DPI: {$persona->dpi}",
+                'nombre' => "{$persona->nombres} {$persona->apellidos}", // Fallback compatibility
+            ];
+        });
     }
 
     /**
@@ -308,7 +321,34 @@ class GestionUsuarios extends Component
             $this->personaId = $persona->id;
             $this->showPersonaDropdown = false;
             $this->searchPersona = '';
+
+            // Generar nombre de usuario automáticamente
+            $this->generarNombreUsuario($persona);
         }
+    }
+
+    /**
+     * Genera un nombre de usuario único basado en la persona
+     * Formato: [Inicial Nombre][Apellido][Secuencia] (ej. jalvarado1)
+     */
+    public function generarNombreUsuario($persona)
+    {
+        if (!$persona) return;
+
+        $primerNombre = Str::slug(explode(' ', trim($persona->nombres))[0]);
+        $primerApellido = Str::slug(explode(' ', trim($persona->apellidos))[0]);
+        
+        $base = substr($primerNombre, 0, 1) . $primerApellido;
+        $contador = 1;
+        $usuarioGenerado = $base . $contador;
+
+        // Buscar el siguiente disponible
+        while (Usuario::where('nombre_usuario', $usuarioGenerado)->exists()) {
+            $contador++;
+            $usuarioGenerado = $base . $contador;
+        }
+
+        $this->nombre_usuario = $usuarioGenerado;
     }
 
     /**
@@ -318,6 +358,7 @@ class GestionUsuarios extends Component
     {
         $this->selectedPersona = null;
         $this->personaId = null;
+        $this->nombre_usuario = ''; // Limpiar usuario generado
     }
 
     /**
@@ -326,9 +367,20 @@ class GestionUsuarios extends Component
     public function handlePersonaCreada($personaData, $mensaje)
     {
         // Seleccionar automáticamente la persona recién creada
-        $this->selectedPersona = $personaData;
-        $this->personaId = $personaData['id'];
-        $this->showPersonaDropdown = false;
+        $persona = Persona::find($personaData['id']);
+        
+        if ($persona) {
+            $this->selectedPersona = [
+                'id' => $persona->id,
+                'nombre_completo' => "{$persona->nombres} {$persona->apellidos}",
+                'dpi' => $persona->dpi,
+            ];
+            $this->personaId = $persona->id;
+            $this->showPersonaDropdown = false;
+            
+            // Generar usuario para la nueva persona
+            $this->generarNombreUsuario($persona);
+        }
 
         // Establecer el mensaje flash
         session()->flash('message', $mensaje);
@@ -388,8 +440,6 @@ class GestionUsuarios extends Component
             // Verificar si la persona ya tiene tarjeta de responsabilidad
             if (!$persona->tarjetasResponsabilidad()->exists()) {
                 // 2. Crear tarjeta de responsabilidad si no existe
-                // IMPORTANTE: created_by y updated_by deben ser NULL ya que
-                // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
                 TarjetaResponsabilidad::create([
                     'nombre' => "{$persona->nombres} {$persona->apellidos}",
                     'fecha_creacion' => now(),
@@ -412,6 +462,7 @@ class GestionUsuarios extends Component
                 'contrasena' => Hash::make($this->passwordGenerada),
                 'id_persona' => $persona->id,
                 'id_puesto' => $this->puestoId,
+                'id_rol' => $this->rolId, // Guardar Rol
                 'estado' => true,
             ]);
 
@@ -469,15 +520,17 @@ class GestionUsuarios extends Component
         // Cargar datos de usuario
         $this->nombre_usuario = $usuario->nombre_usuario;
         $this->puestoId = "";
+        $this->rolId = $usuario->id_rol; // Cargar Rol
         $this->estado = $usuario->estado;
 
-        // Cargar rol seleccionado para el dropdown
+        // Cargar puesto seleccionado para el dropdown
         $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
         if ($puesto) {
             $this->selectedPuesto = [
                 'id' => $puesto->id,
                 'nombre' => $puesto->nombre,
             ];
+            $this->puestoId = $puesto->id;
         }
 
         $this->showModalEditar = true;
@@ -508,6 +561,7 @@ class GestionUsuarios extends Component
             // Actualizar Usuario
             $usuario->update([
                 'id_puesto' => $this->puestoId,
+                'id_rol' => $this->rolId, // Actualizar Rol
                 'estado' => $this->estado,
             ]);
 
@@ -554,6 +608,7 @@ class GestionUsuarios extends Component
         $this->correo = '';
         $this->nombre_usuario = '';
         $this->puestoId = "";
+        $this->rolId = ""; // Resetear Rol
         $this->contrasena = '';
         $this->estado = true;
         $this->usuarioId = null;
@@ -658,9 +713,8 @@ class GestionUsuarios extends Component
      */
     public function getUsuariosProperty()
     {
-        $query = Usuario::with(['persona', 'rol'])
-            ->whereHas('persona') // Solo usuarios que tienen persona asignada
-            ->whereNotNull('id_puesto'); // Solo usuarios con rol (usuarios reales)
+        $query = Usuario::with(['persona', 'rol', 'puesto'])
+            ->whereHas('persona'); // Solo usuarios que tienen persona asignada
 
         // Aplicar búsqueda
         if (!empty($this->search)) {
@@ -704,6 +758,14 @@ class GestionUsuarios extends Component
     }
 
     /**
+     * Obtiene la lista de roles
+     */
+    public function getRolesProperty()
+    {
+        return Rol::orderBy('nombre')->get();
+    }
+
+    /**
      * Renderiza la vista del componente
      */
     public function render()
@@ -711,6 +773,7 @@ class GestionUsuarios extends Component
         return view('livewire.gestion-usuarios', [
             'usuarios' => $this->usuarios,
             'puestos' => $this->puestos,
+            'roles' => $this->roles,
         ]);
     }
 }

@@ -20,32 +20,42 @@ class UsuarioAdminSeeder extends Seeder
         // Buscar el rol de Administrador
         $rolAdmin = Rol::where('nombre', 'Administrador')->first();
 
-        // Crear persona para el administrador
-        $persona = Persona::create([
-            'nombres' => 'Administrador',
-            'apellidos' => 'del Sistema',
-            'dpi' => '0000000000000',
-            'telefono' => '0000-0000',
-            'correo' => 'admin@eemq.com',
-            'estado' => true,
-        ]);
+        // Crear o actualizar persona para el administrador
+        $persona = Persona::updateOrCreate(
+            ['dpi' => '0000000000000'],
+            [
+                'nombres' => 'Administrador',
+                'apellidos' => 'del Sistema',
+                'telefono' => '0000-0000',
+                'correo' => 'admin@eemq.com',
+                'estado' => true,
+            ]
+        );
 
-        // Crear tarjeta de responsabilidad para el administrador
-        TarjetaResponsabilidad::create([
-            'nombre' => 'Administrador del Sistema',
-            'fecha_creacion' => now(),
-            'total' => 0,
-            'id_persona' => $persona->id,
-            'activo' => true,
-        ]);
+        // Crear o actualizar tarjeta de responsabilidad
+        TarjetaResponsabilidad::firstOrCreate(
+            ['id_persona' => $persona->id],
+            [
+                'nombre' => 'Administrador del Sistema',
+                'fecha_creacion' => now(),
+                'total' => 0,
+                'activo' => true,
+            ]
+        );
 
-        // Crear usuario administrador
-        Usuario::create([
-            'nombre_usuario' => 'admin',
-            'contrasena' => Hash::make('admin123'),  // Contraseña: admin123
-            'id_persona' => $persona->id,
-            'id_rol' => $rolAdmin?->id,
-            'estado' => true,
-        ]);
+        // Buscar el puesto de Administrador TI
+        $puestoAdmin = \App\Models\Puesto::where('nombre', 'Administrador TI')->first();
+
+        // Crear o actualizar usuario administrador
+        Usuario::updateOrCreate(
+            ['nombre_usuario' => 'admin'],
+            [
+                'contrasena' => Hash::make('admin123'),
+                'id_persona' => $persona->id,
+                'id_rol' => $rolAdmin?->id,
+                'id_puesto' => $puestoAdmin?->id,
+                'estado' => true,
+            ]
+        );
     }
 }
