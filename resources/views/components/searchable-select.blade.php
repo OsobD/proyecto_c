@@ -27,10 +27,7 @@
     <div class="relative">
         @if($selectedValue)
             {{-- Selected State --}}
-            <div
-                @if(!$disabled) wire:click.stop="{{ $onClear }}" @click="open = false" @endif
-                class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif"
-            >
+            <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif">
                 <div class="flex flex-col gap-0.5 overflow-hidden">
                     <span class="font-medium truncate">{{ $selectedLabel }}</span>
                     @if(isset($selectedSubtitle))
@@ -38,7 +35,13 @@
                     @endif
                 </div>
                 @if(!$disabled)
-                    <svg class="w-5 h-5 text-gray-400 hover:text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                        wire:click="{{ $onClear }}"
+                        @click.stop="open = false"
+                        class="w-5 h-5 text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 @endif
