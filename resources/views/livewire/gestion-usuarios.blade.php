@@ -256,7 +256,7 @@
                 </button>
             </div>
 
-            <form wire:submit.prevent="guardarUsuario">
+            <form wire:submit.prevent="guardarUsuario" @click="$dispatch('close-all-dropdowns')">
                 {{-- Sección: Selección de Persona --}}
                 <div class="mb-6">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Información Personal</h4>

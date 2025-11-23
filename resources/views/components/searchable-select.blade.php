@@ -14,23 +14,9 @@
 ])
 
 <div
-    x-data="{
-        open: false,
-        id: Math.random().toString(36).substr(2, 9)
-    }"
-    x-init="
-        $watch('open', value => {
-            if (value) {
-                $dispatch('dropdown-opened', { id: id });
-            }
-        });
-        $el.addEventListener('dropdown-opened', (e) => {
-            if (e.detail.id !== id) {
-                open = false;
-            }
-        });
-    "
+    x-data="{ open: false }"
     @click.outside="open = false"
+    @close-all-dropdowns.window="open = false"
     class="relative"
 >
     @if($label)
@@ -43,7 +29,8 @@
         @if($selectedValue)
             {{-- Selected State --}}
             <div
-                @click="open = true"
+                wire:click="{{ $onClear }}"
+                @click.stop
                 class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif">
                 <div class="flex flex-col gap-0.5 overflow-hidden">
                     <span class="font-medium truncate">{{ $selectedLabel }}</span>
@@ -52,20 +39,12 @@
                     @endif
                 </div>
                 @if(!$disabled)
-                    <svg
-                        wire:click="{{ $onClear }}"
-                        @click.stop
-                        class="w-5 h-5 text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
+                    <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
                 @endif
             </div>
         @else
             {{-- Search/Input State --}}
-            <div class="relative">
+            <div class="relative" @click.stop>
                 <input
                     type="text"
                     wire:model.live.debounce.300ms="{{ $searchModel }}"
