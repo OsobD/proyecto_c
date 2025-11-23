@@ -16,10 +16,50 @@ class GestionPuestos extends Component
     public $nombre = '';
     public $search = '';
 
+    // Modal de filtros
+    public $showFilterModal = false;
+
+    // Ordenamiento
+    public $sortField = 'nombre';
+    public $sortDirection = 'asc';
+
     protected $paginationTheme = 'tailwind';
 
     public function updatingSearch()
     {
+        $this->resetPage();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        } else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    public function clearFilters()
+    {
+        $this->sortField = 'nombre';
+        $this->sortDirection = 'asc';
         $this->resetPage();
     }
 
@@ -43,9 +83,21 @@ class GestionPuestos extends Component
 
     public function render()
     {
-        $puestos = Puesto::where('nombre', 'like', '%' . $this->search . '%')
-            ->orderBy('nombre', 'asc')
-            ->paginate(30);
+        $query = Puesto::query();
+
+        // Aplicar búsqueda
+        if (!empty($this->search)) {
+            $query->where('nombre', 'like', '%' . $this->search . '%');
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            $query->orderBy('nombre', 'asc');
+        }
+
+        $puestos = $query->paginate(10);
 
         return view('livewire.gestion-puestos', [
             'puestos' => $puestos

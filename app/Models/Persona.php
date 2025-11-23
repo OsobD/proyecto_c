@@ -43,6 +43,11 @@ class Persona extends Model
         return $this->hasMany(Salida::class, 'id_persona');
     }
 
+    public function consumiblesPersona()
+    {
+        return $this->hasMany(ConsumiblePersona::class, 'id_persona');
+    }
+
     // Reglas de validación
     public static function rules($id = null)
     {

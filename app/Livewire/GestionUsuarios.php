@@ -943,7 +943,7 @@ class GestionUsuarios extends Component
 
         // Lógica para mostrar/ocultar inactivos
         if (!$this->showInactive) {
-            $query->where('estado', true);
+            $query->where('usuario.estado', true);
         }
 
         // Aplicar búsqueda
@@ -990,7 +990,7 @@ class GestionUsuarios extends Component
                 break;
 
             case 'estado':
-                $query->orderBy('estado', $this->sortDirection);
+                $query->orderBy('usuario.estado', $this->sortDirection);
                 break;
 
             case 'nombre_usuario':

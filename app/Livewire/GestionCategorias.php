@@ -22,6 +22,14 @@ class GestionCategorias extends Component
     /** @var string Término de búsqueda */
     public $searchCategoria = '';
 
+    // Modal de filtros
+    public $showFilterModal = false;
+    public $showInactive = false;
+
+    // Ordenamiento
+    public $sortField = 'nombre';
+    public $sortDirection = 'asc';
+
     /** @var bool Controla visibilidad del modal */
     public $showModal = false;
 
@@ -38,6 +46,40 @@ class GestionCategorias extends Component
      */
     public function updatingSearchCategoria()
     {
+        $this->resetPage();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        } else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    public function clearFilters()
+    {
+        $this->showInactive = false;
+        $this->sortField = 'nombre';
+        $this->sortDirection = 'asc';
         $this->resetPage();
     }
 
@@ -154,13 +196,27 @@ class GestionCategorias extends Component
      */
     public function render()
     {
-        $categorias = Categoria::query()
-            ->when($this->searchCategoria, function($query) {
-                $search = trim($this->searchCategoria);
-                $query->where('nombre', 'like', "%{$search}%");
-            })
-            ->orderBy('nombre')
-            ->paginate(30);
+        $query = Categoria::query();
+
+        // Filtrar por estado
+        if (!$this->showInactive) {
+            $query->where('activo', true);
+        }
+
+        // Aplicar búsqueda
+        if ($this->searchCategoria) {
+            $search = trim($this->searchCategoria);
+            $query->where('nombre', 'like', "%{$search}%");
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            $query->orderBy('nombre');
+        }
+
+        $categorias = $query->paginate(10);
 
         return view('livewire.gestion-categorias', [
             'categorias' => $categorias

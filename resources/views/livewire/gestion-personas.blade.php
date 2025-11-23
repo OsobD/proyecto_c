@@ -224,35 +224,28 @@
                                         </div>
 
                                         @php
-                                            // Obtener las salidas de la persona
-                                            $salidasPersona = $persona->salidas()
-                                                ->with(['detalles.producto.categoria', 'detalles.lote.bodega', 'tipoSalida'])
+                                            // Obtener los productos consumibles de la persona desde consumible_persona
+                                            $productosConsumibles = $persona->consumiblesPersona()
+                                                ->with(['producto.categoria', 'lote', 'bodega'])
                                                 ->orderBy('fecha', 'desc')
                                                 ->get();
 
-                                            // Obtener TODOS los productos de las salidas
-                                            $productosSalidas = collect();
-                                            foreach ($salidasPersona as $salida) {
-                                                foreach ($salida->detalles as $detalle) {
-                                                    if ($detalle->producto) {
-                                                        $productosSalidas->push([
-                                                            'salida_id' => $salida->id,
-                                                            'fecha_salida' => $salida->fecha,
-                                                            'tipo_salida' => $salida->tipoSalida ? $salida->tipoSalida->nombre : 'N/A',
-                                                            'producto_codigo' => $detalle->producto->id,
-                                                            'producto_nombre' => $detalle->producto->descripcion,
-                                                            'categoria' => $detalle->producto->categoria ? $detalle->producto->categoria->nombre : 'Sin categoría',
-                                                            'es_consumible' => $detalle->producto->es_consumible,
-                                                            'lote_id' => $detalle->lote ? $detalle->lote->id : 'N/A',
-                                                            'cantidad' => $detalle->cantidad,
-                                                            'precio_unitario' => $detalle->precio_salida,
-                                                            'total' => $detalle->cantidad * $detalle->precio_salida,
-                                                            'bodega' => $detalle->lote && $detalle->lote->bodega ? $detalle->lote->bodega->nombre : 'N/A',
-                                                            'descripcion_salida' => $salida->descripcion ?? '-',
-                                                        ]);
-                                                    }
-                                                }
-                                            }
+                                            // Mapear los productos consumibles al formato de la tabla
+                                            $productosSalidas = $productosConsumibles->map(function($consumible) {
+                                                return [
+                                                    'correlativo' => $consumible->correlativo ?? 'N/A',
+                                                    'fecha_salida' => $consumible->fecha,
+                                                    'producto_codigo' => $consumible->producto ? $consumible->producto->id : 'N/A',
+                                                    'producto_nombre' => $consumible->producto ? $consumible->producto->descripcion : 'N/A',
+                                                    'categoria' => $consumible->producto && $consumible->producto->categoria ? $consumible->producto->categoria->nombre : 'Sin categoría',
+                                                    'lote_id' => $consumible->id_lote ?? 'N/A',
+                                                    'cantidad' => $consumible->cantidad,
+                                                    'precio_unitario' => $consumible->precio_unitario,
+                                                    'total' => $consumible->cantidad * $consumible->precio_unitario,
+                                                    'bodega' => $consumible->bodega ? $consumible->bodega->nombre : 'N/A',
+                                                    'descripcion_salida' => $consumible->observaciones ?? '-',
+                                                ];
+                                            });
                                         @endphp
 
                                         @if($productosSalidas->count() > 0)
@@ -260,9 +253,8 @@
                                                 <table class="min-w-full bg-white">
                                                     <thead class="bg-green-100 text-gray-700 text-sm">
                                                         <tr>
-                                                            <th class="py-3 px-4 text-center">Salida ID</th>
+                                                            <th class="py-3 px-4 text-center">Correlativo</th>
                                                             <th class="py-3 px-4 text-center">Fecha</th>
-                                                            <th class="py-3 px-4 text-left">Tipo</th>
                                                             <th class="py-3 px-4 text-left">Código</th>
                                                             <th class="py-3 px-4 text-left">Producto</th>
                                                             <th class="py-3 px-4 text-left">Categoría</th>
@@ -271,22 +263,19 @@
                                                             <th class="py-3 px-4 text-right">Precio Unit.</th>
                                                             <th class="py-3 px-4 text-right">Total</th>
                                                             <th class="py-3 px-4 text-left">Bodega</th>
-                                                            <th class="py-3 px-4 text-left">Descripción</th>
+                                                            <th class="py-3 px-4 text-left">Observaciones</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="text-gray-600 text-sm">
                                                         @foreach($productosSalidas as $index => $pc)
-                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" wire:key="salida-{{ $persona->id }}-{{ $index }}">
+                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" wire:key="consumible-{{ $persona->id }}-{{ $index }}">
                                                                 <td class="py-3 px-4 text-center">
                                                                     <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
-                                                                        #{{ $pc['salida_id'] }}
+                                                                        {{ $pc['correlativo'] }}
                                                                     </span>
                                                                 </td>
                                                                 <td class="py-3 px-4 text-center text-xs">
                                                                     {{ \Carbon\Carbon::parse($pc['fecha_salida'])->format('d/m/Y') }}
-                                                                </td>
-                                                                <td class="py-3 px-4 text-left">
-                                                                    <span class="text-gray-700 text-xs">{{ $pc['tipo_salida'] }}</span>
                                                                 </td>
                                                                 <td class="py-3 px-4 text-left">
                                                                     <span class="font-mono text-gray-700 font-semibold">{{ $pc['producto_codigo'] }}</span>

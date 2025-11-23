@@ -15,12 +15,19 @@ class GestionTarjetasResponsabilidad extends Component
 
     public $search = '';
     public $tarjetaId; // ID de la tarjeta a desactivar
-    public $mostrarDesactivadas = false; // Checkbox para mostrar tarjetas desactivadas
+    public $showInactive = false; // Mostrar tarjetas desactivadas
 
-    // Para el acordeón de productos (similar a bodegas)
+    // Modal de filtros
+    public $showFilterModal = false;
+
+    // Ordenamiento
+    public $sortField = 'fecha_creacion';
+    public $sortDirection = 'desc';
+
+    // Para el acordeón de productos
     public $tarjetaIdExpandida = null;
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
 
     protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
 
@@ -29,38 +36,80 @@ class GestionTarjetasResponsabilidad extends Component
         $this->resetPage();
     }
 
-    public function updatingMostrarDesactivadas()
+    /**
+     * Alterna el ordenamiento por campo
+     */
+    public function sortBy($field)
     {
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        } else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+        $this->resetPage();
+    }
+
+    /**
+     * Abre el modal de filtros
+     */
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    /**
+     * Cierra el modal de filtros
+     */
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    /**
+     * Limpia los filtros
+     */
+    public function clearFilters()
+    {
+        $this->showInactive = false;
+        $this->sortField = 'fecha_creacion';
+        $this->sortDirection = 'desc';
         $this->resetPage();
     }
 
 
     public function render()
     {
-        $query = TarjetaResponsabilidad::with('persona')
-            ->where('activo', $this->mostrarDesactivadas ? false : true);
+        $query = TarjetaResponsabilidad::with('persona');
+
+        // Filtrar por estado
+        if (!$this->showInactive) {
+            $query->where('activo', true);
+        }
 
         // Si hay búsqueda, filtrar por persona
         if (!empty($this->search)) {
             $query->whereHas('persona', function($q) {
-                $q->where('estado', true)
-                  ->where(function($subq) {
-                      $subq->where('nombres', 'like', '%' . $this->search . '%')
-                           ->orWhere('apellidos', 'like', '%' . $this->search . '%');
-                  });
-            });
-        } else {
-            // Sin búsqueda, mostrar todas las tarjetas activas con persona activa
-            $query->where(function($q) {
-                $q->whereHas('persona', function($subq) {
-                    $subq->where('estado', true);
-                })
-                ->orWhereNull('id_persona'); // Incluir tarjetas sin persona para detectar errores
+                $q->where(function($subq) {
+                    $subq->where('nombres', 'like', '%' . $this->search . '%')
+                         ->orWhere('apellidos', 'like', '%' . $this->search . '%');
+                });
             });
         }
 
-        $tarjetas = $query->orderBy('fecha_creacion', 'desc')
-                          ->paginate(30);
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            $query->orderBy('fecha_creacion', 'desc');
+        }
+
+        $tarjetas = $query->paginate(10);
 
         return view('livewire.gestion-tarjetas-responsabilidad', [
             'tarjetas' => $tarjetas
