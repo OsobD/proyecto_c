@@ -145,10 +145,8 @@ class GestionProveedores extends Component
             'nombre' => 'required|min:3|max:255',
         ];
 
-        // Si estamos creando, validar que el NIT no exista
-        if (!$this->editingId) {
-            $rules['nit'] .= '|unique:proveedor,nit';
-        }
+        // Validar que el NIT sea único, excluyendo el ID actual si estamos editando
+        $rules['nit'] .= '|unique:proveedor,nit' . ($this->editingId ? ',' . $this->editingId : '');
 
         $this->validate($rules, [
             'nit.required' => 'El NIT es obligatorio.',
