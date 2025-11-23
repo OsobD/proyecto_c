@@ -69,4 +69,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/bitacora', \App\Livewire\BitacoraSistema::class)->name('bitacora');
     Route::get('/reportes', \App\Livewire\GenerarReportes::class)->name('reportes');
     Route::get('/configuracion', \App\Livewire\ConfiguracionSistema::class)->name('configuracion');
+    Route::get('/configuracion/roles', \App\Livewire\GestionRoles::class)->name('configuracion.roles');
+    Route::get('/configuracion/permisos', \App\Livewire\GestionPermisos::class)->name('configuracion.permisos');
 });

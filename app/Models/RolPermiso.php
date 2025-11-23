@@ -16,7 +16,7 @@ class RolPermiso extends Model
         'id_permiso',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     // Relaciones
     public function rol()
