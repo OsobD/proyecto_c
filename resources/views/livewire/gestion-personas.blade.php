@@ -234,8 +234,8 @@
                                             $productosSalidas = collect();
                                             foreach ($salidasPersona as $salida) {
                                                 foreach ($salida->detalles as $detalle) {
-                                                    // Filtrar solo productos consumibles
-                                                    if ($detalle->producto && $detalle->producto->es_consumible) {
+                                                    // Filtrar solo productos consumibles (es_consumible == 1 o true)
+                                                    if ($detalle->producto && $detalle->producto->es_consumible == 1) {
                                                         $productosSalidas->push([
                                                             'salida_id' => $salida->id,
                                                             'fecha_salida' => $salida->fecha,

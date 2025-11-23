@@ -145,7 +145,7 @@
                                             $tarjetaProductos = $tarjeta->tarjetasProducto()
                                                 ->with(['producto', 'lote.bodega'])
                                                 ->whereHas('producto', function($query) {
-                                                    $query->where('es_consumible', false);
+                                                    $query->where('es_consumible', 0);
                                                 })
                                                 ->get();
                                         @endphp
