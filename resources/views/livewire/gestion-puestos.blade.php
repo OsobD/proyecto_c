@@ -1,7 +1,14 @@
 <div>
+    {{-- Breadcrumbs --}}
+    <x-breadcrumbs :items="[
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Colaboradores'],
+        ['label' => 'Puestos'],
+    ]" />
     {{-- Encabezado --}}
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Puestos</h1>
+
         <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
             + Nuevo Puesto
         </button>

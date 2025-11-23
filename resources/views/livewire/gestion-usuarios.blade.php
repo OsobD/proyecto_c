@@ -7,6 +7,7 @@
     {{-- Breadcrumbs --}}
     <x-breadcrumbs :items="[
         ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Colaboradores'],
         ['label' => 'Usuarios'],
     ]" />
 
