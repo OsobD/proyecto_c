@@ -47,7 +47,7 @@
                 <input type="text"
                        wire:model.live.debounce.300ms="search"
                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                       placeholder="Buscar por nombre, apellido, DPI, correo o teléfono...">
+                       placeholder="Buscar por nombre, apellido o DPI...">
             </div>
         </div>
 
@@ -120,8 +120,6 @@
                                 @endif
                             </button>
                         </th>
-                        <th class="py-3 px-6 text-left">Teléfono</th>
-                        <th class="py-3 px-6 text-left">Correo</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
@@ -141,11 +139,10 @@
                             <td class="py-3 px-6 text-left">
                                 <span class="font-mono text-gray-700">{{ $persona->dpi ?? 'N/A' }}</span>
                             </td>
-                            <td class="py-3 px-6 text-left">{{ $persona->telefono ?? 'N/A' }}</td>
-                            <td class="py-3 px-6 text-left">{{ $persona->correo ?? 'N/A' }}</td>
                             <td class="py-3 px-6 text-center">
                                 <button
                                     wire:click="toggleEstado({{ $persona->id }})"
+                                    wire:confirm="¿Está seguro de que desea {{ $persona->estado ? 'desactivar' : 'activar' }} a {{ $persona->nombres }} {{ $persona->apellidos }}?{{ $persona->estado ? '\n\nEsto también desactivará todas sus tarjetas de responsabilidad activas.' : '' }}"
                                     class="py-1 px-3 rounded-full text-xs font-semibold {{ $persona->estado ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300' }}">
                                     {{ $persona->estado ? 'Activo' : 'Inactivo' }}
                                 </button>
@@ -178,7 +175,7 @@
                         {{-- Expansión de productos consumibles solicitados (acordeón) --}}
                         @if($personaIdConsumiblesExpandida === $persona->id)
                             <tr>
-                                <td colspan="8" class="bg-green-50 p-6">
+                                <td colspan="6" class="bg-green-50 p-6">
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">
@@ -313,7 +310,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-8 text-gray-500">
+                            <td colspan="6" class="text-center py-8 text-gray-500">
                                 <div class="flex flex-col items-center gap-2">
                                     <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
