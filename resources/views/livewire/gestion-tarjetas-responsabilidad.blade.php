@@ -141,9 +141,12 @@
                                         </div>
 
                                         @php
-                                            // Obtener los productos asignados a esta tarjeta
+                                            // Obtener solo los productos NO CONSUMIBLES asignados a esta tarjeta
                                             $tarjetaProductos = $tarjeta->tarjetasProducto()
                                                 ->with(['producto', 'lote.bodega'])
+                                                ->whereHas('producto', function($query) {
+                                                    $query->where('es_consumible', false);
+                                                })
                                                 ->get();
                                         @endphp
 

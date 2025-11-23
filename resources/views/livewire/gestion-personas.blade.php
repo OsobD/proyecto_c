@@ -230,11 +230,12 @@
                                                 ->orderBy('fecha', 'desc')
                                                 ->get();
 
-                                            // Obtener TODOS los productos de las salidas
+                                            // Obtener SOLO los productos CONSUMIBLES de las salidas
                                             $productosSalidas = collect();
                                             foreach ($salidasPersona as $salida) {
                                                 foreach ($salida->detalles as $detalle) {
-                                                    if ($detalle->producto) {
+                                                    // Filtrar solo productos consumibles
+                                                    if ($detalle->producto && $detalle->producto->es_consumible) {
                                                         $productosSalidas->push([
                                                             'salida_id' => $salida->id,
                                                             'fecha_salida' => $salida->fecha,
