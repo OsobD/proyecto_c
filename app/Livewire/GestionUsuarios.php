@@ -400,23 +400,10 @@ class GestionUsuarios extends Component
      */
     public function abrirModal()
     {
-        // Asegurar que el modal esté cerrado primero
-        $this->showModal = false;
-
-        // Resetear todo
         $this->resetValidation();
         $this->resetForm();
         $this->editMode = false;
-
-        // Forzar limpieza del estado de persona
-        $this->searchPersona = '';
-        $this->selectedPersona = null;
-        $this->personaId = null;
-
-        // Incrementar key para forzar recreación de componentes
-        $this->modalKey++;
-
-        // Abrir modal
+        $this->modalKey++; // Incrementar key para forzar recreación de componentes
         $this->showModal = true;
     }
 
