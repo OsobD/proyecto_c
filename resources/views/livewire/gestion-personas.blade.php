@@ -4,10 +4,10 @@
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Personas</h1>
         <div class="flex items-center space-x-3">
             {{-- Checkbox estilizado para visualizar personas inactivas --}}
-            <label class="custom-checkbox-container flex items-center gap-2 cursor-pointer select-none">
+            <label class="custom-checkbox-container inline-flex items-center gap-2.5 cursor-pointer select-none">
                 <input type="checkbox" wire:model.live="showAllPersonas" class="hidden">
-                <div class="custom-checkmark"></div>
-                <span class="text-sm font-medium text-gray-700">Mostrar inactivos</span>
+                <div class="custom-checkmark flex-shrink-0"></div>
+                <span class="text-sm font-medium text-gray-700 leading-tight">Mostrar inactivos</span>
             </label>
             <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                 + Nueva Persona
@@ -480,12 +480,12 @@
 
         /* Estado checked: checkmark blanco más grande y visible */
         .custom-checkbox-container input:checked ~ .custom-checkmark:after {
-            left: 0.5em;
-            top: 0.2em;
-            width: 0.35em;
-            height: 0.7em;
+            left: 0.53em;
+            top: 0.15em;
+            width: 0.3em;
+            height: 0.75em;
             border-color: transparent white white transparent;
-            border-width: 0 0.2em 0.2em 0;
+            border-width: 0 0.18em 0.18em 0;
             border-radius: 0;
             transform: rotate(45deg);
         }
