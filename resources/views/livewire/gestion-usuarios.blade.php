@@ -39,40 +39,22 @@
                 </div>
             </div>
 
-            {{-- Filtro por Puesto --}}
-            <div class="w-full md:w-64">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por puesto</label>
-                <div class="relative">
-                    @if($selectedFilterPuesto)
-                        <div class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white">
-                            <span class="font-medium">{{ $selectedFilterPuesto['nombre'] }}</span>
-                            <button type="button" wire:click.prevent="clearFilterPuesto" class="text-gray-400 hover:text-gray-600 text-xl">
-                                ×
-                            </button>
-                        </div>
-                    @else
-                        <div class="relative" x-data="{ open: @entangle('showFilterPuestoDropdown').live }" @click.outside="open = false">
-                            <input
-                                type="text"
-                                wire:model.live.debounce.300ms="searchFilterPuesto"
-                                @click="open = true"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                placeholder="Seleccionar puesto...">
-                            <div x-show="open"
-                                 x-transition
-                                 class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
-                                <ul>
-                                    @foreach (array_slice($this->filterPuestoResults, 0, 6) as $puesto)
-                                        <li wire:click.prevent="selectFilterPuesto({{ $puesto['id'] }})"
-                                            class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                            {{ $puesto['nombre'] }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
+            {{-- Botón de Filtros / Ajustes --}}
+            <div>
+                <button
+                    wire:click="openFilterModal"
+                    class="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span>Filtros / Ajustes</span>
+                    @if($filterPuesto || $filterRol || $showInactive)
+                        <span class="flex h-3 w-3 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
                     @endif
-                </div>
+                </button>
             </div>
 
             {{-- Botón Nuevo Usuario --}}
@@ -645,6 +627,149 @@
         </div>
     </div>
 
+    {{-- Modal: Filtros y Ajustes --}}
+    <div x-data="{
+            show: @entangle('showFilterModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeFilterModal"
+         wire:ignore.self>
+        <div class="relative border w-full max-w-lg shadow-2xl rounded-xl bg-white max-h-[85vh] flex flex-col overflow-hidden"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            
+            {{-- Header (Fijo) --}}
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 shrink-0">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    Filtros y Ajustes
+                </h3>
+                <button wire:click="closeFilterModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Body (Scrollable) --}}
+            <div class="p-5 overflow-y-auto flex-1">
+                {{-- Sección: Ordenar por --}}
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Ordenar por</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        @foreach([
+                            'nombre_usuario' => 'Usuario',
+                            'nombre_completo' => 'Nombre',
+                            'rol' => 'Rol',
+                            'puesto' => 'Puesto',
+                            'estado' => 'Estado'
+                        ] as $field => $label)
+                            <button
+                                wire:click="sortBy('{{ $field }}')"
+                                class="flex items-center justify-between px-3 py-2 rounded-lg border {{ $sortField === $field ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50' }} transition-all text-sm font-medium">
+                                <span>{{ $label }}</span>
+                                @if($sortField === $field)
+                                    <span class="text-xs font-bold">{{ $sortDirection === 'asc' ? 'ASC' : 'DESC' }}</span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Sección: Filtrar por --}}
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Filtrar por</h4>
+                    
+                    {{-- Filtro Puesto --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Puesto</label>
+                        <div class="relative">
+                            @if($selectedFilterPuesto)
+                                <div class="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-lg bg-blue-50">
+                                    <span class="font-medium text-sm text-blue-800">{{ $selectedFilterPuesto['nombre'] }}</span>
+                                    <button type="button" wire:click.prevent="clearFilterPuesto" class="text-blue-500 hover:text-blue-700">
+                                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                    </button>
+                                </div>
+                            @else
+                                <div class="relative" x-data="{ open: @entangle('showFilterPuestoDropdown').live }" @click.outside="open = false">
+                                    <input
+                                        type="text"
+                                        wire:model.live.debounce.300ms="searchFilterPuesto"
+                                        @click="open = true"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                        placeholder="Buscar puesto...">
+                                    <div x-show="open"
+                                         x-transition
+                                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                        <ul>
+                                            @foreach (array_slice($this->filterPuestoResults, 0, 10) as $puesto)
+                                                <li wire:click.prevent="selectFilterPuesto({{ $puesto['id'] }})"
+                                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm">
+                                                    {{ $puesto['nombre'] }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Filtro Rol --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                        <select wire:model.live="filterRol" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">Todos los roles</option>
+                            @foreach($roles as $rol)
+                                <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Sección: Opciones de Visualización --}}
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Visualización</h4>
+                    
+                    <label class="custom-checkbox-container gap-3 cursor-pointer select-none p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full flex items-center">
+                        <input type="checkbox" wire:model.live="showInactive">
+                        <div class="custom-checkmark"></div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-800">Mostrar usuarios desactivados</span>
+                            <span class="text-xs text-gray-500">Incluir usuarios que han sido dados de baja</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Footer (Fijo) --}}
+            <div class="flex justify-between items-center p-5 border-t border-gray-100 bg-gray-50 shrink-0">
+                <button
+                    type="button"
+                    wire:click="clearFilters"
+                    class="text-sm text-red-600 hover:text-red-800 font-medium hover:underline">
+                    Limpiar filtros
+                </button>
+                
+                <button
+                    type="button"
+                    wire:click="closeFilterModal"
+                    class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Listo
+                </button>
+            </div>
+        </div>
+    </div>
+
     {{-- Modal Reutilizable: Crear Nueva Persona --}}
     @livewire('modal-persona')
 
@@ -753,6 +878,62 @@
 
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
+        }
+
+        /* Checkbox personalizado (Replicado de GestionPersonas) */
+        .custom-checkbox-container {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .custom-checkbox-container input {
+            display: none;
+        }
+
+        .custom-checkmark {
+            position: relative;
+            display: inline-block;
+            height: 1.25em;
+            width: 1.25em;
+            background-color: transparent;
+            border-radius: 0.25em;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        /* Borde del checkbox / Checkmark */
+        .custom-checkmark:after {
+            content: "";
+            position: absolute;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            
+            /* Estado inicial (unchecked): Borde cuadrado completo */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            border: 0.125em solid #4B5563; /* Gray-600 */
+            border-radius: 0.25em;
+            transform: rotate(0deg);
+        }
+
+        /* Estado checked: fondo azul */
+        .custom-checkbox-container input:checked ~ .custom-checkmark {
+            background-color: #2563EB; /* Blue-600 */
+        }
+
+        /* Estado checked: checkmark blanco centrado */
+        .custom-checkbox-container input:checked ~ .custom-checkmark:after {
+            left: 0.45em;
+            top: 0.25em;
+            width: 0.35em;
+            height: 0.7em;
+            border-color: transparent white white transparent;
+            border-width: 0 0.15em 0.15em 0;
+            border-radius: 0;
+            transform: rotate(45deg);
         }
     </style>
 </div>
