@@ -40,34 +40,51 @@
         </div>
 
         <div>
-            <label for="name" class="block text-sm font-medium text-gray-700">
-                Nombre de Usuario <span class="text-red-500">*</span>
+            <label for="dpi" class="block text-sm font-medium text-gray-700">
+                DPI <span class="text-red-500">*</span>
             </label>
             <input
-                wire:model="name"
-                id="name"
+                wire:model="dpi"
+                id="dpi"
                 type="text"
-                class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('name') border-red-500 @enderror"
-                placeholder="juanperez"
+                maxlength="13"
+                class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('dpi') border-red-500 @enderror"
+                placeholder="0000000000000"
             >
-            @error('name')
+            @error('dpi')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
             @enderror
         </div>
 
         <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
+            <label for="nombre_usuario" class="block text-sm font-medium text-gray-700">
+                Nombre de Usuario <span class="text-red-500">*</span>
+            </label>
+            <input
+                wire:model="nombre_usuario"
+                id="nombre_usuario"
+                type="text"
+                class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('nombre_usuario') border-red-500 @enderror"
+                placeholder="juanperez"
+            >
+            @error('nombre_usuario')
+                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div>
+            <label for="correo" class="block text-sm font-medium text-gray-700">
                 Correo Electrónico <span class="text-red-500">*</span>
             </label>
             <input
-                wire:model="email"
-                id="email"
+                wire:model="correo"
+                id="correo"
                 type="email"
                 autocomplete="email"
-                class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('email') border-red-500 @enderror"
+                class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('correo') border-red-500 @enderror"
                 placeholder="juan@example.com"
             >
-            @error('email')
+            @error('correo')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
             @enderror
         </div>
@@ -80,8 +97,9 @@
                 wire:model="telefono"
                 id="telefono"
                 type="text"
+                maxlength="8"
                 class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('telefono') border-red-500 @enderror"
-                placeholder="0000-0000"
+                placeholder="00000000"
             >
             @error('telefono')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
