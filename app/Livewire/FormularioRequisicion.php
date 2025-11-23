@@ -72,6 +72,11 @@ class FormularioRequisicion extends Component
     public $showModalConfirmacion = false;
 
     /**
+     * Listeners de eventos
+     */
+    protected $listeners = ['personaCreada' => 'handlePersonaCreada'];
+
+    /**
      * Inicializa el componente
      *
      * @return void
@@ -79,6 +84,38 @@ class FormularioRequisicion extends Component
     public function mount()
     {
         $this->productosSeleccionados = [];
+    }
+
+    /**
+     * Maneja el evento cuando se crea una persona desde el modal
+     *
+     * @param array $personaData
+     * @param string $mensaje
+     * @return void
+     */
+    public function handlePersonaCreada($personaData, $mensaje)
+    {
+        // Obtener la persona recién creada para verificar si tiene tarjeta
+        $persona = Persona::with(['tarjetasResponsabilidad' => function ($q) {
+            $q->where('activo', true)->latest();
+        }])->find($personaData['id']);
+
+        if ($persona) {
+            $tarjeta = $persona->tarjetasResponsabilidad->first();
+
+            // Seleccionar automáticamente la persona recién creada
+            $this->selectedDestino = [
+                'id' => 'P' . $persona->id,
+                'nombre' => $personaData['nombre_completo'],
+                'tipo' => $tarjeta ? 'Con Tarjeta' : 'Sin Tarjeta',
+                'persona_id' => $persona->id,
+                'tarjeta_id' => $tarjeta ? $tarjeta->id : null,
+                'tiene_tarjeta' => $tarjeta !== null
+            ];
+
+            $this->showDestinoDropdown = false;
+            session()->flash('success', $mensaje);
+        }
     }
 
     /**

@@ -29,6 +29,14 @@ class GestionBodegas extends Component
     public $showModal = false;
     public $editMode = false;
 
+    // Modal de filtros
+    public $showFilterModal = false;
+    public $showInactive = false;
+
+    // Ordenamiento
+    public $sortField = 'nombre';
+    public $sortDirection = 'asc';
+
     // Campos del formulario de bodega
     public $bodegaId;
     public $nombre;
@@ -53,7 +61,7 @@ class GestionBodegas extends Component
     public $showCategoriaDropdown = false;
     public $selectedCategoria = null;
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
@@ -74,12 +82,62 @@ class GestionBodegas extends Component
         $this->showCategoriaDropdown = !empty($this->searchCategoria);
     }
 
+    public function sortBy($field)
+    {
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        } else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    public function clearFilters()
+    {
+        $this->showInactive = false;
+        $this->sortField = 'nombre';
+        $this->sortDirection = 'asc';
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $bodegas = Bodega::where('activo', true)
-            ->where('nombre', 'like', '%' . $this->search . '%')
-            ->orderBy('nombre', 'asc')
-            ->paginate(30);
+        $query = Bodega::query();
+
+        // Filtrar por estado
+        if (!$this->showInactive) {
+            $query->where('activo', true);
+        }
+
+        // Aplicar búsqueda
+        if (!empty($this->search)) {
+            $query->where('nombre', 'like', '%' . $this->search . '%');
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            $query->orderBy('nombre', 'asc');
+        }
+
+        $bodegas = $query->paginate(10);
 
         return view('livewire.gestion-bodegas', [
             'bodegas' => $bodegas

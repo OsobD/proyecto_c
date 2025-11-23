@@ -30,8 +30,13 @@ class GestionUsuarios extends Component
     // Propiedades de búsqueda y filtrado
     public $search = '';
     public $filterPuesto = '';
-    public $sortField = null;  // 'nombre_usuario' o 'nombre_completo'
-    public $sortDirection = null;  // 'asc' o 'desc'
+    public $sortField = 'nombre_usuario';  // 'nombre_usuario' o 'nombre_completo'
+    public $sortDirection = 'asc';  // 'asc' o 'desc'
+
+    // Propiedades del modal de filtros
+    public $showFilterModal = false;
+    public $showInactive = false;
+    public $filterRol = '';
 
     // Propiedades del modal de creación/edición
     public $showModal = false;
@@ -73,6 +78,25 @@ class GestionUsuarios extends Component
     public $showPersonaDropdown = false;
     public $selectedPersona = null;
     public $personaId = null;
+
+    // Propiedades para selección de puesto en modal de crear (searchable)
+    public $searchPuestoModal = '';
+    public $selectedPuestoModal = null;
+
+    // Propiedades para selección de rol en modal de crear (searchable)
+    public $searchRolModal = '';
+    public $selectedRolModal = null;
+
+    // Propiedades para selección de puesto en modal de editar (searchable)
+    public $searchPuestoEdit = '';
+    public $selectedPuestoEdit = null;
+
+    // Propiedades para selección de rol en modal de editar (searchable)
+    public $searchRolEdit = '';
+    public $selectedRolEdit = null;
+
+    // Key para forzar recreación de componentes al abrir modal
+    public $modalKey = 0;
 
     protected $paginationTheme = 'tailwind';
 
@@ -281,13 +305,16 @@ class GestionUsuarios extends Component
     /**
      * Obtiene personas filtradas para el autocompletado
      * Solo muestra personas activas que NO tienen usuario asignado
+     * Límite dinámico: 7 sin búsqueda, 25 con búsqueda activa
      */
     public function getPersonaResultsProperty()
     {
         $query = Persona::where('estado', true)
             ->whereDoesntHave('usuario'); // Solo personas sin usuario
 
-        if (!empty($this->searchPersona)) {
+        $hasSearch = !empty($this->searchPersona);
+
+        if ($hasSearch) {
             $search = $this->searchPersona;
             $query->where(function ($q) use ($search) {
                 $q->where('nombres', 'like', '%' . $search . '%')
@@ -296,7 +323,10 @@ class GestionUsuarios extends Component
             });
         }
 
-        return $query->orderBy('nombres')->limit(10)->get()->map(function($persona) {
+        // Límite dinámico: 7 sin búsqueda (para no abrumar), 25 con búsqueda (ya filtrado)
+        $limit = $hasSearch ? 25 : 7;
+
+        return $query->orderBy('nombres')->limit($limit)->get()->map(function($persona) {
             return [
                 'id' => $persona->id,
                 'label' => "{$persona->nombres} {$persona->apellidos}",
@@ -362,6 +392,174 @@ class GestionUsuarios extends Component
     }
 
     /**
+     * Obtiene puestos filtrados para el modal de crear usuario
+     */
+    public function getPuestoModalResultsProperty()
+    {
+        $puestos = $this->puestos->toArray();
+
+        if (empty($this->searchPuestoModal)) {
+            return array_slice($puestos, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchPuestoModal));
+
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un puesto en el modal de crear
+     */
+    public function selectPuestoModal($id)
+    {
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
+            $this->selectedPuestoModal = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
+            ];
+            $this->puestoId = $puesto->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de puesto en modal
+     */
+    public function clearPuestoModal()
+    {
+        $this->selectedPuestoModal = null;
+        $this->puestoId = '';
+    }
+
+    /**
+     * Obtiene roles filtrados para el modal de crear usuario
+     */
+    public function getRolModalResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchRolModal)) {
+            return array_slice($roles, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchRolModal));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol en el modal de crear
+     */
+    public function selectRolModal($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedRolModal = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de rol en modal
+     */
+    public function clearRolModal()
+    {
+        $this->selectedRolModal = null;
+        $this->rolId = '';
+    }
+
+    /**
+     * Obtiene puestos filtrados para el modal de editar usuario
+     */
+    public function getPuestoEditResultsProperty()
+    {
+        $puestos = $this->puestos->toArray();
+
+        if (empty($this->searchPuestoEdit)) {
+            return array_slice($puestos, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchPuestoEdit));
+
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un puesto en el modal de editar
+     */
+    public function selectPuestoEdit($id)
+    {
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
+            $this->selectedPuestoEdit = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
+            ];
+            $this->puestoId = $puesto->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de puesto en modal de editar
+     */
+    public function clearPuestoEdit()
+    {
+        $this->selectedPuestoEdit = null;
+        $this->puestoId = '';
+    }
+
+    /**
+     * Obtiene roles filtrados para el modal de editar usuario
+     */
+    public function getRolEditResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchRolEdit)) {
+            return array_slice($roles, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchRolEdit));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol en el modal de editar
+     */
+    public function selectRolEdit($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedRolEdit = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de rol en modal de editar
+     */
+    public function clearRolEdit()
+    {
+        $this->selectedRolEdit = null;
+        $this->rolId = '';
+    }
+
+    /**
      * Maneja el evento cuando se crea una persona
      */
     public function handlePersonaCreada($personaData, $mensaje)
@@ -394,6 +592,7 @@ class GestionUsuarios extends Component
         $this->resetValidation();
         $this->resetForm();
         $this->editMode = false;
+        $this->modalKey++; // Incrementar key para forzar recreación de componentes
         $this->showModal = true;
     }
 
@@ -526,11 +725,21 @@ class GestionUsuarios extends Component
         // Cargar puesto seleccionado para el dropdown
         $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
         if ($puesto) {
-            $this->selectedPuesto = [
+            $this->selectedPuestoEdit = [
                 'id' => $puesto->id,
                 'nombre' => $puesto->nombre,
             ];
             $this->puestoId = $puesto->id;
+        }
+
+        // Cargar rol seleccionado para el dropdown
+        $rol = $this->roles->firstWhere('id', $usuario->id_rol);
+        if ($rol) {
+            $this->selectedRolEdit = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
         }
 
         $this->showModalEditar = true;
@@ -623,6 +832,22 @@ class GestionUsuarios extends Component
         $this->showPersonaDropdown = false;
         $this->selectedPersona = null;
         $this->personaId = null;
+
+        // Resetear campos de puesto modal
+        $this->searchPuestoModal = '';
+        $this->selectedPuestoModal = null;
+
+        // Resetear campos de rol modal
+        $this->searchRolModal = '';
+        $this->selectedRolModal = null;
+
+        // Resetear campos de puesto edit
+        $this->searchPuestoEdit = '';
+        $this->selectedPuestoEdit = null;
+
+        // Resetear campos de rol edit
+        $this->searchRolEdit = '';
+        $this->selectedRolEdit = null;
     }
 
     /**
@@ -716,6 +941,11 @@ class GestionUsuarios extends Component
         $query = Usuario::with(['persona', 'rol', 'puesto'])
             ->whereHas('persona'); // Solo usuarios que tienen persona asignada
 
+        // Lógica para mostrar/ocultar inactivos
+        if (!$this->showInactive) {
+            $query->where('usuario.estado', true);
+        }
+
         // Aplicar búsqueda
         if (!empty($this->search)) {
             $query->where(function ($q) {
@@ -728,25 +958,67 @@ class GestionUsuarios extends Component
             });
         }
 
-        // Aplicar filtro por rol
+        // Aplicar filtro por puesto
         if (!empty($this->filterPuesto)) {
             $query->where('id_puesto', $this->filterPuesto);
         }
 
+        // Aplicar filtro por rol
+        if (!empty($this->filterRol)) {
+            $query->where('id_rol', $this->filterRol);
+        }
+
         // Aplicar ordenamiento
-        if ($this->sortField === 'nombre_usuario') {
-            $query->orderBy('nombre_usuario', $this->sortDirection);
-        } elseif ($this->sortField === 'nombre_completo') {
-            $query->join('persona', 'usuario.id_persona', '=', 'persona.id')
-                  ->orderBy('persona.nombres', $this->sortDirection)
-                  ->orderBy('persona.apellidos', $this->sortDirection)
-                  ->select('usuario.*');
-        } else {
-            // Orden por defecto
-            $query->orderBy('nombre_usuario', 'asc');
+        switch ($this->sortField) {
+            case 'nombre_completo':
+                $query->join('persona', 'usuario.id_persona', '=', 'persona.id')
+                      ->orderBy('persona.nombres', $this->sortDirection)
+                      ->orderBy('persona.apellidos', $this->sortDirection)
+                      ->select('usuario.*'); // Evitar conflictos de ID
+                break;
+            
+            case 'rol':
+                $query->join('rol', 'usuario.id_rol', '=', 'rol.id')
+                      ->orderBy('rol.nombre', $this->sortDirection)
+                      ->select('usuario.*');
+                break;
+
+            case 'puesto':
+                $query->join('puesto', 'usuario.id_puesto', '=', 'puesto.id')
+                      ->orderBy('puesto.nombre', $this->sortDirection)
+                      ->select('usuario.*');
+                break;
+
+            case 'estado':
+                $query->orderBy('usuario.estado', $this->sortDirection);
+                break;
+
+            case 'nombre_usuario':
+            default:
+                $query->orderBy('nombre_usuario', $this->sortDirection ?? 'asc');
+                break;
         }
 
         return $query->paginate(30);
+    }
+
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    public function clearFilters()
+    {
+        $this->filterPuesto = '';
+        $this->selectedFilterPuesto = null;
+        $this->filterRol = '';
+        $this->showInactive = false;
+        $this->resetPage();
     }
 
     /**

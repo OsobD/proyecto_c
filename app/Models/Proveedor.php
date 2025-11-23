@@ -34,4 +34,15 @@ class Proveedor extends Model
     {
         return $this->hasMany(Compra::class, 'id_proveedor');
     }
+
+    // Reglas de validación
+    public static function rules($id = null)
+    {
+        return [
+            'nit' => 'required|numeric|digits_between:5,20|unique:proveedor,nit' . ($id ? ",$id" : ''),
+            'id_regimen' => 'required|exists:regimen_tributario,id',
+            'nombre' => 'required|string|min:3|max:255',
+            'activo' => 'nullable|boolean',
+        ];
+    }
 }

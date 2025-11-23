@@ -13,12 +13,10 @@
     'disabled' => false,
 ])
 
-<div 
-    x-data="{ 
-        open: false, 
-        search: @entangle($searchModel).live.debounce.300ms 
-    }" 
+<div
+    x-data="{ open: false }"
     @click.outside="open = false"
+    @close-all-dropdowns.window="open = false"
     class="relative"
 >
     @if($label)
@@ -30,10 +28,10 @@
     <div class="relative">
         @if($selectedValue)
             {{-- Selected State --}}
-            <div 
-                @if(!$disabled) wire:click="{{ $onClear }}" @endif
-                class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif"
-            >
+            <div
+                wire:click="{{ $onClear }}"
+                @click.stop
+                class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif">
                 <div class="flex flex-col gap-0.5 overflow-hidden">
                     <span class="font-medium truncate">{{ $selectedLabel }}</span>
                     @if(isset($selectedSubtitle))
@@ -41,15 +39,15 @@
                     @endif
                 </div>
                 @if(!$disabled)
-                    <span class="text-gray-400 text-xl hover:text-gray-600">×</span>
+                    <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
                 @endif
             </div>
         @else
             {{-- Search/Input State --}}
-            <div class="relative">
+            <div class="relative" @click.stop>
                 <input
                     type="text"
-                    x-model="search"
+                    wire:model.live.debounce.300ms="{{ $searchModel }}"
                     @click="open = true"
                     @focus="open = true"
                     @keydown.escape="open = false"
@@ -59,22 +57,16 @@
                 >
                 
                 {{-- Dropdown --}}
-                <div 
-                    x-show="open" 
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-y-1"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-1"
-                    x-cloak
+                <div
+                    x-show="open"
+                    x-transition
                     class="absolute z-50 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg"
                 >
                     <ul>
                         @forelse ($results as $result)
-                            <li 
+                            <li
                                 wire:click="{{ $onSelect }}({{ $result['id'] ?? $result->id }})"
-                                @click="open = false; search = ''"
+                                @click="open = false"
                                 class="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 transition-colors"
                             >
                                 <div class="flex flex-col">

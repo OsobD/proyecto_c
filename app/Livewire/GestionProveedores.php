@@ -32,6 +32,14 @@ class GestionProveedores extends Component
     /** @var string Término de búsqueda para filtrar proveedores */
     public $searchProveedor = '';
 
+    // Modal de filtros
+    public $showFilterModal = false;
+    public $showInactive = false;
+
+    // Ordenamiento
+    public $sortField = 'nombre';
+    public $sortDirection = 'asc';
+
     // Propiedades de control de UI
     /** @var bool Controla visibilidad del modal de proveedor */
     public $showModal = false;
@@ -65,6 +73,40 @@ class GestionProveedores extends Component
         $this->resetPage();
     }
 
+    public function sortBy($field)
+    {
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        } else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    public function clearFilters()
+    {
+        $this->showInactive = false;
+        $this->sortField = 'nombre';
+        $this->sortDirection = 'asc';
+        $this->resetPage();
+    }
+
     /**
      * Renderiza la vista del componente con datos desde BD
      *
@@ -73,19 +115,33 @@ class GestionProveedores extends Component
     public function render()
     {
         // Cargar proveedores con sus relaciones
-        $proveedores = Proveedor::with('regimenTributario')
-            ->when($this->searchProveedor, function($query) {
-                $search = strtolower(trim($this->searchProveedor));
-                $query->where(function($q) use ($search) {
-                    $q->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%")
-                      ->orWhere(DB::raw('LOWER(nit)'), 'like', "%{$search}%")
-                      ->orWhereHas('regimenTributario', function($subQ) use ($search) {
-                          $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
-                      });
-                });
-            })
-            ->orderBy('nombre')
-            ->paginate(30);
+        $query = Proveedor::with('regimenTributario');
+
+        // Filtrar por estado
+        if (!$this->showInactive) {
+            $query->where('activo', true);
+        }
+
+        // Aplicar búsqueda
+        if ($this->searchProveedor) {
+            $search = strtolower(trim($this->searchProveedor));
+            $query->where(function($q) use ($search) {
+                $q->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%")
+                  ->orWhere(DB::raw('LOWER(nit)'), 'like', "%{$search}%")
+                  ->orWhereHas('regimenTributario', function($subQ) use ($search) {
+                      $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            $query->orderBy('nombre');
+        }
+
+        $proveedores = $query->paginate(10);
 
         $regimenesTributarios = RegimenTributario::orderBy('nombre')
             ->get();
@@ -140,18 +196,18 @@ class GestionProveedores extends Component
     public function guardarProveedor()
     {
         $rules = [
-            'nit' => 'required|min:1|max:50',
+            'nit' => 'required|numeric|digits_between:5,20',
             'regimenTributarioId' => 'required|exists:regimen_tributario,id',
             'nombre' => 'required|min:3|max:255',
         ];
 
-        // Si estamos creando, validar que el NIT no exista
-        if (!$this->editingId) {
-            $rules['nit'] .= '|unique:proveedor,nit';
-        }
+        // Validar que el NIT sea único, excluyendo el ID actual si estamos editando
+        $rules['nit'] .= '|unique:proveedor,nit' . ($this->editingId ? ',' . $this->editingId : '');
 
         $this->validate($rules, [
             'nit.required' => 'El NIT es obligatorio.',
+            'nit.numeric' => 'El NIT debe contener solo números.',
+            'nit.digits_between' => 'El NIT debe tener entre 5 y 20 dígitos.',
             'nit.unique' => 'Este NIT ya está registrado.',
             'regimenTributarioId.required' => 'Debe seleccionar un régimen tributario.',
             'regimenTributarioId.exists' => 'El régimen tributario seleccionado no existe.',

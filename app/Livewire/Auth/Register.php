@@ -18,15 +18,17 @@ class Register extends Component
     public $password_confirmation = '';
     public $nombres = '';
     public $apellidos = '';
+    public $dpi = '';
     public $telefono = '';
 
     protected $rules = [
         'nombre_usuario' => 'required|string|max:255|unique:usuario,nombre_usuario',
-        'correo' => 'required|email',
+        'correo' => 'required|email|max:255|unique:persona,correo',
         'password' => 'required|min:6|confirmed',
         'nombres' => 'required|string|max:255',
         'apellidos' => 'required|string|max:255',
-        'telefono' => 'nullable|string|max:20',
+        'dpi' => 'required|digits:13|unique:persona,dpi',
+        'telefono' => 'nullable|digits:8|unique:persona,telefono',
     ];
 
     protected $messages = [
@@ -34,11 +36,17 @@ class Register extends Component
         'nombre_usuario.unique' => 'Este nombre de usuario ya está registrado.',
         'correo.required' => 'El correo electrónico es obligatorio.',
         'correo.email' => 'Ingresa un correo electrónico válido.',
+        'correo.unique' => 'Ya existe una persona registrada con este correo.',
         'password.required' => 'La contraseña es obligatoria.',
         'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
         'password.confirmed' => 'Las contraseñas no coinciden.',
         'nombres.required' => 'Los nombres son obligatorios.',
         'apellidos.required' => 'Los apellidos son obligatorios.',
+        'dpi.required' => 'El DPI es obligatorio.',
+        'dpi.digits' => 'El DPI debe tener exactamente 13 dígitos numéricos.',
+        'dpi.unique' => 'Ya existe una persona registrada con este DPI.',
+        'telefono.digits' => 'El teléfono debe tener exactamente 8 dígitos numéricos.',
+        'telefono.unique' => 'Ya existe una persona registrada con este teléfono.',
     ];
 
     public function register()
@@ -49,6 +57,7 @@ class Register extends Component
         $persona = Persona::create([
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
+            'dpi' => $this->dpi,
             'telefono' => $this->telefono,
             'correo' => $this->correo,
             'estado' => true,

@@ -43,6 +43,11 @@ class Persona extends Model
         return $this->hasMany(Salida::class, 'id_persona');
     }
 
+    public function consumiblesPersona()
+    {
+        return $this->hasMany(ConsumiblePersona::class, 'id_persona');
+    }
+
     // Reglas de validación
     public static function rules($id = null)
     {
@@ -50,8 +55,8 @@ class Persona extends Model
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'dpi' => 'required|string|size:13|unique:persona,dpi' . ($id ? ",$id" : ''),
-            'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:255',
+            'telefono' => 'nullable|string|max:20|unique:persona,telefono' . ($id ? ",$id" : ''),
+            'correo' => 'nullable|email|max:255|unique:persona,correo' . ($id ? ",$id" : ''),
             'estado' => 'nullable|boolean',
         ];
     }
