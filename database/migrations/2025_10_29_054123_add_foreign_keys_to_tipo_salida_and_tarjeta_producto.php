@@ -11,12 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Agregar foreign keys a users (para id_persona e id_rol)
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreign('id_persona')->references('id')->on('persona')->onDelete('set null');
-            $table->foreign('id_rol')->references('id')->on('rol')->onDelete('set null');
-        });
-
         // Agregar foreign key a tipo_salida (para id_salida)
         Schema::table('tipo_salida', function (Blueprint $table) {
             $table->foreign('id_salida')->references('id')->on('salida')->onDelete('set null');
@@ -57,11 +51,6 @@ return new class extends Migration
 
         Schema::table('tipo_salida', function (Blueprint $table) {
             $table->dropForeign(['id_salida']);
-        });
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['id_persona']);
-            $table->dropForeign(['id_rol']);
         });
     }
 };

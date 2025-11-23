@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->foreign('id_proveedor')->references('id')->on('proveedor')->onDelete('set null');
             $table->foreign('id_bodega')->references('id')->on('bodega')->onDelete('set null');
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('id_usuario')->references('id')->on('usuario')->onDelete('set null');
         });
 
         // Tabla de entradas
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_tarjeta')->nullable();
             $table->unsignedBigInteger('id_bodega')->nullable();
 
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('id_usuario')->references('id')->on('usuario')->onDelete('set null');
             $table->foreign('id_tarjeta')->references('id')->on('tarjeta_responsabilidad')->onDelete('set null');
             $table->foreign('id_bodega')->references('id')->on('bodega')->onDelete('set null');
         });
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_bodega')->nullable();
             $table->unsignedBigInteger('id_tarjeta')->nullable();
 
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('id_usuario')->references('id')->on('usuario')->onDelete('set null');
             $table->foreign('id_bodega')->references('id')->on('bodega')->onDelete('set null');
         });
 
@@ -70,7 +70,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_bodega')->nullable();
             $table->unsignedBigInteger('id_traslado')->nullable();
 
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('id_usuario')->references('id')->on('usuario')->onDelete('set null');
             $table->foreign('id_bodega')->references('id')->on('bodega')->onDelete('set null');
             $table->foreign('id_traslado')->references('id')->on('traslado')->onDelete('set null');
         });
@@ -86,7 +86,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_tarjeta')->nullable();
             $table->unsignedBigInteger('id_bodega')->nullable();
 
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('id_usuario')->references('id')->on('usuario')->onDelete('set null');
             $table->foreign('id_bodega')->references('id')->on('bodega')->onDelete('set null');
         });
     }
