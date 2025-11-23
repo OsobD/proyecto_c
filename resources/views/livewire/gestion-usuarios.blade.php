@@ -263,6 +263,7 @@
 
                     <label class="block text-sm font-medium text-gray-700 mb-2">Persona</label>
                     <x-searchable-select
+                        wire:key="persona-select-{{ $modalKey }}"
                         placeholder="Buscar por nombre, apellidos o DPI..."
                         search-model="searchPersona"
                         :results="$this->personaResults"
