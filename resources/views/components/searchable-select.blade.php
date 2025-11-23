@@ -28,7 +28,7 @@
         @if($selectedValue)
             {{-- Selected State --}}
             <div
-                @if(!$disabled) wire:click="{{ $onClear }}" @endif
+                @if(!$disabled) wire:click.stop="{{ $onClear }}" @click="open = false" @endif
                 class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif"
             >
                 <div class="flex flex-col gap-0.5 overflow-hidden">
