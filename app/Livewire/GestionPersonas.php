@@ -251,55 +251,34 @@ class GestionPersonas extends Component
         }
     }
 
+    /**
+     * Alterna el estado de una persona (activar/desactivar)
+     */
     public function toggleEstado($id)
     {
         try {
-            $persona = Persona::with(['tarjetasResponsabilidad', 'usuario'])->findOrFail($id);
-
-            // Si está activa y queremos desactivarla, verificar relaciones
-            if ($persona->estado) {
-                $tieneTarjetas = $persona->tarjetasResponsabilidad()->where('activo', true)->exists();
-                $tieneUsuario = $persona->usuario()->exists();
-
-                if ($tieneTarjetas) {
-                    session()->flash('error', 'No se puede desactivar la persona porque tiene tarjetas de responsabilidad activas.');
-                    return;
-                }
-
-                // Verificar salidas solo si la columna id_persona existe
-                try {
-                    $tieneSalidas = $persona->salidas()->exists();
-                    if ($tieneSalidas) {
-                        session()->flash('error', 'No se puede desactivar la persona porque tiene salidas registradas.');
-                        return;
-                    }
-                } catch (\Exception $e) {
-                    // Columna no existe aún
-                }
-
-                if ($tieneUsuario) {
-                    session()->flash('error', 'No se puede desactivar la persona porque tiene un usuario asociado.');
-                    return;
-                }
-            }
-
-            // Cambiar estado
+            $persona = Persona::findOrFail($id);
             $nuevoEstado = !$persona->estado;
+
+            // Actualizar estado
             $persona->update(['estado' => $nuevoEstado]);
 
             // Registrar en bitácora
+            $accion = $nuevoEstado ? 'activar' : 'desactivar';
             Bitacora::create([
-                'accion' => $nuevoEstado ? 'Activar' : 'Desactivar',
+                'accion' => $accion,
                 'modelo' => 'Persona',
                 'modelo_id' => $persona->id,
-                'descripcion' => ($nuevoEstado ? 'Persona activada: ' : 'Persona desactivada: ') . "{$persona->nombres} {$persona->apellidos}",
+                'descripcion' => "Persona {$accion}da: {$persona->nombres} {$persona->apellidos}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
             ]);
 
-            session()->flash('message', $nuevoEstado ? 'Persona activada correctamente.' : 'Persona desactivada correctamente.');
+            $mensaje = $nuevoEstado ? 'Persona activada exitosamente.' : 'Persona desactivada exitosamente.';
+            session()->flash('message', $mensaje);
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al cambiar estado: ' . $e->getMessage());
+            session()->flash('error', 'Error al cambiar el estado: ' . $e->getMessage());
         }
     }
 
