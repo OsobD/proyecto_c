@@ -264,11 +264,9 @@ class GestionPersonas extends Component
             // Actualizar estado de la persona
             $persona->update(['estado' => $nuevoEstado]);
 
-            // Si se desactiva la persona, desactivar también su tarjeta de responsabilidad
-            if (!$nuevoEstado) {
-                foreach ($persona->tarjetasResponsabilidad as $tarjeta) {
-                    $tarjeta->update(['activo' => false]);
-                }
+            // Sincronizar estado de la tarjeta de responsabilidad
+            foreach ($persona->tarjetasResponsabilidad as $tarjeta) {
+                $tarjeta->update(['activo' => $nuevoEstado]);
             }
 
             // Registrar en bitácora
