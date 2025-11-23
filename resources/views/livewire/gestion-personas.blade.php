@@ -452,10 +452,10 @@
 
         .custom-checkmark {
             position: relative;
-            height: 1.3em;
-            width: 1.3em;
+            height: 1.5em;
+            width: 1.5em;
             background-color: transparent;
-            border-radius: 0.25em;
+            border-radius: 0.3em;
             transition: all 0.25s;
         }
 
@@ -464,12 +464,12 @@
             content: "";
             position: absolute;
             transform: rotate(0deg);
-            border: 0.1em solid #374151;
+            border: 0.125em solid #374151;
             left: 0;
             top: 0;
-            width: 1.05em;
-            height: 1.05em;
-            border-radius: 0.25em;
+            width: 1.25em;
+            height: 1.25em;
+            border-radius: 0.3em;
             transition: all 0.25s, border-width 0.1s;
         }
 
@@ -478,14 +478,14 @@
             background-color: #2196F3;
         }
 
-        /* Estado checked: checkmark blanco */
+        /* Estado checked: checkmark blanco más grande y visible */
         .custom-checkbox-container input:checked ~ .custom-checkmark:after {
-            left: 0.45em;
-            top: 0.25em;
-            width: 0.25em;
-            height: 0.5em;
+            left: 0.5em;
+            top: 0.2em;
+            width: 0.35em;
+            height: 0.7em;
             border-color: transparent white white transparent;
-            border-width: 0 0.15em 0.15em 0;
+            border-width: 0 0.2em 0.2em 0;
             border-radius: 0;
             transform: rotate(45deg);
         }
