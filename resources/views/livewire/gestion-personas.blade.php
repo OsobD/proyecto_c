@@ -449,6 +449,7 @@
         .custom-checkbox-container {
             display: inline-flex;
             align-items: center;
+            position: relative;
         }
 
         .custom-checkbox-container input {
@@ -462,36 +463,38 @@
             width: 1.25em;
             background-color: transparent;
             border-radius: 0.25em;
-            transition: all 0.25s;
+            transition: all 0.3s ease;
             flex-shrink: 0;
         }
 
-        /* Borde del checkbox */
+        /* Borde del checkbox / Checkmark */
         .custom-checkmark:after {
             content: "";
             position: absolute;
-            transform: rotate(0deg);
-            border: 0.125em solid #374151;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            
+            /* Estado inicial (unchecked): Borde cuadrado completo */
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
+            border: 0.125em solid #4B5563; /* Gray-600 para mejor contraste */
             border-radius: 0.25em;
-            transition: all 0.25s;
-            box-sizing: border-box;
+            transform: rotate(0deg);
         }
 
         /* Estado checked: fondo azul */
         .custom-checkbox-container input:checked ~ .custom-checkmark {
-            background-color: #2196F3;
+            background-color: #2563EB; /* Blue-600 match con botón */
         }
 
         /* Estado checked: checkmark blanco centrado */
         .custom-checkbox-container input:checked ~ .custom-checkmark:after {
             left: 0.45em;
-            top: 0.15em;
-            width: 0.25em;
-            height: 0.65em;
+            top: 0.25em;
+            width: 0.35em;
+            height: 0.7em;
             border-color: transparent white white transparent;
             border-width: 0 0.15em 0.15em 0;
             border-radius: 0;
