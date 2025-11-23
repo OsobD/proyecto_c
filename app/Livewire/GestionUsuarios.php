@@ -74,6 +74,14 @@ class GestionUsuarios extends Component
     public $selectedPersona = null;
     public $personaId = null;
 
+    // Propiedades para selección de puesto en modal de crear (searchable)
+    public $searchPuestoModal = '';
+    public $selectedPuestoModal = null;
+
+    // Propiedades para selección de rol en modal de crear (searchable)
+    public $searchRolModal = '';
+    public $selectedRolModal = null;
+
     // Key para forzar recreación de componentes al abrir modal
     public $modalKey = 0;
 
@@ -371,6 +379,90 @@ class GestionUsuarios extends Component
     }
 
     /**
+     * Obtiene puestos filtrados para el modal de crear usuario
+     */
+    public function getPuestoModalResultsProperty()
+    {
+        $puestos = $this->puestos->toArray();
+
+        if (empty($this->searchPuestoModal)) {
+            return array_slice($puestos, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchPuestoModal));
+
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un puesto en el modal de crear
+     */
+    public function selectPuestoModal($id)
+    {
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
+            $this->selectedPuestoModal = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
+            ];
+            $this->puestoId = $puesto->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de puesto en modal
+     */
+    public function clearPuestoModal()
+    {
+        $this->selectedPuestoModal = null;
+        $this->puestoId = '';
+    }
+
+    /**
+     * Obtiene roles filtrados para el modal de crear usuario
+     */
+    public function getRolModalResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchRolModal)) {
+            return array_slice($roles, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchRolModal));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol en el modal de crear
+     */
+    public function selectRolModal($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedRolModal = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de rol en modal
+     */
+    public function clearRolModal()
+    {
+        $this->selectedRolModal = null;
+        $this->rolId = '';
+    }
+
+    /**
      * Maneja el evento cuando se crea una persona
      */
     public function handlePersonaCreada($personaData, $mensaje)
@@ -633,6 +725,14 @@ class GestionUsuarios extends Component
         $this->showPersonaDropdown = false;
         $this->selectedPersona = null;
         $this->personaId = null;
+
+        // Resetear campos de puesto modal
+        $this->searchPuestoModal = '';
+        $this->selectedPuestoModal = null;
+
+        // Resetear campos de rol modal
+        $this->searchRolModal = '';
+        $this->selectedRolModal = null;
     }
 
     /**
