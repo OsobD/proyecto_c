@@ -53,7 +53,7 @@ class GestionBodegas extends Component
     public $showCategoriaDropdown = false;
     public $selectedCategoria = null;
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'nombre' => 'required|string|max:255',

@@ -854,12 +854,13 @@ class FormularioCompra extends Component
     public function guardarNuevoProveedor()
     {
         $this->validate([
-            'nuevoProveedorNit' => 'required|min:5|max:20|unique:proveedor,nit',
+            'nuevoProveedorNit' => 'required|numeric|digits_between:5,20|unique:proveedor,nit',
             'nuevoProveedorRegimen' => 'required',
             'nuevoProveedorNombre' => 'required|min:3|max:255',
         ], [
             'nuevoProveedorNit.required' => 'El NIT es obligatorio.',
-            'nuevoProveedorNit.min' => 'El NIT debe tener al menos 5 caracteres.',
+            'nuevoProveedorNit.numeric' => 'El NIT debe contener solo números.',
+            'nuevoProveedorNit.digits_between' => 'El NIT debe tener entre 5 y 20 dígitos.',
             'nuevoProveedorNit.unique' => 'Ya existe un proveedor registrado con este NIT.',
             'nuevoProveedorRegimen.required' => 'Debe seleccionar un régimen.',
             'nuevoProveedorNombre.required' => 'El nombre del proveedor es obligatorio.',

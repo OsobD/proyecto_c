@@ -140,7 +140,7 @@ class GestionProveedores extends Component
     public function guardarProveedor()
     {
         $rules = [
-            'nit' => 'required|min:1|max:50',
+            'nit' => 'required|numeric|digits_between:5,20',
             'regimenTributarioId' => 'required|exists:regimen_tributario,id',
             'nombre' => 'required|min:3|max:255',
         ];
@@ -150,6 +150,8 @@ class GestionProveedores extends Component
 
         $this->validate($rules, [
             'nit.required' => 'El NIT es obligatorio.',
+            'nit.numeric' => 'El NIT debe contener solo números.',
+            'nit.digits_between' => 'El NIT debe tener entre 5 y 20 dígitos.',
             'nit.unique' => 'Este NIT ya está registrado.',
             'regimenTributarioId.required' => 'Debe seleccionar un régimen tributario.',
             'regimenTributarioId.exists' => 'El régimen tributario seleccionado no existe.',

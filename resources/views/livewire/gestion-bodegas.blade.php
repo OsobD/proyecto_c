@@ -5,10 +5,16 @@
                  crear productos directamente desde aquí.
 --}}
 <div>
+    {{-- Breadcrumbs --}}
+    <x-breadcrumbs :items="[
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Bodegas'],
+    ]" />
+
     {{-- Encabezado --}}
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Gestión de Bodegas Físicas</h1>
-        <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+        <h1 class="text-2xl font-bold text-gray-800">Gestión de Bodegas</h1>
+        <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
             + Nueva Bodega
         </button>
     </div>
