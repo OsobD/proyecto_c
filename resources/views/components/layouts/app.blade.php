@@ -30,7 +30,7 @@
                         <div x-show="open"
                              x-cloak
                              x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
+                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
                             <a href="{{ route('compras') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras') && !request()->routeIs('compras.*') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Inicio
                             </a>
@@ -54,7 +54,7 @@
                         <div x-show="open"
                              x-cloak
                              x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
+                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
                             <a href="{{ route('traslados') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Inicio
                             </a>
@@ -84,7 +84,7 @@
                         <div x-show="open"
                              x-cloak
                              x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
+                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
                             <a href="{{ route('productos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos') && !request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Productos
                             </a>
@@ -108,7 +108,7 @@
                         <div x-show="open"
                              x-cloak
                              x-transition
-                             class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
+                             class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
                              <a href="{{ route('personas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('personas') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Personas
                             </a>
@@ -132,7 +132,7 @@
                         <div x-show="open"
                              x-cloak
                              x-transition
-                             class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
+                             class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
                             <a href="{{ route('bodegas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('bodegas') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
                                 Bodegas
                             </a>
@@ -160,7 +160,7 @@
                         <div x-show="open"
                              x-cloak
                              x-transition
-                             class="absolute right-0 mt-2 w-56 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10">
+                             class="absolute right-0 mt-2 w-56 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
                             <div class="px-4 py-3 text-sm bg-[var(--color-eemq-bg)] border-b border-[var(--color-eemq-secondary)]">
                                 <p class="font-semibold text-[var(--color-eemq-primary)]">{{ auth()->user()->persona->nombres }} {{ auth()->user()->persona->apellidos }}</p>
                                 <p class="text-xs text-gray-600">{{ auth()->user()->persona->correo }}</p>
