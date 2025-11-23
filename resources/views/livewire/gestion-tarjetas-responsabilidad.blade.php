@@ -68,7 +68,22 @@
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
-                        <th class="py-3 px-6 text-left">ID</th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('id')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                ID
+                                @if($sortField === 'id')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="py-3 px-6 text-left">Persona</th>
                         <th class="py-3 px-6 text-left">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>

@@ -76,8 +76,38 @@
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
-                        <th class="py-3 px-6 text-left">Nombre del Proveedor</th>
-                        <th class="py-3 px-6 text-left">NIT</th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('nombre')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Nombre del Proveedor
+                                @if($sortField === 'nombre')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('nit')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                NIT
+                                @if($sortField === 'nit')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="py-3 px-6 text-left">Régimen Tributario</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>

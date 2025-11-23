@@ -82,7 +82,22 @@
             <table class="min-w-full bg-white">
                 <thead class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 uppercase text-xs font-semibold">
                     <tr>
-                        <th class="py-4 px-6 text-left">Nombre</th>
+                        <th class="py-4 px-6 text-left">
+                            <button
+                                wire:click="sortBy('nombre')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Nombre
+                                @if($sortField === 'nombre')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="py-4 px-6 text-center">Estado</th>
                         <th class="py-4 px-6 text-center">Acciones</th>
                     </tr>
