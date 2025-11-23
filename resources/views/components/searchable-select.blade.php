@@ -16,8 +16,14 @@
 <div
     x-data="{
         open: false,
+        hasInteracted: false,
         search: @entangle($searchModel).live.debounce.300ms,
         closeTimeout: null,
+        handleOpen() {
+            this.hasInteracted = true;
+            this.open = true;
+            this.cancelClose();
+        },
         scheduleClose() {
             this.closeTimeout = setTimeout(() => { this.open = false; }, 150);
         },
@@ -28,6 +34,7 @@
             }
         }
     }"
+    x-init="() => { open = false; hasInteracted = false; }"
     @click.outside="open = false"
     class="relative"
 >
@@ -60,8 +67,8 @@
                 <input
                     type="text"
                     x-model="search"
-                    @click="open = true; cancelClose()"
-                    @focus="open = true; cancelClose()"
+                    @click="handleOpen()"
+                    @focus="handleOpen()"
                     @blur="scheduleClose()"
                     @keydown.escape="open = false"
                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @if($error) border-red-500 ring-2 ring-red-200 @endif {{ $disabled ? 'bg-gray-100 cursor-not-allowed' : '' }}"
@@ -71,7 +78,7 @@
                 
                 {{-- Dropdown --}}
                 <div
-                    x-show="open"
+                    x-show="open && hasInteracted"
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 translate-y-1"
                     x-transition:enter-end="opacity-100 translate-y-0"
