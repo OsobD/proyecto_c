@@ -38,6 +38,14 @@ class GestionProductos extends Component
     /** @var string Término de búsqueda para filtrar productos */
     public $searchProducto = '';
 
+    // Modal de filtros
+    public $showFilterModal = false;
+    public $showInactive = false;
+
+    // Ordenamiento
+    public $sortField = 'id';
+    public $sortDirection = 'asc';
+
     /** @var int Número de elementos por página en la lista principal */
     protected $perPage = 30;
 
@@ -102,6 +110,40 @@ class GestionProductos extends Component
     /** @var string ID del producto al que pertenece el lote */
     public $loteProductoId = '';
 
+    public function sortBy($field)
+    {
+        if ($this->sortField !== $field) {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        } else {
+            if ($this->sortDirection === 'asc') {
+                $this->sortDirection = 'desc';
+            } elseif ($this->sortDirection === 'desc') {
+                $this->sortField = null;
+                $this->sortDirection = null;
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    public function clearFilters()
+    {
+        $this->showInactive = false;
+        $this->sortField = 'id';
+        $this->sortDirection = 'asc';
+        $this->resetPage();
+    }
+
     /**
      * Renderiza la vista del componente con datos desde BD
      *
@@ -110,20 +152,33 @@ class GestionProductos extends Component
     public function render()
     {
         // Cargar productos con sus relaciones - PAGINADO
-        $productos = Producto::with(['categoria'])
-            ->withCount('lotes')
-            ->when($this->searchProducto, function($query) {
-                $search = strtolower(trim($this->searchProducto));
-                $query->where(function($q) use ($search) {
-                    $q->where(DB::raw('LOWER(id)'), 'like', "%{$search}%")
-                      ->orWhere(DB::raw('LOWER(descripcion)'), 'like', "%{$search}%")
-                      ->orWhereHas('categoria', function($subQ) use ($search) {
-                          $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
-                      });
-                });
-            })
-            ->orderBy('descripcion')
-            ->paginate($this->perPage);
+        $query = Producto::with(['categoria'])->withCount('lotes');
+
+        // Filtrar por estado
+        if (!$this->showInactive) {
+            $query->where('activo', true);
+        }
+
+        // Aplicar búsqueda
+        if ($this->searchProducto) {
+            $search = strtolower(trim($this->searchProducto));
+            $query->where(function($q) use ($search) {
+                $q->where(DB::raw('LOWER(id)'), 'like', "%{$search}%")
+                  ->orWhere(DB::raw('LOWER(descripcion)'), 'like', "%{$search}%")
+                  ->orWhereHas('categoria', function($subQ) use ($search) {
+                      $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Aplicar ordenamiento
+        if ($this->sortField) {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        } else {
+            $query->orderBy('descripcion');
+        }
+
+        $productos = $query->paginate(10);
 
         // Obtener lotes paginados si hay un producto expandido
         $lotesPaginados = null;
