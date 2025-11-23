@@ -16,11 +16,14 @@ class GestionPersonas extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    public $showAllPersonas = false; // Para mostrar inactivas también
+    
+    // Propiedades del modal de filtros
+    public $showFilterModal = false;
+    public $showInactive = false; // Renombrado de showAllPersonas para consistencia
 
     // Propiedades de ordenamiento
-    public $sortField = null;  // 'id', 'nombres', 'apellidos', 'dpi'
-    public $sortDirection = null;  // 'asc' o 'desc'
+    public $sortField = 'nombres';
+    public $sortDirection = 'asc';
 
     // Para el acordeón de productos consumibles
     public $personaIdConsumiblesExpandida = null;
@@ -32,6 +35,9 @@ class GestionPersonas extends Component
     public $dpi;
     public $telefono;
     public $correo;
+
+    // Key para forzar recreación de componentes al abrir modal
+    public $modalKey = 0;
 
     protected $paginationTheme = 'tailwind';
 
@@ -90,8 +96,8 @@ class GestionPersonas extends Component
     {
         $query = Persona::query();
 
-        // Filtrar por estado si no queremos ver todas
-        if (!$this->showAllPersonas) {
+        // Filtrar por estado si no queremos ver todas (inactivas)
+        if (!$this->showInactive) {
             $query->where('estado', true);
         }
 
@@ -115,7 +121,7 @@ class GestionPersonas extends Component
                   ->orderBy('nombres', 'asc');
         }
 
-        $personas = $query->paginate(30);
+        $personas = $query->paginate(10);
 
         return view('livewire.gestion-personas', [
             'personas' => $personas
@@ -126,6 +132,7 @@ class GestionPersonas extends Component
     {
         $this->resetForm();
         $this->editMode = false;
+        $this->modalKey++;
         $this->showModal = true;
     }
 
@@ -218,8 +225,6 @@ class GestionPersonas extends Component
                 ]);
 
                 // Crear tarjeta de responsabilidad automáticamente
-                // IMPORTANTE: created_by y updated_by deben ser NULL ya que
-                // la foreign key apunta a 'users' pero usamos la tabla 'usuario'
                 TarjetaResponsabilidad::create([
                     'nombre' => "{$this->nombres} {$this->apellidos}",
                     'fecha_creacion' => now(),
@@ -334,5 +339,32 @@ class GestionPersonas extends Component
         } else {
             $this->personaIdConsumiblesExpandida = $personaId;
         }
+    }
+
+    /**
+     * Abre el modal de filtros
+     */
+    public function openFilterModal()
+    {
+        $this->showFilterModal = true;
+    }
+
+    /**
+     * Cierra el modal de filtros
+     */
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+    }
+
+    /**
+     * Limpia los filtros
+     */
+    public function clearFilters()
+    {
+        $this->showInactive = false;
+        $this->sortField = 'nombres';
+        $this->sortDirection = 'asc';
+        $this->resetPage();
     }
 }

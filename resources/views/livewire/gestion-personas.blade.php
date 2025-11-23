@@ -1,24 +1,78 @@
+{{--
+    Vista: Gestión de Personas
+    Descripción: CRUD completo de personas con búsqueda, filtros (modal), ordenamiento y gestión de tarjetas de responsabilidad.
+--}}
 <div>
-    {{-- Encabezado --}}
+    {{-- Breadcrumbs --}}
+    <x-breadcrumbs :items="[
+        ['label' => 'Inicio', 'url' => '/', 'icon' => true],
+        ['label' => 'Personas'],
+    ]" />
+
+    {{-- Encabezado con título --}}
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Personas</h1>
-        <div class="flex items-center space-x-3">
-            {{-- Checkbox estilizado para visualizar personas inactivas --}}
-            <label class="custom-checkbox-container gap-2 cursor-pointer select-none">
-                <input type="checkbox" wire:model.live="showAllPersonas">
-                <div class="custom-checkmark"></div>
-                <span class="text-sm font-medium text-gray-700">Mostrar inactivos</span>
-            </label>
-            <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                + Nueva Persona
-            </button>
+    </div>
+
+    {{-- Barra de búsqueda y filtros --}}
+    <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+        <div class="flex flex-col md:flex-row gap-4 items-end">
+            {{-- Búsqueda --}}
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar persona</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="search"
+                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        placeholder="Buscar por nombre, apellido, DPI, correo..."
+                        autocomplete="off">
+                </div>
+            </div>
+
+            {{-- Botón de Filtros / Ajustes --}}
+            <div>
+                <button
+                    wire:click="openFilterModal"
+                    class="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span>Filtros / Ajustes</span>
+                    @if($showInactive)
+                        <span class="flex h-3 w-3 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
+                    @endif
+                </button>
+            </div>
+
+            {{-- Botón Nueva Persona --}}
+            <div>
+                <button
+                    wire:click="openModal"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    + Nueva Persona
+                </button>
+            </div>
         </div>
     </div>
 
-    {{-- Mensajes --}}
+    {{-- Mensajes flash --}}
     @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
-            <span class="block sm:inline">{{ session('message') }}</span>
+        <div class="relative fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
+            <div class="flex items-center gap-2">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-medium">{{ session('message') }}</span>
+            </div>
             <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
                 <span class="text-2xl">&times;</span>
             </button>
@@ -26,8 +80,13 @@
     @endif
 
     @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
+        <div class="relative fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
+            <div class="flex items-center gap-2">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
             <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
                 <span class="text-2xl">&times;</span>
             </button>
@@ -35,23 +94,8 @@
     @endif
 
     {{-- Contenedor principal --}}
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        {{-- Búsqueda --}}
-        <div class="mb-4">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <input type="text"
-                       wire:model.live.debounce.300ms="search"
-                       class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                       placeholder="Buscar por nombre, apellido o DPI...">
-            </div>
-        </div>
-
-        {{-- Tabla --}}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        {{-- Tabla de personas --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -63,9 +107,9 @@
                                 ID
                                 @if($sortField === 'id')
                                     @if($sortDirection === 'asc')
-                                        <span class="text-blue-600">↑</span>
+                                        <span>↑</span>
                                     @else
-                                        <span class="text-blue-600">↓</span>
+                                        <span>↓</span>
                                     @endif
                                 @else
                                     <span class="text-gray-400">↕</span>
@@ -79,9 +123,9 @@
                                 Nombres
                                 @if($sortField === 'nombres')
                                     @if($sortDirection === 'asc')
-                                        <span class="text-blue-600">↑</span>
+                                        <span>↑</span>
                                     @else
-                                        <span class="text-blue-600">↓</span>
+                                        <span>↓</span>
                                     @endif
                                 @else
                                     <span class="text-gray-400">↕</span>
@@ -95,9 +139,9 @@
                                 Apellidos
                                 @if($sortField === 'apellidos')
                                     @if($sortDirection === 'asc')
-                                        <span class="text-blue-600">↑</span>
+                                        <span>↑</span>
                                     @else
-                                        <span class="text-blue-600">↓</span>
+                                        <span>↓</span>
                                     @endif
                                 @else
                                     <span class="text-gray-400">↕</span>
@@ -111,9 +155,9 @@
                                 DPI
                                 @if($sortField === 'dpi')
                                     @if($sortDirection === 'asc')
-                                        <span class="text-blue-600">↑</span>
+                                        <span>↑</span>
                                     @else
-                                        <span class="text-blue-600">↓</span>
+                                        <span>↓</span>
                                     @endif
                                 @else
                                     <span class="text-gray-400">↕</span>
@@ -148,7 +192,7 @@
                                 </button>
                             </td>
                             <td class="py-3 px-6 text-center">
-                                <div class="flex item-center justify-center gap-2">
+                                <div class="flex items-center justify-center gap-2">
                                     {{-- Botón para ver productos solicitados --}}
                                     <button
                                         wire:click="toggleConsumibles({{ $persona->id }})"
@@ -159,15 +203,11 @@
                                         </svg>
                                     </button>
 
-                                    {{-- Botón Editar con colores originales --}}
-                                    <button
+                                    {{-- Botón Editar --}}
+                                    <x-action-button
+                                        type="edit"
                                         wire:click="edit({{ $persona->id }})"
-                                        class="w-8 h-8 flex items-center justify-center rounded-md bg-yellow-100 hover:bg-yellow-200 transition-colors"
-                                        title="Editar persona">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
-                                        </svg>
-                                    </button>
+                                        title="Editar persona" />
                                 </div>
                             </td>
                         </tr>
@@ -175,7 +215,7 @@
                         {{-- Expansión de productos consumibles solicitados (acordeón) --}}
                         @if($personaIdConsumiblesExpandida === $persona->id)
                             <tr>
-                                <td colspan="6" class="bg-green-50 p-6">
+                                <td colspan="6" class="bg-green-50 p-6 shadow-inner">
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">
@@ -216,8 +256,8 @@
                                         @endphp
 
                                         @if($productosSalidas->count() > 0)
-                                            <div class="overflow-x-auto">
-                                                <table class="min-w-full bg-white border border-gray-300">
+                                            <div class="overflow-x-auto rounded-lg border border-gray-300">
+                                                <table class="min-w-full bg-white">
                                                     <thead class="bg-green-100 text-gray-700 text-sm">
                                                         <tr>
                                                             <th class="py-3 px-4 text-center">Salida ID</th>
@@ -299,7 +339,7 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <div class="text-center py-8 text-gray-500">
+                                            <div class="text-center py-8 text-gray-500 bg-white rounded-lg border border-gray-200">
                                                 <p>No hay productos solicitados por esta persona.</p>
                                                 <p class="text-sm mt-2">El historial aparecerá aquí cuando se realicen salidas de productos.</p>
                                             </div>
@@ -310,13 +350,8 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-8 text-gray-500">
-                                <div class="flex flex-col items-center gap-2">
-                                    <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
-                                    <span class="font-medium">No se encontraron personas.</span>
-                                </div>
+                            <td colspan="6" class="py-8 px-6 text-center text-gray-500">
+                                No se encontraron personas.
                             </td>
                         </tr>
                     @endforelse
@@ -326,106 +361,258 @@
 
         {{-- Paginación --}}
         @if($personas->hasPages())
-            <div class="mt-6 px-6 py-4 border-t border-gray-200">
+            <div class="px-6 py-4 border-t border-gray-200">
                 {{ $personas->links() }}
             </div>
         @endif
     </div>
 
-    {{-- Modal --}}
-    @if($showModal)
-        <div class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 flex items-center justify-center"
-             x-data="{ show: @entangle('showModal') }"
-             x-show="show"
-             @click.self="$wire.closeModal()">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6" @click.stop>
-                <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="text-xl font-semibold text-gray-800">
+    {{-- Modal: Crear/Editar Persona --}}
+    <div x-data="{
+            show: @entangle('showModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModal"
+         wire:ignore.self>
+        <div class="relative border w-full max-w-2xl shadow-2xl rounded-xl bg-white max-h-[90vh] overflow-hidden"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="p-8 overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">
                         {{ $editMode ? 'Editar Persona' : 'Nueva Persona' }}
                     </h3>
-                    <button wire:click="closeModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
-                <form wire:submit.prevent="save" class="mt-4">
-                    <div class="grid grid-cols-2 gap-4">
+                <form wire:submit.prevent="save">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Nombres --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Nombres <span class="text-red-500">*</span>
+                                Nombres *
                             </label>
                             <input type="text" wire:model="nombres"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('nombres') border-red-500 @enderror">
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('nombres') border-red-500 ring-2 ring-red-200 @enderror">
                             @error('nombres')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
+                        {{-- Apellidos --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Apellidos <span class="text-red-500">*</span>
+                                Apellidos *
                             </label>
                             <input type="text" wire:model="apellidos"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('apellidos') border-red-500 @enderror">
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('apellidos') border-red-500 ring-2 ring-red-200 @enderror">
                             @error('apellidos')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
-                        <div class="col-span-2">
+                        {{-- DPI --}}
+                        <div class="col-span-1 md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                DPI <span class="text-red-500">*</span> (13 dígitos)
+                                DPI * (13 dígitos)
                             </label>
                             <input type="text" wire:model="dpi" maxlength="13"
                                    pattern="[0-9]{13}"
                                    inputmode="numeric"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('dpi') border-red-500 @enderror"
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('dpi') border-red-500 ring-2 ring-red-200 @enderror"
                                    placeholder="1234567890123">
                             @error('dpi')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
+                        {{-- Teléfono --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono (8 dígitos)</label>
                             <input type="text" wire:model="telefono"
                                    maxlength="8"
                                    pattern="[0-9]{8}"
                                    inputmode="numeric"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('telefono') border-red-500 @enderror"
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('telefono') border-red-500 ring-2 ring-red-200 @enderror"
                                    placeholder="55555555">
                             @error('telefono')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
 
+                        {{-- Correo --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
                             <input type="email" wire:model="correo"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('correo') border-red-500 @enderror">
+                                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('correo') border-red-500 ring-2 ring-red-200 @enderror">
                             @error('correo')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
                     </div>
 
-                    <div class="flex justify-end space-x-2 mt-6">
-                        <button type="button" wire:click="closeModal"
-                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">
+                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                        <button
+                            type="button"
+                            wire:click="closeModal"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md">
                             Cancelar
                         </button>
-                        <button type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            {{ $editMode ? 'Actualizar' : 'Guardar' }}
+                        <button
+                            type="submit"
+                            wire:loading.attr="disabled"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove wire:target="save">
+                                {{ $editMode ? '✓ Actualizar' : '✓ Guardar' }}
+                            </span>
+                            <span wire:loading wire:target="save" class="flex items-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Guardando...
+                            </span>
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-    @endif
+    </div>
+
+    {{-- Modal: Filtros y Ajustes --}}
+    <div x-data="{
+            show: @entangle('showFilterModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeFilterModal"
+         wire:ignore.self>
+        <div class="relative border w-full max-w-lg shadow-2xl rounded-xl bg-white max-h-[85vh] flex flex-col overflow-hidden"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            
+            {{-- Header (Fijo) --}}
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 shrink-0">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    Filtros y Ajustes
+                </h3>
+                <button wire:click="closeFilterModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Body (Scrollable) --}}
+            <div class="p-5 overflow-y-auto flex-1">
+                {{-- Sección: Ordenar por --}}
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Ordenar por</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        @foreach([
+                            'id' => 'ID',
+                            'nombres' => 'Nombres',
+                            'apellidos' => 'Apellidos',
+                            'dpi' => 'DPI'
+                        ] as $field => $label)
+                            <button
+                                wire:click="sortBy('{{ $field }}')"
+                                class="flex items-center justify-between px-3 py-2 rounded-lg border {{ $sortField === $field ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50' }} transition-all text-sm font-medium">
+                                <span>{{ $label }}</span>
+                                @if($sortField === $field)
+                                    <span class="text-xs font-bold">{{ $sortDirection === 'asc' ? 'ASC' : 'DESC' }}</span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Sección: Opciones de Visualización --}}
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Visualización</h4>
+                    
+                    <label class="custom-checkbox-container gap-3 cursor-pointer select-none p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full flex items-center">
+                        <input type="checkbox" wire:model.live="showInactive">
+                        <div class="custom-checkmark"></div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-800">Mostrar personas desactivadas</span>
+                            <span class="text-xs text-gray-500">Incluir personas que han sido dadas de baja</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Footer (Fijo) --}}
+            <div class="flex justify-between items-center p-5 border-t border-gray-100 bg-gray-50 shrink-0">
+                <button
+                    type="button"
+                    wire:click="clearFilters"
+                    class="text-sm text-red-600 hover:text-red-800 font-medium hover:underline">
+                    Limpiar filtros
+                </button>
+                
+                <button
+                    type="button"
+                    wire:click="closeFilterModal"
+                    class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Listo
+                </button>
+            </div>
+        </div>
+    </div>
 
     {{-- Modal Reutilizable: Crear Nueva Persona --}}
     @livewire('modal-persona')
 
     <style>
+        /* Ocultar elementos hasta que Alpine.js esté listo */
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Animación de mensajes flash */
         @keyframes fade-in {
             from {
@@ -442,7 +629,7 @@
             animation: fade-in 0.3s ease-out;
         }
 
-        /* Checkbox personalizado para visualizar personas inactivas */
+        /* Checkbox personalizado */
         .custom-checkbox-container {
             display: inline-flex;
             align-items: center;
@@ -464,29 +651,24 @@
             flex-shrink: 0;
         }
 
-        /* Borde del checkbox / Checkmark */
         .custom-checkmark:after {
             content: "";
             position: absolute;
             transition: all 0.3s ease;
             box-sizing: border-box;
-            
-            /* Estado inicial (unchecked): Borde cuadrado completo */
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            border: 0.125em solid #4B5563; /* Gray-600 para mejor contraste */
+            border: 0.125em solid #4B5563;
             border-radius: 0.25em;
             transform: rotate(0deg);
         }
 
-        /* Estado checked: fondo azul */
         .custom-checkbox-container input:checked ~ .custom-checkmark {
-            background-color: #2563EB; /* Blue-600 match con botón */
+            background-color: #2563EB;
         }
 
-        /* Estado checked: checkmark blanco centrado */
         .custom-checkbox-container input:checked ~ .custom-checkmark:after {
             left: 0.45em;
             top: 0.25em;
