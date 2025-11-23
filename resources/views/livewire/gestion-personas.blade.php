@@ -4,10 +4,10 @@
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Personas</h1>
         <div class="flex items-center space-x-3">
             {{-- Checkbox estilizado para visualizar personas inactivas --}}
-            <label class="custom-checkbox-container inline-flex items-center gap-2.5 cursor-pointer select-none">
-                <input type="checkbox" wire:model.live="showAllPersonas" class="hidden">
-                <div class="custom-checkmark flex-shrink-0"></div>
-                <span class="text-sm font-medium text-gray-700 leading-tight">Mostrar inactivos</span>
+            <label class="custom-checkbox-container gap-2 cursor-pointer select-none">
+                <input type="checkbox" wire:model.live="showAllPersonas">
+                <div class="custom-checkmark"></div>
+                <span class="text-sm font-medium text-gray-700">Mostrar inactivos</span>
             </label>
             <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                 + Nueva Persona
@@ -446,17 +446,24 @@
         }
 
         /* Checkbox personalizado para visualizar personas inactivas */
+        .custom-checkbox-container {
+            display: inline-flex;
+            align-items: center;
+        }
+
         .custom-checkbox-container input {
             display: none;
         }
 
         .custom-checkmark {
             position: relative;
-            height: 1.5em;
-            width: 1.5em;
+            display: inline-block;
+            height: 1.25em;
+            width: 1.25em;
             background-color: transparent;
-            border-radius: 0.3em;
+            border-radius: 0.25em;
             transition: all 0.25s;
+            flex-shrink: 0;
         }
 
         /* Borde del checkbox */
@@ -467,10 +474,11 @@
             border: 0.125em solid #374151;
             left: 0;
             top: 0;
-            width: 1.25em;
-            height: 1.25em;
-            border-radius: 0.3em;
-            transition: all 0.25s, border-width 0.1s;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.25em;
+            transition: all 0.25s;
+            box-sizing: border-box;
         }
 
         /* Estado checked: fondo azul */
@@ -478,14 +486,14 @@
             background-color: #2196F3;
         }
 
-        /* Estado checked: checkmark blanco más grande y visible */
+        /* Estado checked: checkmark blanco centrado */
         .custom-checkbox-container input:checked ~ .custom-checkmark:after {
-            left: 0.53em;
+            left: 0.45em;
             top: 0.15em;
-            width: 0.3em;
-            height: 0.75em;
+            width: 0.25em;
+            height: 0.65em;
             border-color: transparent white white transparent;
-            border-width: 0 0.18em 0.18em 0;
+            border-width: 0 0.15em 0.15em 0;
             border-radius: 0;
             transform: rotate(45deg);
         }
