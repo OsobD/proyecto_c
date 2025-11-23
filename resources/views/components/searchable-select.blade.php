@@ -14,7 +14,22 @@
 ])
 
 <div
-    x-data="{ open: false }"
+    x-data="{
+        open: false,
+        id: Math.random().toString(36).substr(2, 9)
+    }"
+    x-init="
+        $watch('open', value => {
+            if (value) {
+                $dispatch('dropdown-opened', { id: id });
+            }
+        });
+        $el.addEventListener('dropdown-opened', (e) => {
+            if (e.detail.id !== id) {
+                open = false;
+            }
+        });
+    "
     @click.outside="open = false"
     class="relative"
 >
