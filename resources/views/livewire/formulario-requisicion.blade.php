@@ -97,13 +97,28 @@
                                      @click.away="open = false"
                                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
                                     <ul>
-                                        @foreach ($this->destinoResults as $result)
+                                        @forelse ($this->destinoResults as $result)
                                             <li wire:click.prevent="selectDestino('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ $result['persona_id'] }}, {{ $result['tarjeta_id'] ?? 'null' }}, {{ $result['tiene_tarjeta'] ? 'true' : 'false' }})"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre'] }}
+                                                <div class="font-medium">{{ $result['nombre'] }}</div>
+                                                <div class="text-xs text-gray-500">{{ $result['tipo'] }}</div>
                                             </li>
-                                        @endforeach
+                                        @empty
+                                            <li class="px-3 py-2 text-sm text-gray-500 text-center">
+                                                No se encontraron personas
+                                            </li>
+                                        @endforelse
                                     </ul>
+                                    {{-- Botón para crear nueva persona --}}
+                                    <div class="border-t border-gray-200">
+                                        <button
+                                            type="button"
+                                            wire:click="$dispatch('abrirModalPersona')"
+                                            class="w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2">
+                                            <span>+</span>
+                                            <span>Crear nueva persona</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endif
@@ -494,4 +509,7 @@
             }
         }
     </style>
+
+    {{-- Modal para crear nueva persona --}}
+    @livewire('modal-persona')
 </div>
