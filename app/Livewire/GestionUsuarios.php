@@ -87,6 +87,14 @@ class GestionUsuarios extends Component
     public $searchRolModal = '';
     public $selectedRolModal = null;
 
+    // Propiedades para selección de puesto en modal de editar (searchable)
+    public $searchPuestoEdit = '';
+    public $selectedPuestoEdit = null;
+
+    // Propiedades para selección de rol en modal de editar (searchable)
+    public $searchRolEdit = '';
+    public $selectedRolEdit = null;
+
     // Key para forzar recreación de componentes al abrir modal
     public $modalKey = 0;
 
@@ -468,6 +476,90 @@ class GestionUsuarios extends Component
     }
 
     /**
+     * Obtiene puestos filtrados para el modal de editar usuario
+     */
+    public function getPuestoEditResultsProperty()
+    {
+        $puestos = $this->puestos->toArray();
+
+        if (empty($this->searchPuestoEdit)) {
+            return array_slice($puestos, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchPuestoEdit));
+
+        return array_filter($puestos, function($puesto) use ($search) {
+            return str_contains(strtolower($puesto['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un puesto en el modal de editar
+     */
+    public function selectPuestoEdit($id)
+    {
+        $puesto = $this->puestos->firstWhere('id', $id);
+        if ($puesto) {
+            $this->selectedPuestoEdit = [
+                'id' => $puesto->id,
+                'nombre' => $puesto->nombre,
+            ];
+            $this->puestoId = $puesto->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de puesto en modal de editar
+     */
+    public function clearPuestoEdit()
+    {
+        $this->selectedPuestoEdit = null;
+        $this->puestoId = '';
+    }
+
+    /**
+     * Obtiene roles filtrados para el modal de editar usuario
+     */
+    public function getRolEditResultsProperty()
+    {
+        $roles = $this->roles->toArray();
+
+        if (empty($this->searchRolEdit)) {
+            return array_slice($roles, 0, 10);
+        }
+
+        $search = strtolower(trim($this->searchRolEdit));
+
+        return array_filter($roles, function($rol) use ($search) {
+            return str_contains(strtolower($rol['nombre']), $search);
+        });
+    }
+
+    /**
+     * Selecciona un rol en el modal de editar
+     */
+    public function selectRolEdit($id)
+    {
+        $rol = $this->roles->firstWhere('id', $id);
+        if ($rol) {
+            $this->selectedRolEdit = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
+        }
+    }
+
+    /**
+     * Limpia la selección de rol en modal de editar
+     */
+    public function clearRolEdit()
+    {
+        $this->selectedRolEdit = null;
+        $this->rolId = '';
+    }
+
+    /**
      * Maneja el evento cuando se crea una persona
      */
     public function handlePersonaCreada($personaData, $mensaje)
@@ -633,11 +725,21 @@ class GestionUsuarios extends Component
         // Cargar puesto seleccionado para el dropdown
         $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
         if ($puesto) {
-            $this->selectedPuesto = [
+            $this->selectedPuestoEdit = [
                 'id' => $puesto->id,
                 'nombre' => $puesto->nombre,
             ];
             $this->puestoId = $puesto->id;
+        }
+
+        // Cargar rol seleccionado para el dropdown
+        $rol = $this->roles->firstWhere('id', $usuario->id_rol);
+        if ($rol) {
+            $this->selectedRolEdit = [
+                'id' => $rol->id,
+                'nombre' => $rol->nombre,
+            ];
+            $this->rolId = $rol->id;
         }
 
         $this->showModalEditar = true;
@@ -738,6 +840,14 @@ class GestionUsuarios extends Component
         // Resetear campos de rol modal
         $this->searchRolModal = '';
         $this->selectedRolModal = null;
+
+        // Resetear campos de puesto edit
+        $this->searchPuestoEdit = '';
+        $this->selectedPuestoEdit = null;
+
+        // Resetear campos de rol edit
+        $this->searchRolEdit = '';
+        $this->selectedRolEdit = null;
     }
 
     /**

@@ -449,7 +449,7 @@
 
                         {{-- Teléfono --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
                             <input
                                 type="text"
                                 wire:model="telefono"
@@ -490,34 +490,36 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{-- Puesto --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
-                            <select
-                                wire:model="puestoId"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccionar Puesto...</option>
-                                @foreach($puestos as $puesto)
-                                    <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('puestoId')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                            <x-searchable-select
+                                wire:key="puesto-edit-{{ $modalKey }}"
+                                label="Puesto"
+                                placeholder="Seleccionar Puesto..."
+                                search-model="searchPuestoEdit"
+                                :results="$this->puestoEditResults"
+                                :selected-value="$selectedPuestoEdit ? $selectedPuestoEdit['id'] : null"
+                                :selected-label="$selectedPuestoEdit ? $selectedPuestoEdit['nombre'] : null"
+                                on-select="selectPuestoEdit"
+                                on-clear="clearPuestoEdit"
+                                :required="true"
+                                :error="$errors->first('puestoId')"
+                            />
                         </div>
 
                         {{-- Rol --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol de Sistema *</label>
-                            <select
-                                wire:model="rolId"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccionar Rol...</option>
-                                @foreach($roles as $rol)
-                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('rolId')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                            <x-searchable-select
+                                wire:key="rol-edit-{{ $modalKey }}"
+                                label="Rol de Sistema"
+                                placeholder="Seleccionar Rol..."
+                                search-model="searchRolEdit"
+                                :results="$this->rolEditResults"
+                                :selected-value="$selectedRolEdit ? $selectedRolEdit['id'] : null"
+                                :selected-label="$selectedRolEdit ? $selectedRolEdit['nombre'] : null"
+                                on-select="selectRolEdit"
+                                on-clear="clearRolEdit"
+                                :required="true"
+                                :error="$errors->first('rolId')"
+                            />
                         </div>
 
                         {{-- Estado --}}
