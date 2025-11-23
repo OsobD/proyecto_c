@@ -256,7 +256,7 @@
                 </button>
             </div>
 
-            <form wire:submit.prevent="guardarUsuario">
+            <form wire:submit.prevent="guardarUsuario" @click="$dispatch('close-all-dropdowns')">
                 {{-- Sección: Selección de Persona --}}
                 <div class="mb-6">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Información Personal</h4>
@@ -314,34 +314,36 @@
 
                         {{-- Puesto --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Puesto *</label>
-                            <select
-                                wire:model="puestoId"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('puestoId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccionar Puesto...</option>
-                                @foreach($puestos as $puesto)
-                                    <option value="{{ $puesto->id }}">{{ $puesto->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('puestoId')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                            <x-searchable-select
+                                wire:key="puesto-select-{{ $modalKey }}"
+                                label="Puesto"
+                                placeholder="Seleccionar Puesto..."
+                                search-model="searchPuestoModal"
+                                :results="$this->puestoModalResults"
+                                :selected-value="$selectedPuestoModal ? $selectedPuestoModal['id'] : null"
+                                :selected-label="$selectedPuestoModal ? $selectedPuestoModal['nombre'] : null"
+                                on-select="selectPuestoModal"
+                                on-clear="clearPuestoModal"
+                                :required="true"
+                                :error="$errors->first('puestoId')"
+                            />
                         </div>
 
                         {{-- Rol --}}
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol de Sistema *</label>
-                            <select
-                                wire:model="rolId"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('rolId') border-red-500 ring-2 ring-red-200 @enderror">
-                                <option value="">Seleccionar Rol...</option>
-                                @foreach($roles as $rol)
-                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('rolId')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                            <x-searchable-select
+                                wire:key="rol-select-{{ $modalKey }}"
+                                label="Rol de Sistema"
+                                placeholder="Seleccionar Rol..."
+                                search-model="searchRolModal"
+                                :results="$this->rolModalResults"
+                                :selected-value="$selectedRolModal ? $selectedRolModal['id'] : null"
+                                :selected-label="$selectedRolModal ? $selectedRolModal['nombre'] : null"
+                                on-select="selectRolModal"
+                                on-clear="clearRolModal"
+                                :required="true"
+                                :error="$errors->first('rolId')"
+                            />
                         </div>
                     </div>
 

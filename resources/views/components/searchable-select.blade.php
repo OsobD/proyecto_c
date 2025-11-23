@@ -16,6 +16,7 @@
 <div
     x-data="{ open: false }"
     @click.outside="open = false"
+    @close-all-dropdowns.window="open = false"
     class="relative"
 >
     @if($label)
@@ -27,10 +28,10 @@
     <div class="relative">
         @if($selectedValue)
             {{-- Selected State --}}
-            <div 
-                @if(!$disabled) wire:click="{{ $onClear }}" @endif
-                class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif"
-            >
+            <div
+                wire:click="{{ $onClear }}"
+                @click.stop
+                class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm bg-white {{ !$disabled ? 'cursor-pointer hover:border-blue-400' : 'bg-gray-100 cursor-not-allowed' }} transition-colors @if($error) border-red-500 ring-2 ring-red-200 @endif">
                 <div class="flex flex-col gap-0.5 overflow-hidden">
                     <span class="font-medium truncate">{{ $selectedLabel }}</span>
                     @if(isset($selectedSubtitle))
@@ -38,12 +39,12 @@
                     @endif
                 </div>
                 @if(!$disabled)
-                    <span class="text-gray-400 text-xl hover:text-gray-600">×</span>
+                    <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
                 @endif
             </div>
         @else
             {{-- Search/Input State --}}
-            <div class="relative">
+            <div class="relative" @click.stop>
                 <input
                     type="text"
                     wire:model.live.debounce.300ms="{{ $searchModel }}"
