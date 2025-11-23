@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamp('created_at')->after('user_agent');
 
             // Foreign key
-            $table->foreign('id_usuario')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('id_usuario')->references('id')->on('usuario')->onDelete('set null');
 
             // Índices para mejorar rendimiento de consultas
             $table->index(['modelo', 'modelo_id']);

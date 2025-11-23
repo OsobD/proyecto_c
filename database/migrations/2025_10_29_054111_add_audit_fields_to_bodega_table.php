@@ -17,8 +17,8 @@ return new class extends Migration
             $table->timestamps(); // Agrega created_at y updated_at
 
             // Foreign keys
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('created_by')->references('id')->on('usuario')->onDelete('set null');
+            $table->foreign('updated_by')->references('id')->on('usuario')->onDelete('set null');
         });
     }
 
