@@ -3,9 +3,11 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Personas</h1>
         <div class="flex items-center space-x-3">
-            <label class="flex items-center cursor-pointer">
-                <input type="checkbox" wire:model.live="showAllPersonas" class="mr-2">
-                <span class="text-sm text-gray-700">Mostrar inactivos</span>
+            {{-- Checkbox estilizado para visualizar personas inactivas --}}
+            <label class="custom-checkbox-container flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" wire:model.live="showAllPersonas" class="hidden">
+                <div class="custom-checkmark"></div>
+                <span class="text-sm font-medium text-gray-700">Mostrar inactivos</span>
             </label>
             <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                 + Nueva Persona
@@ -441,6 +443,51 @@
 
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
+        }
+
+        /* Checkbox personalizado para visualizar personas inactivas */
+        .custom-checkbox-container input {
+            display: none;
+        }
+
+        .custom-checkmark {
+            position: relative;
+            height: 1.3em;
+            width: 1.3em;
+            background-color: transparent;
+            border-radius: 0.25em;
+            transition: all 0.25s;
+        }
+
+        /* Borde del checkbox */
+        .custom-checkmark:after {
+            content: "";
+            position: absolute;
+            transform: rotate(0deg);
+            border: 0.1em solid #374151;
+            left: 0;
+            top: 0;
+            width: 1.05em;
+            height: 1.05em;
+            border-radius: 0.25em;
+            transition: all 0.25s, border-width 0.1s;
+        }
+
+        /* Estado checked: fondo azul */
+        .custom-checkbox-container input:checked ~ .custom-checkmark {
+            background-color: #2196F3;
+        }
+
+        /* Estado checked: checkmark blanco */
+        .custom-checkbox-container input:checked ~ .custom-checkmark:after {
+            left: 0.45em;
+            top: 0.25em;
+            width: 0.25em;
+            height: 0.5em;
+            border-color: transparent white white transparent;
+            border-width: 0 0.15em 0.15em 0;
+            border-radius: 0;
+            transform: rotate(45deg);
         }
     </style>
 </div>

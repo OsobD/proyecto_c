@@ -253,28 +253,46 @@ class GestionPersonas extends Component
 
     /**
      * Alterna el estado de una persona (activar/desactivar)
+     * Si se desactiva, también desactiva su tarjeta de responsabilidad
      */
     public function toggleEstado($id)
     {
         try {
-            $persona = Persona::findOrFail($id);
+            $persona = Persona::with('tarjetasResponsabilidad')->findOrFail($id);
             $nuevoEstado = !$persona->estado;
 
-            // Actualizar estado
+            // Actualizar estado de la persona
             $persona->update(['estado' => $nuevoEstado]);
+
+            // Si se desactiva la persona, desactivar también su tarjeta de responsabilidad
+            if (!$nuevoEstado) {
+                foreach ($persona->tarjetasResponsabilidad as $tarjeta) {
+                    $tarjeta->update(['activo' => false]);
+                }
+            }
 
             // Registrar en bitácora
             $accion = $nuevoEstado ? 'activar' : 'desactivar';
+            $descripcion = "Persona {$accion}da: {$persona->nombres} {$persona->apellidos}";
+
+            if (!$nuevoEstado && $persona->tarjetasResponsabilidad->count() > 0) {
+                $descripcion .= " (tarjeta de responsabilidad desactivada)";
+            }
+
             Bitacora::create([
                 'accion' => $accion,
                 'modelo' => 'Persona',
                 'modelo_id' => $persona->id,
-                'descripcion' => "Persona {$accion}da: {$persona->nombres} {$persona->apellidos}",
+                'descripcion' => $descripcion,
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
             ]);
 
             $mensaje = $nuevoEstado ? 'Persona activada exitosamente.' : 'Persona desactivada exitosamente.';
+            if (!$nuevoEstado && $persona->tarjetasResponsabilidad->count() > 0) {
+                $mensaje .= ' Su tarjeta de responsabilidad también fue desactivada.';
+            }
+
             session()->flash('message', $mensaje);
 
         } catch (\Exception $e) {
