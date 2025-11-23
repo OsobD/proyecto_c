@@ -80,7 +80,7 @@
         {{-- Tabla de listado de categorías --}}
         <div class="overflow-x-auto rounded-lg border border-gray-200">
             <table class="min-w-full bg-white">
-                <thead class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 uppercase text-xs font-semibold">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
                         <th class="py-4 px-6 text-left">
                             <button
