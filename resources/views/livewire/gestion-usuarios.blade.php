@@ -158,6 +158,7 @@
                             <td class="py-3 px-6 text-center">
                                 <button
                                     wire:click="toggleEstado({{ $usuario->id }})"
+                                    wire:confirm="¿Está seguro de que desea {{ $usuario->estado ? 'DESACTIVAR' : 'ACTIVAR' }} al usuario {{ $usuario->nombre_usuario }}?"
                                     class="py-1 px-3 rounded-full text-xs font-semibold {{ $usuario->estado ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300' }}">
                                     {{ $usuario->estado ? 'Activo' : 'Inactivo' }}
                                 </button>
