@@ -51,9 +51,14 @@ class Bodega extends Model
         return $this->hasMany(Devolucion::class, 'id_bodega');
     }
 
-    public function traslados()
+    public function trasladosOrigen()
     {
-        return $this->hasMany(Traslado::class, 'id_bodega');
+        return $this->hasMany(Traslado::class, 'id_bodega_origen');
+    }
+
+    public function trasladosDestino()
+    {
+        return $this->hasMany(Traslado::class, 'id_bodega_destino');
     }
 
     public function salidas()

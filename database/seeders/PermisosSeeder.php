@@ -548,6 +548,13 @@ class PermisosSeeder extends Seeder
                 'modificador' => null,
                 'descripcion' => 'Puede gestionar permisos',
             ],
+            [
+                'nombre' => 'configuracion.regimenes',
+                'modulo' => 'configuracion',
+                'accion' => 'regimenes',
+                'modificador' => null,
+                'descripcion' => 'Puede gestionar regímenes tributarios',
+            ],
 
             // =====================================
             // APROBACIONES

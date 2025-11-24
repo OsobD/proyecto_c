@@ -177,6 +177,8 @@ class GestionBodegas extends Component
                 // Registrar en bitácora
                 Bitacora::create([
                     'accion' => 'Actualizar',
+                    'modelo' => 'Bodega',
+                    'modelo_id' => $bodega->id,
                     'descripcion' => "Bodega actualizada: {$bodega->nombre}",
                     'id_usuario' => Auth::id(),
                     'created_at' => now(),
@@ -193,6 +195,8 @@ class GestionBodegas extends Component
                 // Registrar en bitácora
                 Bitacora::create([
                     'accion' => 'Crear',
+                    'modelo' => 'Bodega',
+                    'modelo_id' => $bodega->id,
                     'descripcion' => "Bodega creada: {$bodega->nombre}",
                     'id_usuario' => Auth::id(),
                     'created_at' => now(),
@@ -214,7 +218,8 @@ class GestionBodegas extends Component
             'compras',
             'entradas',
             'devoluciones',
-            'traslados',
+            'trasladosOrigen',
+            'trasladosDestino',
             'salidas'
         ])->findOrFail($id);
 
@@ -223,7 +228,7 @@ class GestionBodegas extends Component
         $tieneCompras = $bodega->compras()->exists();
         $tieneEntradas = $bodega->entradas()->exists();
         $tieneDevoluciones = $bodega->devoluciones()->exists();
-        $tieneTraslados = $bodega->traslados()->exists();
+        $tieneTraslados = $bodega->trasladosOrigen()->exists() || $bodega->trasladosDestino()->exists();
         $tieneSalidas = $bodega->salidas()->exists();
 
         if ($tieneLotes || $tieneCompras || $tieneEntradas || $tieneDevoluciones || $tieneTraslados || $tieneSalidas) {
@@ -248,6 +253,8 @@ class GestionBodegas extends Component
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'Desactivar',
+                'modelo' => 'Bodega',
+                'modelo_id' => $bodega->id,
                 'descripcion' => "Bodega desactivada: {$bodega->nombre}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),
@@ -306,7 +313,7 @@ class GestionBodegas extends Component
             ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%")
             ->limit(6)
             ->get()
-            ->map(function($categoria) {
+            ->map(function ($categoria) {
                 return [
                     'id' => $categoria->id,
                     'nombre' => $categoria->nombre,
@@ -421,6 +428,8 @@ class GestionBodegas extends Component
             // Registrar en bitácora
             Bitacora::create([
                 'accion' => 'Crear',
+                'modelo' => 'Producto',
+                'modelo_id' => $this->codigo,
                 'descripcion' => "Producto creado: {$this->codigo} - {$this->descripcion}",
                 'id_usuario' => Auth::id(),
                 'created_at' => now(),

@@ -120,4 +120,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:configuracion.permisos')->group(function () {
         Route::get('/configuracion/permisos', \App\Livewire\GestionPermisos::class)->name('configuracion.permisos');
     });
+
+    // Regímenes Tributarios (Acceso libre para usuarios autenticados)
+    Route::get('/configuracion/regimenes', \App\Livewire\GestionRegimenes::class)->name('configuracion.regimenes');
 });

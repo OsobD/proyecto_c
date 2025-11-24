@@ -205,6 +205,11 @@ class NavigationService
                         'route' => 'configuracion.permisos',
                         'permission' => 'configuracion.permisos',
                     ],
+                    [
+                        'label' => 'Regímenes',
+                        'route' => 'configuracion.regimenes',
+                        // 'permission' => 'configuracion.regimenes', // Eliminado temporalmente para acceso directo
+                    ],
                 ],
             ],
         ];
