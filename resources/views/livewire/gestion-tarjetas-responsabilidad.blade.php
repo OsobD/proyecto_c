@@ -2,9 +2,11 @@
     {{-- Encabezado --}}
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Tarjetas de Responsabilidad</h1>
-        <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
-            <span>+ Nueva Persona</span>
-        </button>
+        @if(auth()->user()->puedeCrear('personas'))
+            <button wire:click="$dispatch('abrirModalPersona')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+                <span>+ Nueva Persona</span>
+            </button>
+        @endif
     </div>
 
     {{-- Mensajes --}}
@@ -130,10 +132,12 @@
                                     </button>
 
                                     @if($tarjeta->activo)
-                                        <x-action-button
-                                            type="delete"
-                                            wire:click="confirmDelete({{ $tarjeta->id }})"
-                                            title="Desactivar tarjeta" />
+                                        @if(auth()->user()->puedeEliminar('tarjetas'))
+                                            <x-action-button
+                                                type="delete"
+                                                wire:click="confirmDelete({{ $tarjeta->id }})"
+                                                title="Desactivar tarjeta" />
+                                        @endif
                                     @endif
                                 </div>
                             </td>

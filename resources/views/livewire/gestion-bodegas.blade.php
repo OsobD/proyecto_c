@@ -14,9 +14,11 @@
     {{-- Encabezado --}}
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Bodegas</h1>
-        <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-            + Nueva Bodega
-        </button>
+        @if(auth()->user()->puedeCrear('bodegas'))
+            <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                + Nueva Bodega
+            </button>
+        @endif
     </div>
 
     {{-- Mensajes --}}
@@ -126,14 +128,18 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                         </svg>
                                     </button>
-                                    <x-action-button
-                                        type="edit"
-                                        wire:click="edit({{ $bodega->id }})"
-                                        title="Editar bodega" />
-                                    <x-action-button
-                                        type="delete"
-                                        wire:click="confirmDelete({{ $bodega->id }})"
-                                        title="Desactivar bodega" />
+                                    @if(auth()->user()->puedeEditar('bodegas'))
+                                        <x-action-button
+                                            type="edit"
+                                            wire:click="edit({{ $bodega->id }})"
+                                            title="Editar bodega" />
+                                    @endif
+                                    @if(auth()->user()->puedeEliminar('bodegas'))
+                                        <x-action-button
+                                            type="delete"
+                                            wire:click="confirmDelete({{ $bodega->id }})"
+                                            title="Desactivar bodega" />
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -145,11 +151,13 @@
                                     <div class="mb-4">
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="text-lg font-semibold text-gray-800">Productos en {{ $bodega->nombre }}</h3>
-                                            <button
-                                                wire:click="abrirModalProducto"
-                                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg">
-                                                + Nuevo Producto
-                                            </button>
+                                            @if(auth()->user()->puedeCrear('productos'))
+                                                <button
+                                                    wire:click="abrirModalProducto"
+                                                    class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg">
+                                                    + Nuevo Producto
+                                                </button>
+                                            @endif
                                         </div>
 
                                         @php
