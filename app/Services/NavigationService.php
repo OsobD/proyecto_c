@@ -19,6 +19,12 @@ class NavigationService
             return [];
         }
 
+        // FALLBACK: Si el usuario no tiene rol, mostrar todo (modo desarrollo)
+        // Esto evita que el navbar esté vacío si olvidaste asignar roles
+        if (!$user->rol) {
+            \Log::warning("Usuario {$user->id} ({$user->nombre_usuario}) no tiene rol asignado. Mostrando navbar completo por defecto.");
+        }
+
         $menu = [
             // COMPRAS
             [
@@ -213,6 +219,12 @@ class NavigationService
      */
     private static function tieneAcceso($user, $item)
     {
+        // FALLBACK: Si el usuario no tiene rol asignado, mostrar TODO
+        // (Evita navbar vacío en desarrollo)
+        if (!$user->rol) {
+            return true;
+        }
+
         // Si no requiere permiso, todos tienen acceso
         if (!isset($item['permission']) && !isset($item['permission_or'])) {
             return true;
