@@ -2,57 +2,55 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Configuracion;
-use App\Models\Bitacora;
-use App\Models\Permiso;
-use App\Models\Rol;
 
 class RolesPermisosSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * Este seeder ejecuta los seeders de permisos y roles en orden
+     *
+     * Uso: php artisan db:seed --class=RolesPermisosSeeder
      */
     public function run(): void
     {
-        // Crear configuraciones básicas
-        $configGeneral = Configuracion::create(['nombre' => 'Configuración General']);
-        $configInventario = Configuracion::create(['nombre' => 'Configuración Inventario']);
+        $this->command->info('🔐 Iniciando configuración del sistema de permisos granulares...');
+        $this->command->newLine();
 
-        // NOTA: Bitácoras comentadas porque el modelo extendido requiere campos adicionales
-        // que no están en el schema base SQL. Se implementarán cuando se defina
-        // la funcionalidad completa de auditoría.
-        // $bitacoraGeneral = Bitacora::create();
-        // $bitacoraInventario = Bitacora::create();
+        // 1. Crear permisos
+        $this->command->info('📝 Paso 1/2: Creando permisos del sistema...');
+        $this->call(PermisosSeeder::class);
+        $this->command->newLine();
 
-        // Crear permisos básicos (sin bitácoras por ahora)
-        $permisoAdmin = Permiso::create([
-            'nombre' => 'Administrador Total',
-            'id_configuracion' => $configGeneral->id,
-            'id_bitacora' => null, // Será implementado cuando se active auditoría
-        ]);
+        // 2. Crear roles con sus permisos
+        $this->command->info('👥 Paso 2/2: Creando roles predefinidos...');
+        $this->call(RolesSeeder::class);
+        $this->command->newLine();
 
-        $permisoInventario = Permiso::create([
-            'nombre' => 'Gestión de Inventario',
-            'id_configuracion' => $configInventario->id,
-            'id_bitacora' => null, // Será implementado cuando se active auditoría
-        ]);
+        $this->command->info('✅ ¡Sistema de permisos configurado exitosamente!');
+        $this->command->newLine();
 
-        $permisoOperador = Permiso::create([
-            'nombre' => 'Operador Básico',
-            'id_configuracion' => $configGeneral->id,
-            'id_bitacora' => null, // Será implementado cuando se active auditoría
-        ]);
+        $this->command->line('──────────────────────────────────────────────────────');
+        $this->command->info('📚 Roles creados:');
+        $this->command->line('  1. Colaborador de Bodega (operativo)');
+        $this->command->line('  2. Jefe de Bodega (supervisor y aprobador)');
+        $this->command->line('  3. Colaborador de Contabilidad (solo reportes)');
+        $this->command->line('  4. Administrador TI (control total)');
+        $this->command->line('──────────────────────────────────────────────────────');
+        $this->command->newLine();
 
-        // Crear roles básicos usando relación many-to-many correcta
-        $rolAdmin = Rol::create(['nombre' => 'Administrador']);
-        $rolAdmin->permisos()->attach($permisoAdmin->id);
+        $this->command->warn('⚠️  PRÓXIMOS PASOS:');
+        $this->command->line('   1. Asigna un rol a cada usuario en la tabla `usuario`');
+        $this->command->line('   2. Consulta ROLES_Y_PERMISOS.md para la guía completa');
+        $this->command->line('   3. El navbar ya es dinámico según permisos');
+        $this->command->line('   4. Usa @can(\'permiso.nombre\') en las vistas Blade');
+        $this->command->newLine();
 
-        $rolInventario = Rol::create(['nombre' => 'Gestor de Inventario']);
-        $rolInventario->permisos()->attach($permisoInventario->id);
-
-        $rolOperador = Rol::create(['nombre' => 'Operador']);
-        $rolOperador->permisos()->attach($permisoOperador->id);
+        $this->command->info('📖 Documentación:');
+        $this->command->line('   - ROLES_Y_PERMISOS.md → Guía rápida para usuarios');
+        $this->command->line('   - ARQUITECTURA_PERMISOS.md → Arquitectura técnica');
+        $this->command->newLine();
     }
 }
+

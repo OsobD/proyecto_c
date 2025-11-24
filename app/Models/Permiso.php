@@ -13,25 +13,45 @@ class Permiso extends Model
 
     protected $fillable = [
         'nombre',
-        'id_configuracion',
-        'id_bitacora',
+        'modulo',
+        'accion',
+        'modificador',
+        'descripcion',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     // Relaciones
-    public function configuracion()
-    {
-        return $this->belongsTo(Configuracion::class, 'id_configuracion');
-    }
-
-    public function bitacora()
-    {
-        return $this->belongsTo(Bitacora::class, 'id_bitacora');
-    }
-
     public function roles()
     {
         return $this->belongsToMany(Rol::class, 'rol_permiso', 'id_permiso', 'id_rol')->withTimestamps();
+    }
+
+    /**
+     * Scope para buscar permisos por módulo
+     */
+    public function scopeModulo($query, $modulo)
+    {
+        return $query->where('modulo', $modulo);
+    }
+
+    /**
+     * Scope para buscar permisos por acción
+     */
+    public function scopeAccion($query, $accion)
+    {
+        return $query->where('accion', $accion);
+    }
+
+    /**
+     * Obtener el nombre completo del permiso (módulo.acción.modificador)
+     */
+    public function getNombreCompletoAttribute()
+    {
+        $nombre = "{$this->modulo}.{$this->accion}";
+        if ($this->modificador) {
+            $nombre .= ".{$this->modificador}";
+        }
+        return $nombre;
     }
 }
