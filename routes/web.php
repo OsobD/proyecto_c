@@ -81,9 +81,11 @@ Route::middleware('auth')->group(function () {
     // Rutas de Bodegas y Responsabilidad (ahora bajo /almacenes)
     Route::middleware('permission:bodegas.acceder')->group(function () {
         Route::get('/almacenes/bodegas', \App\Livewire\GestionBodegas::class)->name('bodegas');
+        Route::get('/almacenes/bodegas/{id}/inventario', \App\Livewire\DetalleBodega::class)->name('bodegas.detalle');
     });
     Route::middleware('permission:tarjetas.acceder')->group(function () {
         Route::get('/almacenes/tarjetas', \App\Livewire\GestionTarjetasResponsabilidad::class)->name('tarjetas.responsabilidad');
+        Route::get('/almacenes/tarjetas/{id}/activos', \App\Livewire\DetalleTarjeta::class)->name('tarjetas.detalle');
     });
 
     // Rutas de Colaboradores (Personas, Usuarios, Puestos)

@@ -113,7 +113,9 @@
                         <tr class="border-b border-gray-200 hover:bg-gray-100">
                             <td class="py-3 px-6 text-left whitespace-nowrap">{{ $bodega->id }}</td>
                             <td class="py-3 px-6 text-left">
-                                <span class="font-medium">{{ $bodega->nombre }}</span>
+                                <a href="{{ route('bodegas.detalle', $bodega->id) }}" class="font-medium hover:text-blue-600 hover:underline transition-colors">
+                                    {{ $bodega->nombre }}
+                                </a>
                             </td>
                             <td class="py-3 px-6 text-left">
                                 <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs">Activa</span>
@@ -161,21 +163,24 @@
                                         </div>
 
                                         @php
-                                            // Obtener los lotes de esta bodega agrupados por producto
+                                            // Obtener los lotes de esta bodega agrupados por producto (LIMITADO A 5 RECIENTES)
+                                            // Nota: La limitación real idealmente debería ser en la consulta, pero como agrupamos por producto,
+                                            // tomaremos los 5 lotes más recientes para la vista previa.
                                             $lotes = $bodega->lotes()
                                                 ->with(['producto.categoria'])
                                                 ->orderBy('fecha_ingreso', 'desc')
+                                                ->take(5) // LIMITAR A 5
                                                 ->get()
-                                                // Filtrar lotes que tengan producto válido
                                                 ->filter(function($lote) {
                                                     return $lote->producto !== null;
                                                 });
 
                                             $productosAgrupados = $lotes->groupBy('id_producto');
+                                            $totalLotes = $bodega->lotes()->count();
                                         @endphp
 
                                         @if($productosAgrupados->count() > 0)
-                                            <div class="overflow-x-auto">
+                                            <div class="overflow-x-auto mb-4">
                                                 <table class="min-w-full bg-white border border-gray-300">
                                                     <thead class="bg-indigo-100 text-gray-700 text-sm">
                                                         <tr>
@@ -184,9 +189,6 @@
                                                             <th class="py-3 px-4 text-left">Categoría</th>
                                                             <th class="py-3 px-4 text-center">Lote ID</th>
                                                             <th class="py-3 px-4 text-center">Cantidad</th>
-                                                            <th class="py-3 px-4 text-right">Precio Ingreso</th>
-                                                            <th class="py-3 px-4 text-center">Fecha Ingreso</th>
-                                                            <th class="py-3 px-4 text-left">Observaciones</th>
                                                             <th class="py-3 px-4 text-center">Estado</th>
                                                         </tr>
                                                     </thead>
@@ -194,7 +196,6 @@
                                                         @foreach($productosAgrupados as $productoId => $lotesProducto)
                                                             @foreach($lotesProducto as $index => $lote)
                                                                 <tr class="border-b border-gray-200 hover:bg-gray-50" wire:key="lote-{{ $lote->id }}">
-                                                                    {{-- Solo mostrar código y descripción en la primera fila del producto --}}
                                                                     @if($index === 0)
                                                                         <td class="py-3 px-4 font-mono font-semibold" rowspan="{{ $lotesProducto->count() }}">
                                                                             {{ $lote->producto?->id ?? 'N/A' }}
@@ -216,16 +217,6 @@
                                                                         <span class="font-semibold {{ $lote->cantidad > 0 ? 'text-green-600' : 'text-red-600' }}">
                                                                             {{ $lote->cantidad }}
                                                                         </span>
-                                                                        <span class="text-gray-400 text-xs">/ {{ $lote->cantidad_inicial }}</span>
-                                                                    </td>
-                                                                    <td class="py-3 px-4 text-right">
-                                                                        Q{{ number_format($lote->precio_ingreso, 2) }}
-                                                                    </td>
-                                                                    <td class="py-3 px-4 text-center text-xs">
-                                                                        {{ $lote->fecha_ingreso ? $lote->fecha_ingreso->format('d/m/Y') : 'N/A' }}
-                                                                    </td>
-                                                                    <td class="py-3 px-4 text-xs text-gray-500 max-w-xs truncate">
-                                                                        {{ $lote->observaciones ?? '-' }}
                                                                     </td>
                                                                     <td class="py-3 px-4 text-center">
                                                                         @if($lote->estado)
@@ -239,6 +230,13 @@
                                                         @endforeach
                                                     </tbody>
                                                 </table>
+                                            </div>
+
+                                            <div class="flex justify-center mt-4">
+                                                <a href="{{ route('bodegas.detalle', $bodega->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                                    Ver inventario completo ({{ $totalLotes }} lotes)
+                                                    <svg class="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                                </a>
                                             </div>
                                         @else
                                             <div class="text-center py-8 text-gray-500">

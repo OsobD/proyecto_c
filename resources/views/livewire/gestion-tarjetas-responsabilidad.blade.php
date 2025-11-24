@@ -102,7 +102,9 @@
                             <td class="py-3 px-6 text-left whitespace-nowrap">{{ $tarjeta->id }}</td>
                             <td class="py-3 px-6 text-left">
                                 @if($tarjeta->persona)
-                                    <strong>{{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}</strong>
+                                    <a href="{{ route('tarjetas.detalle', $tarjeta->id) }}" class="font-bold hover:text-blue-600 hover:underline transition-colors">
+                                        {{ $tarjeta->persona->nombres }} {{ $tarjeta->persona->apellidos }}
+                                    </a>
                                     @if($tarjeta->persona->correo || $tarjeta->persona->telefono)
                                         <div class="text-xs text-gray-500 mt-1">
                                             @if($tarjeta->persona->correo)
@@ -160,17 +162,25 @@
                                         </div>
 
                                         @php
-                                            // Obtener solo los productos NO CONSUMIBLES asignados a esta tarjeta
+                                            // Obtener solo los productos NO CONSUMIBLES asignados a esta tarjeta (LIMITADO A 5 RECIENTES)
                                             $tarjetaProductos = $tarjeta->tarjetasProducto()
                                                 ->with(['producto', 'lote.bodega'])
                                                 ->whereHas('producto', function($query) {
                                                     $query->where('es_consumible', 0);
                                                 })
+                                                ->latest() // Ordenar por fecha de creación (asignación) descendente
+                                                ->take(5) // LIMITAR A 5
                                                 ->get();
+
+                                            $totalProductos = $tarjeta->tarjetasProducto()
+                                                ->whereHas('producto', function($query) {
+                                                    $query->where('es_consumible', 0);
+                                                })
+                                                ->count();
                                         @endphp
 
                                         @if($tarjetaProductos->count() > 0)
-                                            <div class="overflow-x-auto">
+                                            <div class="overflow-x-auto mb-4">
                                                 <table class="min-w-full bg-white border border-gray-300">
                                                     <thead class="bg-indigo-100 text-gray-700 text-sm">
                                                         <tr>
@@ -178,12 +188,8 @@
                                                             <th class="py-3 px-4 text-left">Producto</th>
                                                             <th class="py-3 px-4 text-center">Lote ID</th>
                                                             <th class="py-3 px-4 text-center">Cant. Asignada</th>
-                                                            <th class="py-3 px-4 text-right">Precio Unitario</th>
                                                             <th class="py-3 px-4 text-right">Total Asignado</th>
-                                                            <th class="py-3 px-4 text-center">Fecha Ingreso</th>
-                                                            <th class="py-3 px-4 text-left">Bodega</th>
                                                             <th class="py-3 px-4 text-center">Estado</th>
-                                                            <th class="py-3 px-4 text-left">Observaciones</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="text-gray-600 text-sm">
@@ -220,21 +226,8 @@
                                                                     </span>
                                                                 </td>
                                                                 <td class="py-3 px-4 text-right">
-                                                                    <span class="font-medium text-gray-700">
-                                                                        Q{{ $lote ? number_format($lote->precio_ingreso, 2) : '0.00' }}
-                                                                    </span>
-                                                                </td>
-                                                                <td class="py-3 px-4 text-right">
                                                                     <span class="font-semibold text-indigo-600">
                                                                         Q{{ number_format($tp->precio_asignacion, 2) }}
-                                                                    </span>
-                                                                </td>
-                                                                <td class="py-3 px-4 text-center text-xs">
-                                                                    {{ $lote && $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') : 'N/A' }}
-                                                                </td>
-                                                                <td class="py-3 px-4 text-left">
-                                                                    <span class="text-gray-700">
-                                                                        {{ $lote && $lote->bodega ? $lote->bodega->nombre : 'N/A' }}
                                                                     </span>
                                                                 </td>
                                                                 <td class="py-3 px-4 text-center">
@@ -244,21 +237,17 @@
                                                                         <span class="bg-red-200 text-red-800 py-1 px-2 rounded-full text-xs">Inactivo</span>
                                                                     @endif
                                                                 </td>
-                                                                <td class="py-3 px-4 text-left text-xs text-gray-500 max-w-xs truncate">
-                                                                    {{ $lote ? ($lote->observaciones ?? '-') : '-' }}
-                                                                </td>
                                                             </tr>
                                                         @endforeach
                                                     </tbody>
                                                 </table>
                                             </div>
 
-                                            {{-- Resumen --}}
-                                            <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-gray-700 font-medium">Total de productos asignados:</span>
-                                                    <span class="text-2xl font-bold text-indigo-600">{{ $tarjetaProductos->count() }}</span>
-                                                </div>
+                                            <div class="flex justify-center mt-4">
+                                                <a href="{{ route('tarjetas.detalle', $tarjeta->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                                    Ver todos los activos ({{ $totalProductos }})
+                                                    <svg class="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                                </a>
                                             </div>
                                         @else
                                             <div class="text-center py-8 text-gray-500">
