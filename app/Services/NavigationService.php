@@ -188,9 +188,14 @@ class NavigationService
                         'permission' => 'configuracion.acceder',
                     ],
                     [
-                        'label' => 'Roles y Permisos',
+                        'label' => 'Roles',
                         'route' => 'configuracion.roles',
                         'permission' => 'configuracion.roles',
+                    ],
+                    [
+                        'label' => 'Permisos',
+                        'route' => 'configuracion.permisos',
+                        'permission' => 'configuracion.permisos',
                     ],
                 ],
             ],
