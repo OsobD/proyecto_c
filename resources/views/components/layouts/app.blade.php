@@ -17,139 +17,48 @@
                         <img src="{{ asset('images/EEMQ@3x.png') }}" alt="Logo EEMQ" class="h-8 w-auto">
                     </a>
                 </div>
+
+                {{-- NAVEGACIÓN DINÁMICA BASADA EN PERMISOS --}}
                 <div class="hidden md:flex items-center space-x-4">
+                    @php
+                        $menuItems = \App\Services\NavigationService::simplifyDropdowns(
+                            \App\Services\NavigationService::getMenuItems()
+                        );
+                    @endphp
 
-                    {{-- Dropdown de Compras --}}
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['compras', 'compras.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
-                            Compras
-                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div x-show="open"
-                             x-cloak
-                             x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
-                            <a href="{{ route('compras') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras') && !request()->routeIs('compras.*') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Inicio
+                    @foreach($menuItems as $item)
+                        @if(isset($item['children']) && count($item['children']) > 0)
+                            {{-- Dropdown con múltiples opciones --}}
+                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs($item['route_pattern'] ?? []) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
+                                    {{ $item['label'] }}
+                                    <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <div x-show="open"
+                                     x-cloak
+                                     x-transition
+                                     class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
+                                    @foreach($item['children'] as $child)
+                                        <a href="{{ route($child['route']) }}{{ $child['route_param'] ?? '' }}"
+                                           class="block px-4 py-2 transition-colors {{ request()->routeIs($child['route']) ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
+                                            {{ $child['label'] }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            {{-- Link directo (sin dropdown o dropdown simplificado) --}}
+                            <a href="{{ route($item['route']) }}{{ $item['route_param'] ?? '' }}"
+                               class="px-3 py-2 rounded-md {{ request()->routeIs($item['route_pattern'] ?? $item['route']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">
+                                {{ $item['label'] }}
                             </a>
-                            <a href="{{ route('compras.nueva') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras.nueva') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Nueva Compra
-                            </a>
-                            <a href="{{ route('compras.historial') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('compras.historial') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Historial
-                            </a>
-                        </div>
-                    </div>
-
-                    {{-- Dropdown de Traslados --}}
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['traslados', 'traslados.*', 'requisiciones', 'requisiciones.*', 'devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
-                            Traslados
-                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div x-show="open"
-                             x-cloak
-                             x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
-                            <a href="{{ route('traslados') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados') && !request()->routeIs('traslados.*') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Inicio
-                            </a>
-                            <a href="{{ route('requisiciones') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs(['requisiciones', 'requisiciones.*']) ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Requisición
-                            </a>
-                            <a href="{{ route('devoluciones') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs(['devoluciones', 'devoluciones.*']) ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Devolución
-                            </a>
-                            <a href="{{ route('traslados.nuevo') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados.nuevo') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Nuevo Traslado
-                            </a>
-                            <a href="{{ route('traslados.historial') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('traslados.historial') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Historial
-                            </a>
-                        </div>
-                    </div>
-
-                    {{-- Dropdown de Productos y derivados--}}
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['proveedores', 'productos', 'productos.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
-                            Catálogo
-                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div x-show="open"
-                             x-cloak
-                             x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
-                            <a href="{{ route('productos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos') && !request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Productos
-                            </a>
-                            <a href="{{ route('productos.categorias') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('productos.categorias') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Categorías
-                            </a>
-                            <a href="{{ route('proveedores') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('proveedores') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Proveedores
-                            </a>
-                        </div>
-                    </div>
-
-                    {{-- Dropdown de gestión de personas, usuarios y puestos --}}
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['personas', 'personas.*', 'usuarios', 'usuarios.*', 'puestos', 'puestos.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
-                            Colaboradores
-                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div x-show="open"
-                             x-cloak
-                             x-transition
-                             class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
-                             <a href="{{ route('personas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('personas') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Personas
-                            </a>
-                            <a href="{{ route('usuarios') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('usuarios') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Usuarios
-                            </a>
-                            <a href="{{ route('puestos') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('puestos') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Puestos
-                            </a>
-                        </div>
-                    </div>
-
-                    {{-- Dropdown de Almacenes (Bodegas y Tarjetas de Responsabilidad) --}}
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open" class="px-3 py-2 rounded-md {{ request()->routeIs(['bodegas', 'bodegas.*', 'tarjetas.responsabilidad', 'tarjetas.*']) ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} flex items-center font-bold transition-colors">
-                            Almacenes
-                            <svg class="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div x-show="open"
-                             x-cloak
-                             x-transition
-                             class="absolute left-0 mt-2 w-64 bg-white border border-[var(--color-eemq-secondary)] rounded-md shadow-lg z-10 overflow-hidden">
-                            <a href="{{ route('bodegas') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('bodegas') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Bodegas
-                            </a>
-                            <a href="{{ route('tarjetas.responsabilidad') }}" class="block px-4 py-2 transition-colors {{ request()->routeIs('tarjetas.responsabilidad') ? 'bg-[var(--color-eemq-interactive)] text-white font-semibold' : 'text-gray-700 hover:bg-[var(--color-eemq-bg)]' }}">
-                                Tarjetas de Responsabilidad
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <a href="{{ route('bitacora') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('bitacora') ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Bitácora</a>
-                    {{-- Ruta hacia reportes --}}
-                    <a href="{{ route('reportes') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('reportes') ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Reportes</a>
-
-                    {{-- Ruta hacia configuración --}}
-                    <a href="{{ route('configuracion') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('configuracion') ? 'bg-[var(--color-eemq-primary-dark)] text-white' : 'text-white hover:bg-[var(--color-eemq-primary-dark)]' }} font-bold transition-colors">Configuración</a>
+                        @endif
+                    @endforeach
                 </div>
 
+                {{-- Menú de usuario --}}
                 <div class="flex items-center">
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                         <button @click="open = !open" class="flex items-center justify-center text-white focus:outline-none hover:bg-[var(--color-eemq-primary-dark)] p-2 rounded-md transition-colors">
@@ -164,6 +73,9 @@
                             <div class="px-4 py-3 text-sm bg-[var(--color-eemq-bg)] border-b border-[var(--color-eemq-secondary)]">
                                 <p class="font-semibold text-[var(--color-eemq-primary)]">{{ auth()->user()->persona->nombres }} {{ auth()->user()->persona->apellidos }}</p>
                                 <p class="text-xs text-gray-600">{{ auth()->user()->persona->correo }}</p>
+                                @if(auth()->user()->rol)
+                                    <p class="text-xs text-blue-600 font-medium mt-1">{{ auth()->user()->rol->nombre }}</p>
+                                @endif
                             </div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
