@@ -11,16 +11,44 @@
     ]" />
     {{-- Encabezado --}}
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Gestión de Personas</h1>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Gestión de Personas</h1>
+        </div>
+        @if(auth()->user()->puedeCrear('personas'))
+            <button
+                wire:click="openModal"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                + Nueva Persona
+            </button>
+        @endif
     </div>
 
-    {{-- Barra de búsqueda y filtros --}}
-    <div class="bg-white p-4 rounded-lg shadow-md mb-4">
-        <div class="flex flex-col md:flex-row gap-4 items-end">
-            {{-- Búsqueda --}}
-            <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar persona</label>
-                <div class="relative">
+    {{-- Mensajes flash --}}
+    @if (session()->has('message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in">
+            <span class="block sm:inline">{{ session('message') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in">
+            <span class="block sm:inline">{{ session('error') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    {{-- Contenedor principal --}}
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        {{-- Búsqueda y filtros --}}
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar persona</label>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -33,17 +61,13 @@
                         placeholder="Buscar por nombre, apellido, DPI, correo..."
                         autocomplete="off">
                 </div>
-            </div>
-
-            {{-- Botón de Filtros / Ajustes --}}
-            <div>
                 <button
                     wire:click="openFilterModal"
-                    class="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border-2 border-gray-300 transition-all duration-200 flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                     </svg>
-                    <span>Filtros / Ajustes</span>
+                    <span class="font-medium">Filtros / Ajustes</span>
                     @if($showInactive)
                         <span class="flex h-3 w-3 relative">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -52,51 +76,8 @@
                     @endif
                 </button>
             </div>
-
-            {{-- Botón Nueva Persona --}}
-            @if(auth()->user()->puedeCrear('personas'))
-                <div>
-                    <button
-                        wire:click="openModal"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                        + Nueva Persona
-                    </button>
-                </div>
-            @endif
         </div>
-    </div>
 
-    {{-- Mensajes flash --}}
-    @if (session()->has('message'))
-        <div class="relative fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
-            <div class="flex items-center gap-2">
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span class="font-medium">{{ session('message') }}</span>
-            </div>
-            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
-                <span class="text-2xl">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="relative fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in">
-            <div class="flex items-center gap-2">
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <span class="font-medium">{{ session('error') }}</span>
-            </div>
-            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
-                <span class="text-2xl">&times;</span>
-            </button>
-        </div>
-    @endif
-
-    {{-- Contenedor principal --}}
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
         {{-- Tabla de personas --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">

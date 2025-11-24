@@ -13,16 +13,42 @@
 
     {{-- Encabezado con título --}}
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Gestión de Usuarios</h1>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Gestión de Usuarios</h1>
+        </div>
+        <button
+            wire:click="abrirModal"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+            + Nuevo Usuario
+        </button>
     </div>
 
-    {{-- Barra de búsqueda y filtros --}}
-    <div class="bg-white p-4 rounded-lg shadow-md mb-4">
-        <div class="flex flex-col md:flex-row gap-4 items-end">
-            {{-- Búsqueda --}}
-            <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar usuario</label>
-                <div class="relative">
+    {{-- Mensajes flash --}}
+    @if (session()->has('message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 animate-fade-in">
+            <span class="block sm:inline">{{ session('message') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 animate-fade-in">
+            <span class="block sm:inline">{{ session('error') }}</span>
+            <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    {{-- Contenedor principal --}}
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        {{-- Barra de búsqueda y filtros --}}
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar usuario</label>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -38,17 +64,13 @@
                         data-lpignore="true"
                         data-1p-ignore>
                 </div>
-            </div>
-
-            {{-- Botón de Filtros / Ajustes --}}
-            <div>
                 <button
                     wire:click="openFilterModal"
-                    class="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border-2 border-gray-300 transition-all duration-200 flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                     </svg>
-                    <span>Filtros / Ajustes</span>
+                    <span class="font-medium">Filtros / Ajustes</span>
                     @if($filterPuesto || $filterRol || $showInactive)
                         <span class="flex h-3 w-3 relative">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -57,20 +79,8 @@
                     @endif
                 </button>
             </div>
-
-            {{-- Botón Nuevo Usuario --}}
-            <div>
-                <button
-                    wire:click="abrirModal"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    + Nuevo Usuario
-                </button>
-            </div>
         </div>
-    </div>
 
-    {{-- Contenedor principal --}}
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
         {{-- Tabla de usuarios --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
