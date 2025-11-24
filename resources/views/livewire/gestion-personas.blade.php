@@ -54,13 +54,15 @@
             </div>
 
             {{-- Botón Nueva Persona --}}
-            <div>
-                <button
-                    wire:click="openModal"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    + Nueva Persona
-                </button>
-            </div>
+            @if(auth()->user()->puedeCrear('personas'))
+                <div>
+                    <button
+                        wire:click="openModal"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                        + Nueva Persona
+                    </button>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -184,12 +186,18 @@
                                 <span class="font-mono text-gray-700">{{ $persona->dpi ?? 'N/A' }}</span>
                             </td>
                             <td class="py-3 px-6 text-center">
-                                <button
-                                    wire:click="toggleEstado({{ $persona->id }})"
-                                    wire:confirm="¿Está seguro de que desea {{ $persona->estado ? 'desactivar' : 'activar' }} a {{ $persona->nombres }} {{ $persona->apellidos }}?{{ $persona->estado ? '\n\nEsto también desactivará todas sus tarjetas de responsabilidad activas.' : '' }}"
-                                    class="py-1 px-3 rounded-full text-xs font-semibold {{ $persona->estado ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300' }}">
-                                    {{ $persona->estado ? 'Activo' : 'Inactivo' }}
-                                </button>
+                                @if(auth()->user()->puedeEliminar('personas'))
+                                    <button
+                                        wire:click="toggleEstado({{ $persona->id }})"
+                                        wire:confirm="¿Está seguro de que desea {{ $persona->estado ? 'desactivar' : 'activar' }} a {{ $persona->nombres }} {{ $persona->apellidos }}?{{ $persona->estado ? '\n\nEsto también desactivará todas sus tarjetas de responsabilidad activas.' : '' }}"
+                                        class="py-1 px-3 rounded-full text-xs font-semibold {{ $persona->estado ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300' }}">
+                                        {{ $persona->estado ? 'Activo' : 'Inactivo' }}
+                                    </button>
+                                @else
+                                    <span class="py-1 px-3 rounded-full text-xs font-semibold {{ $persona->estado ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800' }}">
+                                        {{ $persona->estado ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
@@ -204,10 +212,12 @@
                                     </button>
 
                                     {{-- Botón Editar --}}
-                                    <x-action-button
-                                        type="edit"
-                                        wire:click="edit({{ $persona->id }})"
-                                        title="Editar persona" />
+                                    @if(auth()->user()->puedeEditar('personas'))
+                                        <x-action-button
+                                            type="edit"
+                                            wire:click="edit({{ $persona->id }})"
+                                            title="Editar persona" />
+                                    @endif
                                 </div>
                             </td>
                         </tr>

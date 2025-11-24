@@ -130,6 +130,12 @@ class GestionPersonas extends Component
 
     public function openModal()
     {
+        // Validar permiso para crear personas
+        if (!auth()->user()->tienePermiso('personas.crear')) {
+            session()->flash('error', 'No tienes permiso para crear personas.');
+            return;
+        }
+
         $this->resetForm();
         $this->editMode = false;
         $this->modalKey++;
@@ -138,6 +144,12 @@ class GestionPersonas extends Component
 
     public function edit($id)
     {
+        // Validar permiso para editar personas
+        if (!auth()->user()->puedeEditar('personas')) {
+            session()->flash('error', 'No tienes permiso para editar personas.');
+            return;
+        }
+
         $persona = Persona::findOrFail($id);
 
         $this->personaId = $persona->id;
@@ -153,6 +165,19 @@ class GestionPersonas extends Component
 
     public function save()
     {
+        // Validar permisos según el modo
+        if ($this->editMode) {
+            if (!auth()->user()->puedeEditar('personas')) {
+                session()->flash('error', 'No tienes permiso para editar personas.');
+                return;
+            }
+        } else {
+            if (!auth()->user()->puedeCrear('personas')) {
+                session()->flash('error', 'No tienes permiso para crear personas.');
+                return;
+            }
+        }
+
         // Validar campos únicos (DPI, teléfono, correo) solo si es nueva persona o si cambió el valor
         $validationRules = $this->rules;
         if ($this->editMode) {
@@ -262,6 +287,12 @@ class GestionPersonas extends Component
      */
     public function toggleEstado($id)
     {
+        // Validar permiso para eliminar/desactivar personas
+        if (!auth()->user()->puedeEliminar('personas')) {
+            session()->flash('error', 'No tienes permiso para activar/desactivar personas.');
+            return;
+        }
+
         try {
             $persona = Persona::with('tarjetasResponsabilidad')->findOrFail($id);
             $nuevoEstado = !$persona->estado;
