@@ -91,17 +91,21 @@
 
     {{-- Modal Crear/Editar --}}
     @if($showModal)
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-            <div class="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden animate-fade-in-down">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-6">
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-fade-in-down flex flex-col">
+                {{-- Header fijo --}}
+                <div class="p-6 border-b border-gray-200 flex-shrink-0">
+                    <div class="flex justify-between items-center">
                         <h3 class="text-xl font-bold text-gray-900">{{ $editMode ? 'Editar Rol' : 'Nuevo Rol' }}</h3>
                         <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
+                </div>
 
-                    <form wire:submit.prevent="guardarRol">
+                {{-- Contenido con scroll --}}
+                <div class="flex-1 overflow-y-auto p-6">
+                    <form wire:submit.prevent="guardarRol" id="formRol">
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Rol</label>
                             <input type="text" wire:model="nombre" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -110,26 +114,114 @@
 
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Permisos Asignados</label>
-                            <div class="border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto bg-gray-50">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    @foreach($allPermisos as $permiso)
-                                        <label class="flex items-center space-x-3 p-2 hover:bg-white rounded cursor-pointer transition-colors">
-                                            <input type="checkbox" wire:model="selectedPermisos" value="{{ $permiso->id }}" class="form-checkbox h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                                            <span class="text-sm text-gray-700">{{ $permiso->nombre }}</span>
-                                        </label>
-                                    @endforeach
+
+                            {{-- Búsqueda de permisos --}}
+                            <div class="mb-3">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        wire:model.live.debounce.300ms="searchPermisos"
+                                        class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Buscar permisos por nombre, módulo o descripción...">
                                 </div>
                             </div>
-                            @if(count($allPermisos) === 0)
-                                <p class="text-sm text-gray-500 mt-2">No hay permisos registrados en el sistema.</p>
-                            @endif
-                        </div>
 
-                        <div class="flex justify-end gap-3">
-                            <button type="button" wire:click="closeModal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+                            {{-- Permisos agrupados por módulo --}}
+                            <div class="border border-gray-200 rounded-lg max-h-96 overflow-y-auto bg-gray-50">
+                                @if(count($this->permisosAgrupados) > 0)
+                                    @foreach($this->permisosAgrupados as $modulo => $permisos)
+                                        <div class="border-b border-gray-200 last:border-b-0">
+                                            {{-- Encabezado del módulo --}}
+                                            <div class="bg-white px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                                <button
+                                                    type="button"
+                                                    wire:click="toggleModulo('{{ $modulo }}')"
+                                                    class="flex-1 flex items-center gap-2 text-left">
+                                                    <svg class="w-4 h-4 transition-transform {{ in_array($modulo, $modulosAbiertos) ? 'rotate-90' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                    </svg>
+                                                    <span class="font-semibold text-gray-800">{{ $this->getNombreModuloAmigable($modulo) }}</span>
+                                                    <span class="text-xs text-gray-500">({{ $permisos->count() }} permisos)</span>
+                                                </button>
+
+                                                {{-- Botones seleccionar/deseleccionar todo --}}
+                                                <div class="flex gap-2">
+                                                    @if($this->todoModuloSeleccionado($modulo))
+                                                        <button
+                                                            type="button"
+                                                            wire:click="deseleccionarTodoModulo('{{ $modulo }}')"
+                                                            class="text-xs px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                                            title="Deseleccionar todo">
+                                                            Deseleccionar todo
+                                                        </button>
+                                                    @else
+                                                        <button
+                                                            type="button"
+                                                            wire:click="seleccionarTodoModulo('{{ $modulo }}')"
+                                                            class="text-xs px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                            title="Seleccionar todo">
+                                                            Seleccionar todo
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            {{-- Permisos del módulo (collapsible) --}}
+                                            @if(in_array($modulo, $modulosAbiertos))
+                                                <div class="bg-gray-50 px-4 py-3 space-y-2">
+                                                    @foreach($permisos as $permiso)
+                                                        <label class="flex items-start space-x-3 p-2 hover:bg-white rounded cursor-pointer transition-colors group">
+                                                            <input
+                                                                type="checkbox"
+                                                                wire:model.live="selectedPermisos"
+                                                                value="{{ $permiso->id }}"
+                                                                class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mt-0.5">
+                                                            <div class="flex-1">
+                                                                <div class="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                                                                    {{ $permiso->nombre }}
+                                                                </div>
+                                                                @if($permiso->descripcion)
+                                                                    <div class="text-xs text-gray-500 mt-0.5">
+                                                                        {{ $permiso->descripcion }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="p-4 text-center text-gray-500 text-sm">
+                                        @if(!empty($searchPermisos))
+                                            No se encontraron permisos que coincidan con "{{ $searchPermisos }}"
+                                        @else
+                                            No hay permisos registrados en el sistema.
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Contador de permisos seleccionados --}}
+                            <div class="mt-2 text-sm text-gray-600">
+                                <span class="font-semibold">{{ count($selectedPermisos) }}</span> permisos seleccionados
+                            </div>
                         </div>
                     </form>
+                </div>
+
+                {{-- Footer fijo con botones --}}
+                <div class="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+                    <div class="flex justify-end gap-3">
+                        <button type="button" wire:click="closeModal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">Cancelar</button>
+                        <button type="submit" form="formRol" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Guardar</button>
+                    </div>
                 </div>
             </div>
         </div>
