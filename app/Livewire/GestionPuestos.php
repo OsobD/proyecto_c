@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\Puesto;
+use App\Models\Bitacora;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -133,11 +135,33 @@ class GestionPuestos extends Component
             $puesto->update([
                 'nombre' => $this->nombre,
             ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Actualizar',
+                'modelo' => 'Puesto',
+                'modelo_id' => $puesto->id,
+                'descripcion' => "Puesto actualizado: {$this->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             session()->flash('message', 'Puesto actualizado exitosamente.');
         } else {
-            Puesto::create([
+            $puesto = Puesto::create([
                 'nombre' => $this->nombre,
             ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Puesto',
+                'modelo_id' => $puesto->id,
+                'descripcion' => "Puesto creado: {$this->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             session()->flash('message', 'Puesto creado exitosamente.');
         }
 
@@ -171,6 +195,17 @@ class GestionPuestos extends Component
             }
 
             $puesto->delete();
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Eliminar',
+                'modelo' => 'Puesto',
+                'modelo_id' => $puesto->id,
+                'descripcion' => "Puesto eliminado: {$puesto->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             session()->flash('message', 'Puesto eliminado exitosamente.');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al eliminar el puesto: ' . $e->getMessage());

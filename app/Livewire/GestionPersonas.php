@@ -16,7 +16,7 @@ class GestionPersonas extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    
+
     // Propiedades del modal de filtros
     public $showFilterModal = false;
     public $showInactive = false; // Renombrado de showAllPersonas para consistencia
@@ -103,12 +103,12 @@ class GestionPersonas extends Component
 
         // Aplicar búsqueda
         if (!empty($this->search)) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('nombres', 'like', '%' . $this->search . '%')
-                  ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                  ->orWhere('dpi', 'like', '%' . $this->search . '%')
-                  ->orWhere('correo', 'like', '%' . $this->search . '%')
-                  ->orWhere('telefono', 'like', '%' . $this->search . '%');
+                    ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                    ->orWhere('dpi', 'like', '%' . $this->search . '%')
+                    ->orWhere('correo', 'like', '%' . $this->search . '%')
+                    ->orWhere('telefono', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -118,7 +118,7 @@ class GestionPersonas extends Component
         } else {
             // Orden por defecto: por apellidos y nombres
             $query->orderBy('apellidos', 'asc')
-                  ->orderBy('nombres', 'asc');
+                ->orderBy('nombres', 'asc');
         }
 
         $personas = $query->paginate(10);
@@ -306,8 +306,8 @@ class GestionPersonas extends Component
             }
 
             // Registrar en bitácora
-            $accion = $nuevoEstado ? 'activar' : 'desactivar';
-            $descripcion = "Persona {$accion}da: {$persona->nombres} {$persona->apellidos}";
+            $accion = $nuevoEstado ? 'Activar' : 'Desactivar';
+            $descripcion = "Persona " . ($nuevoEstado ? 'activada' : 'desactivada') . ": {$persona->nombres} {$persona->apellidos}";
 
             if (!$nuevoEstado && $persona->tarjetasResponsabilidad->count() > 0) {
                 $descripcion .= " (tarjeta de responsabilidad desactivada)";

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\Categoria;
 use App\Models\Compra;
@@ -14,6 +15,7 @@ use App\Models\Transaccion;
 use App\Models\TipoTransaccion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 /**
@@ -255,7 +257,7 @@ class FormularioCompra extends Component
 
         $search = strtolower(trim($this->searchBodega));
 
-        return array_filter($this->bodegas, function($bodega) use ($search) {
+        return array_filter($this->bodegas, function ($bodega) use ($search) {
             return str_contains(strtolower($bodega['nombre']), $search);
         });
     }
@@ -268,7 +270,7 @@ class FormularioCompra extends Component
 
         $search = strtolower(trim($this->searchProveedor));
 
-        return array_filter($this->proveedores, function($proveedor) use ($search) {
+        return array_filter($this->proveedores, function ($proveedor) use ($search) {
             return str_contains(strtolower($proveedor['nombre']), $search);
         });
     }
@@ -281,9 +283,9 @@ class FormularioCompra extends Component
 
         $search = strtolower(trim($this->searchProducto));
 
-        return array_filter($this->productos, function($producto) use ($search) {
+        return array_filter($this->productos, function ($producto) use ($search) {
             return str_contains(strtolower($producto['descripcion']), $search) ||
-                   str_contains(strtolower($producto['codigo']), $search);
+                str_contains(strtolower($producto['codigo']), $search);
         });
     }
 
@@ -297,7 +299,7 @@ class FormularioCompra extends Component
 
         $search = strtolower(trim($this->searchCategoria));
 
-        return array_filter($categorias, function($categoria) use ($search) {
+        return array_filter($categorias, function ($categoria) use ($search) {
             return str_contains(strtolower($categoria['nombre']), $search);
         });
     }
@@ -371,7 +373,7 @@ class FormularioCompra extends Component
     {
         // Filtrar y reindexar en una sola operación para forzar reactividad
         $this->productosSeleccionados = array_values(
-            array_filter($this->productosSeleccionados, function($item) use ($productoId) {
+            array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
                 return $item['id'] !== $productoId;
             })
         );
@@ -383,9 +385,9 @@ class FormularioCompra extends Component
      */
     public function getSubtotalProperty()
     {
-        return collect($this->productosSeleccionados)->sum(function($producto) {
-            $cantidad = (float)($producto['cantidad'] ?? 0);
-            $costoConIva = (float)($producto['costo'] ?? 0);
+        return collect($this->productosSeleccionados)->sum(function ($producto) {
+            $cantidad = (float) ($producto['cantidad'] ?? 0);
+            $costoConIva = (float) ($producto['costo'] ?? 0);
             // Dividir entre 1.12 para obtener el precio sin IVA
             $costoSinIva = $costoConIva / 1.12;
             return $cantidad * $costoSinIva;
@@ -417,7 +419,7 @@ class FormularioCompra extends Component
         if (empty($this->precioFactura)) {
             return 0;
         }
-        $precioFacturaNum = (float)$this->precioFactura;
+        $precioFacturaNum = (float) $this->precioFactura;
         return $precioFacturaNum - $this->total;
     }
 
@@ -433,11 +435,11 @@ class FormularioCompra extends Component
                 if ($field === 'cantidad') {
                     $valor = $this->productosSeleccionados[$index]['cantidad'];
                     // Si está vacío o es null, establecer 1 como mínimo
-                    $this->productosSeleccionados[$index]['cantidad'] = empty($valor) ? 1 : max(1, (int)$valor);
+                    $this->productosSeleccionados[$index]['cantidad'] = empty($valor) ? 1 : max(1, (int) $valor);
                 } elseif ($field === 'costo') {
                     $valor = $this->productosSeleccionados[$index]['costo'];
                     // Si está vacío o es null, establecer 0
-                    $this->productosSeleccionados[$index]['costo'] = ($valor === '' || $valor === null) ? 0 : max(0, (float)$valor);
+                    $this->productosSeleccionados[$index]['costo'] = ($valor === '' || $valor === null) ? 0 : max(0, (float) $valor);
                 }
             }
         }
@@ -519,6 +521,16 @@ class FormularioCompra extends Component
                     'activo' => true,
                 ]);
                 $mapeoIds['categorias'][$categoriaTemp['id']] = $nuevaCategoria->id;
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Crear',
+                    'modelo' => 'Categoria',
+                    'modelo_id' => $nuevaCategoria->id,
+                    'descripcion' => "Categoría creada desde compra: {$nuevaCategoria->nombre}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
             }
 
             // 2. Crear proveedores temporales
@@ -531,6 +543,16 @@ class FormularioCompra extends Component
                     'activo' => true,
                 ]);
                 $mapeoIds['proveedores'][$proveedorTemp['id']] = $nuevoProveedor->id;
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Crear',
+                    'modelo' => 'Proveedor',
+                    'modelo_id' => $nuevoProveedor->id,
+                    'descripcion' => "Proveedor creado desde compra: {$nuevoProveedor->nombre}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
             }
 
             // 3. Crear productos temporales (con categorías ya mapeadas)
@@ -549,6 +571,16 @@ class FormularioCompra extends Component
                     'activo' => true,
                 ]);
                 $mapeoIds['productos'][$productoTemp['id']] = $nuevoProducto->id;
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Crear',
+                    'modelo' => 'Producto',
+                    'modelo_id' => $nuevoProducto->id,
+                    'descripcion' => "Producto creado desde compra: {$nuevoProducto->descripcion}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
             }
 
             // 4. Mapear proveedor si es temporal
@@ -611,7 +643,7 @@ class FormularioCompra extends Component
                 'no_serie' => $this->numeroSerie,
                 'correlativo' => $this->correlativo,
                 'total' => $this->total,
-                'precio_factura' => !empty($this->precioFactura) ? (float)$this->precioFactura : null,
+                'precio_factura' => !empty($this->precioFactura) ? (float) $this->precioFactura : null,
                 'id_proveedor' => $proveedorIdReal,
                 'id_bodega' => $this->selectedBodega['id'],
                 'id_usuario' => $usuarioValido ? $usuarioValido->id : null,
@@ -637,8 +669,8 @@ class FormularioCompra extends Component
                     $productoIdReal = $mapeoIds['productos'][$productoIdReal];
                 }
 
-                $cantidad = (int)$productoData['cantidad'];
-                $costoConIva = (float)$productoData['costo'];
+                $cantidad = (int) $productoData['cantidad'];
+                $costoConIva = (float) $productoData['costo'];
                 // Corregido: Dividir entre 1.12 para obtener precio sin IVA (12% Guatemala)
                 $costoSinIva = $costoConIva / 1.12;
                 $observaciones = $productoData['observaciones'] ?? '';
@@ -664,6 +696,16 @@ class FormularioCompra extends Component
                     'id_transaccion' => $transaccion->id,
                 ]);
             }
+
+            // Registrar Compra en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Compra',
+                'modelo_id' => $compra->id,
+                'descripcion' => "Compra registrada: Factura #{$compra->no_factura}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
 
             DB::commit();
 
@@ -749,7 +791,7 @@ class FormularioCompra extends Component
             'id' => $idTemporal,
             'codigo' => $this->codigo,
             'descripcion' => $this->descripcion,
-            'categoria_id' => (int)$this->categoriaId,
+            'categoria_id' => (int) $this->categoriaId,
             'es_consumible' => $this->esConsumible,
         ];
 

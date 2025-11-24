@@ -216,7 +216,7 @@ class GestionUsuarios extends Component
 
         $search = strtolower(trim($this->searchPuesto));
 
-        return array_filter($puestos, function($puesto) use ($search) {
+        return array_filter($puestos, function ($puesto) use ($search) {
             return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
@@ -260,7 +260,7 @@ class GestionUsuarios extends Component
 
         $search = strtolower(trim($this->searchFilterPuesto));
 
-        return array_filter($puestos, function($puesto) use ($search) {
+        return array_filter($puestos, function ($puesto) use ($search) {
             return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
@@ -318,15 +318,15 @@ class GestionUsuarios extends Component
             $search = $this->searchPersona;
             $query->where(function ($q) use ($search) {
                 $q->where('nombres', 'like', '%' . $search . '%')
-                  ->orWhere('apellidos', 'like', '%' . $search . '%')
-                  ->orWhere('dpi', 'like', '%' . $search . '%');
+                    ->orWhere('apellidos', 'like', '%' . $search . '%')
+                    ->orWhere('dpi', 'like', '%' . $search . '%');
             });
         }
 
         // Límite dinámico: 7 sin búsqueda (para no abrumar), 25 con búsqueda (ya filtrado)
         $limit = $hasSearch ? 25 : 7;
 
-        return $query->orderBy('nombres')->limit($limit)->get()->map(function($persona) {
+        return $query->orderBy('nombres')->limit($limit)->get()->map(function ($persona) {
             return [
                 'id' => $persona->id,
                 'label' => "{$persona->nombres} {$persona->apellidos}",
@@ -363,11 +363,12 @@ class GestionUsuarios extends Component
      */
     public function generarNombreUsuario($persona)
     {
-        if (!$persona) return;
+        if (!$persona)
+            return;
 
         $primerNombre = Str::slug(explode(' ', trim($persona->nombres))[0]);
         $primerApellido = Str::slug(explode(' ', trim($persona->apellidos))[0]);
-        
+
         $base = substr($primerNombre, 0, 1) . $primerApellido;
         $contador = 1;
         $usuarioGenerado = $base . $contador;
@@ -404,7 +405,7 @@ class GestionUsuarios extends Component
 
         $search = strtolower(trim($this->searchPuestoModal));
 
-        return array_filter($puestos, function($puesto) use ($search) {
+        return array_filter($puestos, function ($puesto) use ($search) {
             return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
@@ -446,7 +447,7 @@ class GestionUsuarios extends Component
 
         $search = strtolower(trim($this->searchRolModal));
 
-        return array_filter($roles, function($rol) use ($search) {
+        return array_filter($roles, function ($rol) use ($search) {
             return str_contains(strtolower($rol['nombre']), $search);
         });
     }
@@ -488,7 +489,7 @@ class GestionUsuarios extends Component
 
         $search = strtolower(trim($this->searchPuestoEdit));
 
-        return array_filter($puestos, function($puesto) use ($search) {
+        return array_filter($puestos, function ($puesto) use ($search) {
             return str_contains(strtolower($puesto['nombre']), $search);
         });
     }
@@ -530,7 +531,7 @@ class GestionUsuarios extends Component
 
         $search = strtolower(trim($this->searchRolEdit));
 
-        return array_filter($roles, function($rol) use ($search) {
+        return array_filter($roles, function ($rol) use ($search) {
             return str_contains(strtolower($rol['nombre']), $search);
         });
     }
@@ -566,7 +567,7 @@ class GestionUsuarios extends Component
     {
         // Seleccionar automáticamente la persona recién creada
         $persona = Persona::find($personaData['id']);
-        
+
         if ($persona) {
             $this->selectedPersona = [
                 'id' => $persona->id,
@@ -575,7 +576,7 @@ class GestionUsuarios extends Component
             ];
             $this->personaId = $persona->id;
             $this->showPersonaDropdown = false;
-            
+
             // Generar usuario para la nueva persona
             $this->generarNombreUsuario($persona);
         }
@@ -667,7 +668,7 @@ class GestionUsuarios extends Component
 
             // 5. Registrar en bitácora
             Bitacora::create([
-                'accion' => 'crear',
+                'accion' => 'Crear',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
                 'descripcion' => "Usuario creado: {$this->nombre_usuario} para {$persona->nombres} {$persona->apellidos}",
@@ -776,7 +777,7 @@ class GestionUsuarios extends Component
 
             // Registrar en bitácora
             Bitacora::create([
-                'accion' => 'actualizar',
+                'accion' => 'Actualizar',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
                 'descripcion' => "Usuario actualizado: {$this->nombre_usuario}",
@@ -878,7 +879,7 @@ class GestionUsuarios extends Component
 
             // Registrar en bitácora
             Bitacora::create([
-                'accion' => 'resetear_password',
+                'accion' => 'Resetear Password',
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
                 'descripcion' => "Contraseña reseteada para usuario: {$this->nombre_usuario} ({$usuario->persona->nombres} {$usuario->persona->apellidos})",
@@ -912,12 +913,12 @@ class GestionUsuarios extends Component
             $usuario->update(['estado' => $nuevoEstado]);
 
             // Registrar en bitácora
-            $accion = $nuevoEstado ? 'activar' : 'desactivar';
+            $accion = $nuevoEstado ? 'Activar' : 'Desactivar';
             Bitacora::create([
                 'accion' => $accion,
                 'modelo' => 'Usuario',
                 'modelo_id' => $usuario->id,
-                'descripcion' => "Usuario {$accion}do: {$usuario->nombre_usuario}",
+                'descripcion' => "Usuario " . ($nuevoEstado ? 'activado' : 'desactivado') . ": {$usuario->nombre_usuario}",
                 'id_usuario' => auth()->id() ?? 1,
                 'created_at' => now(),
             ]);
@@ -950,11 +951,11 @@ class GestionUsuarios extends Component
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('nombre_usuario', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('persona', function ($subQ) {
-                      $subQ->where('nombres', 'like', '%' . $this->search . '%')
-                           ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                           ->orWhere('correo', 'like', '%' . $this->search . '%');
-                  });
+                    ->orWhereHas('persona', function ($subQ) {
+                        $subQ->where('nombres', 'like', '%' . $this->search . '%')
+                            ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                            ->orWhere('correo', 'like', '%' . $this->search . '%');
+                    });
             });
         }
 
@@ -972,21 +973,21 @@ class GestionUsuarios extends Component
         switch ($this->sortField) {
             case 'nombre_completo':
                 $query->join('persona', 'usuario.id_persona', '=', 'persona.id')
-                      ->orderBy('persona.nombres', $this->sortDirection)
-                      ->orderBy('persona.apellidos', $this->sortDirection)
-                      ->select('usuario.*'); // Evitar conflictos de ID
+                    ->orderBy('persona.nombres', $this->sortDirection)
+                    ->orderBy('persona.apellidos', $this->sortDirection)
+                    ->select('usuario.*'); // Evitar conflictos de ID
                 break;
-            
+
             case 'rol':
                 $query->join('rol', 'usuario.id_rol', '=', 'rol.id')
-                      ->orderBy('rol.nombre', $this->sortDirection)
-                      ->select('usuario.*');
+                    ->orderBy('rol.nombre', $this->sortDirection)
+                    ->select('usuario.*');
                 break;
 
             case 'puesto':
                 $query->join('puesto', 'usuario.id_puesto', '=', 'puesto.id')
-                      ->orderBy('puesto.nombre', $this->sortDirection)
-                      ->select('usuario.*');
+                    ->orderBy('puesto.nombre', $this->sortDirection)
+                    ->select('usuario.*');
                 break;
 
             case 'estado':

@@ -7,8 +7,10 @@ use Livewire\WithPagination;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Lote;
+use App\Models\Bitacora;
 use App\Models\Bodega;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Componente GestionProductos
@@ -162,12 +164,12 @@ class GestionProductos extends Component
         // Aplicar búsqueda
         if ($this->searchProducto) {
             $search = strtolower(trim($this->searchProducto));
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where(DB::raw('LOWER(id)'), 'like', "%{$search}%")
-                  ->orWhere(DB::raw('LOWER(descripcion)'), 'like', "%{$search}%")
-                  ->orWhereHas('categoria', function($subQ) use ($search) {
-                      $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
-                  });
+                    ->orWhere(DB::raw('LOWER(descripcion)'), 'like', "%{$search}%")
+                    ->orWhereHas('categoria', function ($subQ) use ($search) {
+                        $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -278,6 +280,18 @@ class GestionProductos extends Component
                 $producto->es_consumible = $this->esConsumible;
                 $producto->save();
 
+                $producto->save();
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Actualizar',
+                    'modelo' => 'Producto',
+                    'modelo_id' => $producto->id,
+                    'descripcion' => "Producto actualizado: {$producto->descripcion}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
+
                 session()->flash('message', 'Producto actualizado exitosamente.');
             }
         } else {
@@ -288,6 +302,16 @@ class GestionProductos extends Component
                 'id_categoria' => $this->categoriaId,
                 'es_consumible' => $this->esConsumible,
                 'activo' => true,
+            ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Producto',
+                'modelo_id' => $this->codigo,
+                'descripcion' => "Producto creado: {$this->descripcion}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Producto creado exitosamente.');
@@ -308,6 +332,18 @@ class GestionProductos extends Component
         if ($producto) {
             $producto->activo = !$producto->activo;
             $producto->save();
+
+            $producto->save();
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => $producto->activo ? 'Activar' : 'Desactivar',
+                'modelo' => 'Producto',
+                'modelo_id' => $producto->id,
+                'descripcion' => "Producto " . ($producto->activo ? 'activado' : 'desactivado') . ": {$producto->descripcion}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
 
             session()->flash('message', 'Estado del producto actualizado.');
         }
@@ -382,6 +418,16 @@ class GestionProductos extends Component
         $categoria = Categoria::create([
             'nombre' => $this->nuevaCategoriaNombre,
             'activo' => true,
+        ]);
+
+        // Registrar en bitácora
+        Bitacora::create([
+            'accion' => 'Crear',
+            'modelo' => 'Categoria',
+            'modelo_id' => $categoria->id,
+            'descripcion' => "Categoría creada desde productos: {$categoria->nombre}",
+            'id_usuario' => Auth::id(),
+            'created_at' => now(),
         ]);
 
         $this->categoriaId = $categoria->id;
@@ -519,11 +565,23 @@ class GestionProductos extends Component
                 $lote->observaciones = $this->loteObservaciones;
                 $lote->save();
 
+                $lote->save();
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Actualizar',
+                    'modelo' => 'Lote',
+                    'modelo_id' => $lote->id,
+                    'descripcion' => "Lote actualizado para producto: {$lote->id_producto}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
+
                 session()->flash('message', 'Lote actualizado exitosamente.');
             }
         } else {
             // Crear nuevo lote desde modal
-            Lote::create([
+            $lote = Lote::create([
                 'id_producto' => $this->loteProductoId,
                 'cantidad' => $this->loteCantidad,
                 'cantidad_inicial' => $this->loteCantidad,
@@ -532,6 +590,16 @@ class GestionProductos extends Component
                 'id_bodega' => $this->loteBodegaId,
                 'observaciones' => $this->loteObservaciones,
                 'estado' => true,
+            ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Lote',
+                'modelo_id' => $lote->id,
+                'descripcion' => "Lote creado para producto: {$this->loteProductoId}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Lote creado exitosamente.');
@@ -562,6 +630,18 @@ class GestionProductos extends Component
             if ($lote->cantidad == $lote->cantidad_inicial) {
                 $lote->estado = false;
                 $lote->save();
+                $lote->save();
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Desactivar',
+                    'modelo' => 'Lote',
+                    'modelo_id' => $lote->id,
+                    'descripcion' => "Lote desactivado: {$lote->id}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
+
                 session()->flash('message', 'Lote desactivado exitosamente.');
             } else {
                 session()->flash('error', 'No se puede desactivar un lote que tiene movimientos de inventario.');
@@ -581,6 +661,18 @@ class GestionProductos extends Component
         if ($lote) {
             $lote->estado = true;
             $lote->save();
+            $lote->save();
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Activar',
+                'modelo' => 'Lote',
+                'modelo_id' => $lote->id,
+                'descripcion' => "Lote activado: {$lote->id}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             session()->flash('message', 'Lote activado exitosamente.');
         }
     }

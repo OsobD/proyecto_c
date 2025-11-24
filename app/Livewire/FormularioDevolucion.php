@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Bitacora;
 use App\Models\Bodega;
 use App\Models\Persona;
 use App\Models\Producto;
@@ -93,7 +94,7 @@ class FormularioDevolucion extends Component
             ->with('tarjetasResponsabilidad:id,id_persona,activo')
             ->select('id', 'nombres', 'apellidos')
             ->get()
-            ->map(function($persona) {
+            ->map(function ($persona) {
                 return [
                     'id' => $persona->id,
                     'nombre' => $persona->nombres . ' ' . $persona->apellidos,
@@ -106,7 +107,7 @@ class FormularioDevolucion extends Component
         // Cargar todos los productos del catálogo
         $this->productos = Producto::select('id', 'descripcion')
             ->get()
-            ->map(function($producto) {
+            ->map(function ($producto) {
                 return [
                     'id' => $producto->id,
                     'descripcion' => $producto->descripcion,
@@ -239,17 +240,17 @@ class FormularioDevolucion extends Component
                 ->whereIn('tp.id_tarjeta', $this->selectedOrigen['tarjetas'])
                 ->where('l.estado', true)
                 ->where('l.cantidad', '>', 0)
-                ->when(!empty($search), function($query) use ($search) {
-                    $query->where(function($q) use ($search) {
+                ->when(!empty($search), function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
                         $q->where('p.descripcion', 'LIKE', "%{$search}%")
-                          ->orWhere('p.id', 'LIKE', "%{$search}%");
+                            ->orWhere('p.id', 'LIKE', "%{$search}%");
                     });
                 })
                 ->select('p.id', 'p.descripcion', DB::raw('AVG(l.precio_ingreso) as precio'))
                 ->groupBy('p.id', 'p.descripcion')
                 ->limit(20)
                 ->get()
-                ->map(function($producto) {
+                ->map(function ($producto) {
                     return [
                         'id' => $producto->id,
                         'descripcion' => $producto->descripcion,
@@ -259,20 +260,20 @@ class FormularioDevolucion extends Component
                 ->toArray();
         } else {
             // Mostrar productos con lotes activos
-            $productosFiltrados = Producto::whereHas('lotes', function($query) {
-                    $query->where('estado', true)
-                          ->where('cantidad', '>', 0);
-                })
-                ->when(!empty($search), function($query) use ($search) {
-                    $query->where(function($q) use ($search) {
+            $productosFiltrados = Producto::whereHas('lotes', function ($query) {
+                $query->where('estado', true)
+                    ->where('cantidad', '>', 0);
+            })
+                ->when(!empty($search), function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
                         $q->where('descripcion', 'LIKE', "%{$search}%")
-                          ->orWhere('id', 'LIKE', "%{$search}%");
+                            ->orWhere('id', 'LIKE', "%{$search}%");
                     });
                 })
                 ->select('id', 'descripcion')
                 ->limit(20)
                 ->get()
-                ->map(function($producto) {
+                ->map(function ($producto) {
                     // Calcular precio promedio de lotes activos
                     $precioPromedio = Lote::where('id_producto', $producto->id)
                         ->where('estado', true)
@@ -310,7 +311,7 @@ class FormularioDevolucion extends Component
 
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
+        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
             return $item['id'] != $productoId; // Use != for loose comparison to handle both strings and ints
         });
         $this->productosSeleccionados = array_values($this->productosSeleccionados);
@@ -320,7 +321,7 @@ class FormularioDevolucion extends Component
     {
         foreach ($this->productosSeleccionados as &$producto) {
             if ($producto['id'] == $productoId) { // Use == for loose comparison
-                $producto['cantidad'] = max(1, (int)$cantidad);
+                $producto['cantidad'] = max(1, (int) $cantidad);
                 break;
             }
         }
@@ -328,7 +329,7 @@ class FormularioDevolucion extends Component
 
     public function getSubtotalProperty()
     {
-        return collect($this->productosSeleccionados)->sum(function($producto) {
+        return collect($this->productosSeleccionados)->sum(function ($producto) {
             return $producto['cantidad'] * $producto['precio'];
         });
     }
@@ -356,12 +357,12 @@ class FormularioDevolucion extends Component
         DB::beginTransaction();
         try {
             // Obtener bodega destino
-            $bodegaId = (int)str_replace('B', '', $this->selectedDestino['id']);
+            $bodegaId = (int) str_replace('B', '', $this->selectedDestino['id']);
 
             // Obtener persona origen (quien devuelve)
             $personaId = null;
             if ($this->selectedOrigen && $this->selectedOrigen['tipo'] === 'Persona') {
-                $personaId = (int)str_replace('P', '', $this->selectedOrigen['id']);
+                $personaId = (int) str_replace('P', '', $this->selectedOrigen['id']);
             }
 
             // Calcular total
@@ -392,6 +393,16 @@ class FormularioDevolucion extends Component
                 'descripcion' => 'Devolución de material' . ($this->motivo ? ' - ' . $this->motivo : ''),
                 'id_tipo_transaccion' => $tipoTransaccion->id,
                 'id_devolucion' => $devolucion->id,
+            ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Devolucion',
+                'modelo_id' => $devolucion->id,
+                'descripcion' => "Devolución registrada: #{$devolucion->id} - Total: Q" . number_format($total, 2),
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             DB::commit();

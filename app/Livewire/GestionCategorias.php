@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\Categoria;
+use App\Models\Bitacora;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -133,14 +135,36 @@ class GestionCategorias extends Component
                 $categoria->update([
                     'nombre' => $this->nombre,
                 ]);
+
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Actualizar',
+                    'modelo' => 'Categoria',
+                    'modelo_id' => $categoria->id,
+                    'descripcion' => "Categoría actualizada: {$this->nombre}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
+
                 $mensaje = 'Categoría actualizada exitosamente.';
             }
         } else {
             // Crear nueva categoría
-            Categoria::create([
+            $categoria = Categoria::create([
                 'nombre' => $this->nombre,
                 'activo' => true,
             ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Categoria',
+                'modelo_id' => $categoria->id,
+                'descripcion' => "Categoría creada: {$this->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             $mensaje = 'Categoría creada exitosamente.';
         }
 
@@ -162,6 +186,17 @@ class GestionCategorias extends Component
             $categoria->update([
                 'activo' => !$categoria->activo,
             ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => $categoria->activo ? 'Activar' : 'Desactivar',
+                'modelo' => 'Categoria',
+                'modelo_id' => $categoria->id,
+                'descripcion' => "Categoría " . ($categoria->activo ? 'activada' : 'desactivada') . ": {$categoria->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             session()->flash('message', 'Estado de la categoría actualizado.');
         }
     }

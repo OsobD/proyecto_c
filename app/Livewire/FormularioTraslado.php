@@ -221,10 +221,10 @@ class FormularioTraslado extends Component
         $query = Persona::where('estado', true);
 
         if (!empty($this->searchPersona)) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('nombres', 'like', '%' . $this->searchPersona . '%')
-                  ->orWhere('apellidos', 'like', '%' . $this->searchPersona . '%')
-                  ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $this->searchPersona . '%']);
+                    ->orWhere('apellidos', 'like', '%' . $this->searchPersona . '%')
+                    ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $this->searchPersona . '%']);
             });
         }
 
@@ -309,11 +309,13 @@ class FormularioTraslado extends Component
         $search = strtolower(trim($this->searchProducto));
 
         $query = Producto::where('activo', true)
-            ->with(['lotes' => function ($q) use ($bodegaId) {
-                $q->where('id_bodega', $bodegaId)
-                    ->where('cantidad', '>', 0)
-                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
-            }]);
+            ->with([
+                'lotes' => function ($q) use ($bodegaId) {
+                    $q->where('id_bodega', $bodegaId)
+                        ->where('cantidad', '>', 0)
+                        ->orderBy('fecha_ingreso', 'asc'); // FIFO
+                }
+            ]);
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -333,9 +335,9 @@ class FormularioTraslado extends Component
                 return [
                     'id' => $producto->id,
                     'descripcion' => $producto->descripcion,
-                    'es_consumible' => (bool)$producto->es_consumible,
-                    'precio' => (float)$precioPromedio,
-                    'cantidad_disponible' => (int)$cantidadDisponible,
+                    'es_consumible' => (bool) $producto->es_consumible,
+                    'precio' => (float) $precioPromedio,
+                    'cantidad_disponible' => (int) $cantidadDisponible,
                     'lotes' => $producto->lotes->toArray()
                 ];
             })
@@ -357,10 +359,10 @@ class FormularioTraslado extends Component
             $this->productosSeleccionados[] = [
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
-                'es_consumible' => (bool)($producto['es_consumible'] ?? false),
-                'precio' => (float)$producto['precio'],
+                'es_consumible' => (bool) ($producto['es_consumible'] ?? false),
+                'precio' => (float) $producto['precio'],
                 'cantidad' => 1,
-                'cantidad_disponible' => (int)$producto['cantidad_disponible'],
+                'cantidad_disponible' => (int) $producto['cantidad_disponible'],
                 'lotes' => $producto['lotes']
             ];
         }
@@ -376,8 +378,8 @@ class FormularioTraslado extends Component
      */
     public function eliminarProducto($productoId)
     {
-        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function($item) use ($productoId) {
-            return $item['id'] !== (int)$productoId;
+        $this->productosSeleccionados = array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
+            return $item['id'] !== (int) $productoId;
         });
         $this->productosSeleccionados = array_values($this->productosSeleccionados);
     }
@@ -392,9 +394,9 @@ class FormularioTraslado extends Component
     public function actualizarCantidad($productoId, $cantidad)
     {
         foreach ($this->productosSeleccionados as &$producto) {
-            if ($producto['id'] === (int)$productoId) {
+            if ($producto['id'] === (int) $productoId) {
                 $cantidadMax = $producto['cantidad_disponible'];
-                $producto['cantidad'] = max(1, min((int)$cantidad, $cantidadMax));
+                $producto['cantidad'] = max(1, min((int) $cantidad, $cantidadMax));
                 break;
             }
         }
@@ -407,8 +409,8 @@ class FormularioTraslado extends Component
      */
     public function getSubtotalProperty()
     {
-        return collect($this->productosSeleccionados)->sum(function($producto) {
-            return (int)($producto['cantidad'] ?? 0) * (float)($producto['precio'] ?? 0);
+        return collect($this->productosSeleccionados)->sum(function ($producto) {
+            return (int) ($producto['cantidad'] ?? 0) * (float) ($producto['precio'] ?? 0);
         });
     }
 
@@ -537,7 +539,8 @@ class FormularioTraslado extends Component
                     ->get();
 
                 foreach ($lotes as $lote) {
-                    if ($cantidadRestante <= 0) break;
+                    if ($cantidadRestante <= 0)
+                        break;
 
                     $cantidadAUsar = min($cantidadRestante, $lote->cantidad);
 
@@ -621,14 +624,12 @@ class FormularioTraslado extends Component
 
             // Registrar en bitácora
             Bitacora::create([
-                'id_usuario' => $usuario->id,
-                'accion' => 'Creación',
-                'modelo' => 'App\\Models\\Traslado',
+                'accion' => 'Crear',
+                'modelo' => 'Traslado',
                 'modelo_id' => $traslado->id,
                 'descripcion' => "Traslado creado: {$this->selectedOrigen['nombre']} → {$this->selectedDestino['nombre']} - Total: Q" . number_format($this->subtotal, 2),
+                'id_usuario' => $usuario->id,
                 'created_at' => now(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
             ]);
 
             DB::commit();

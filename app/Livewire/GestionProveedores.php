@@ -2,11 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\Bitacora;
 use App\Models\Proveedor;
 use App\Models\RegimenTributario;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Componente GestionProveedores
@@ -125,12 +127,12 @@ class GestionProveedores extends Component
         // Aplicar búsqueda
         if ($this->searchProveedor) {
             $search = strtolower(trim($this->searchProveedor));
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%")
-                  ->orWhere(DB::raw('LOWER(nit)'), 'like', "%{$search}%")
-                  ->orWhereHas('regimenTributario', function($subQ) use ($search) {
-                      $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
-                  });
+                    ->orWhere(DB::raw('LOWER(nit)'), 'like', "%{$search}%")
+                    ->orWhereHas('regimenTributario', function ($subQ) use ($search) {
+                        $subQ->where(DB::raw('LOWER(nombre)'), 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -224,15 +226,35 @@ class GestionProveedores extends Component
                 $proveedor->nombre = $this->nombre;
                 $proveedor->save();
 
+                // Registrar en bitácora
+                Bitacora::create([
+                    'accion' => 'Actualizar',
+                    'modelo' => 'Proveedor',
+                    'modelo_id' => $proveedor->id,
+                    'descripcion' => "Proveedor actualizado: {$proveedor->nombre}",
+                    'id_usuario' => Auth::id(),
+                    'created_at' => now(),
+                ]);
+
                 session()->flash('message', 'Proveedor actualizado exitosamente.');
             }
         } else {
             // Crear nuevo proveedor
-            Proveedor::create([
+            $proveedor = Proveedor::create([
                 'nit' => $this->nit,
                 'id_regimen_tributario' => $this->regimenTributarioId,
                 'nombre' => $this->nombre,
                 'activo' => true,
+            ]);
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Crear',
+                'modelo' => 'Proveedor',
+                'modelo_id' => $proveedor->id,
+                'descripcion' => "Proveedor creado: {$proveedor->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
             ]);
 
             session()->flash('message', 'Proveedor creado exitosamente.');
@@ -253,6 +275,16 @@ class GestionProveedores extends Component
         if ($proveedor) {
             $proveedor->activo = !$proveedor->activo;
             $proveedor->save();
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => $proveedor->activo ? 'Activar' : 'Desactivar',
+                'modelo' => 'Proveedor',
+                'modelo_id' => $proveedor->id,
+                'descripcion' => "Proveedor " . ($proveedor->activo ? 'activado' : 'desactivado') . ": {$proveedor->nombre}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
 
             session()->flash('message', 'Estado del proveedor actualizado.');
         }

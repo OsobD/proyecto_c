@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\RegimenTributario;
+use App\Models\Bitacora;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -70,8 +72,18 @@ class GestionRegimenes extends Component
     {
         $this->validate();
 
-        RegimenTributario::create([
+        $regimen = RegimenTributario::create([
             'nombre' => $this->nombre,
+        ]);
+
+        // Registrar en bitácora
+        Bitacora::create([
+            'accion' => 'Crear',
+            'modelo' => 'RegimenTributario',
+            'modelo_id' => $regimen->id,
+            'descripcion' => "Régimen tributario creado: {$this->nombre}",
+            'id_usuario' => Auth::id(),
+            'created_at' => now(),
         ]);
 
         $this->closeModal();
@@ -87,6 +99,16 @@ class GestionRegimenes extends Component
         $regimen = RegimenTributario::findOrFail($this->editingId);
         $regimen->update([
             'nombre' => $this->nombre,
+        ]);
+
+        // Registrar en bitácora
+        Bitacora::create([
+            'accion' => 'Actualizar',
+            'modelo' => 'RegimenTributario',
+            'modelo_id' => $regimen->id,
+            'descripcion' => "Régimen tributario actualizado: {$this->nombre}",
+            'id_usuario' => Auth::id(),
+            'created_at' => now(),
         ]);
 
         $this->closeModal();
@@ -112,7 +134,19 @@ class GestionRegimenes extends Component
     {
         if ($this->regimenToDeleteId) {
             $regimen = RegimenTributario::findOrFail($this->regimenToDeleteId);
+            $nombreRegimen = $regimen->nombre;
             $regimen->delete();
+
+            // Registrar en bitácora
+            Bitacora::create([
+                'accion' => 'Eliminar',
+                'modelo' => 'RegimenTributario',
+                'modelo_id' => $this->regimenToDeleteId,
+                'descripcion' => "Régimen tributario eliminado: {$nombreRegimen}",
+                'id_usuario' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
             session()->flash('message', 'Régimen eliminado exitosamente.');
         }
 
