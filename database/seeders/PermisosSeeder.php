@@ -448,6 +448,20 @@ class PermisosSeeder extends Seeder
                 'modificador' => null,
                 'descripcion' => 'Puede eliminar/desactivar usuarios',
             ],
+            [
+                'nombre' => 'usuarios.cambiar_estado',
+                'modulo' => 'usuarios',
+                'accion' => 'cambiar_estado',
+                'modificador' => null,
+                'descripcion' => 'Puede activar/desactivar usuarios',
+            ],
+            [
+                'nombre' => 'usuarios.resetear_password',
+                'modulo' => 'usuarios',
+                'accion' => 'resetear_password',
+                'modificador' => null,
+                'descripcion' => 'Puede resetear contraseñas de usuarios',
+            ],
 
             // =====================================
             // PUESTOS
@@ -525,7 +539,14 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'configuracion',
                 'accion' => 'roles',
                 'modificador' => null,
-                'descripcion' => 'Puede gestionar roles y permisos',
+                'descripcion' => 'Puede gestionar roles',
+            ],
+            [
+                'nombre' => 'configuracion.permisos',
+                'modulo' => 'configuracion',
+                'accion' => 'permisos',
+                'modificador' => null,
+                'descripcion' => 'Puede gestionar permisos',
             ],
 
             // =====================================
