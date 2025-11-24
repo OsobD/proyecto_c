@@ -38,6 +38,10 @@ class BodegaSeeder extends Seeder
                 'nombre' => 'Almacén Temporal',
                 'activo' => true,
             ],
+            [
+                'nombre' => 'Devoluciones',
+                'activo' => true,
+            ],
         ];
 
         foreach ($bodegas as $bodega) {
