@@ -263,10 +263,12 @@ class NavigationService
     {
         return collect($menuItems)->map(function ($item) {
             if (isset($item['children']) && count($item['children']) === 1) {
-                // Si solo tiene un hijo, convertir el padre en link directo
+                // Si solo tiene un hijo, usar el label y ruta del hijo directamente
                 $child = $item['children'][0];
+                $item['label'] = $child['label'];
                 $item['route'] = $child['route'];
                 $item['route_param'] = $child['route_param'] ?? null;
+                $item['permission'] = $child['permission'] ?? null;
                 unset($item['children']);
             }
             return $item;
