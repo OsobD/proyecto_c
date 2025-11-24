@@ -167,10 +167,18 @@ class NavigationService
                         'route' => 'bitacora',
                         'permission' => 'bitacora.acceder',
                     ],
+                ],
+            ],
+
+            // APROBACIONES
+            [
+                'label' => 'Aprobaciones',
+                'permission' => 'aprobaciones.ver',
+                'route_pattern' => ['aprobaciones'],
+                'children' => [
                     [
-                        'label' => 'Aprobaciones Pendientes',
-                        'route' => 'reportes',
-                        'route_param' => '?tab=aprobaciones',
+                        'label' => 'Pendientes',
+                        'route' => 'aprobaciones',
                         'permission' => 'aprobaciones.ver',
                     ],
                 ],

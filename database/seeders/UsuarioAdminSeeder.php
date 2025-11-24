@@ -18,7 +18,7 @@ class UsuarioAdminSeeder extends Seeder
     public function run(): void
     {
         // Buscar el rol de Administrador
-        $rolAdmin = Rol::where('nombre', 'Administrador')->first();
+        $rolAdmin = Rol::where('nombre', 'Administrador TI')->first();
 
         // Crear o actualizar persona para el administrador
         $persona = Persona::updateOrCreate(

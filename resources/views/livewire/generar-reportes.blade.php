@@ -61,7 +61,7 @@
                             <select
                                 id="tipo_reporte"
                                 wire:model="tipoReporte"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Seleccione un tipo</option>
                                 @foreach ($reportesCompras as $reporte)
                                     <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
@@ -74,7 +74,7 @@
                             <select
                                 id="proveedor"
                                 wire:model="proveedorSeleccionado"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Todos</option>
                                 @foreach ($proveedores as $proveedor)
                                     <option value="{{ $proveedor['id'] }}">{{ $proveedor['nombre'] }}</option>
@@ -88,7 +88,7 @@
                                 type="date"
                                 id="fecha_inicio"
                                 wire:model="fechaInicio"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
 
                         <div>
@@ -97,7 +97,7 @@
                                 type="date"
                                 id="fecha_fin"
                                 wire:model="fechaFin"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
                     </div>
                 </div>
@@ -113,7 +113,7 @@
                             <select
                                 id="tipo_reporte"
                                 wire:model="tipoReporte"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Seleccione un tipo</option>
                                 @foreach ($reportesTraslados as $reporte)
                                     <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
@@ -126,7 +126,7 @@
                             <select
                                 id="bodega"
                                 wire:model="bodegaSeleccionada"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Todas</option>
                                 @foreach ($bodegas as $bodega)
                                     <option value="{{ $bodega['id'] }}">{{ $bodega['nombre'] }}</option>
@@ -140,7 +140,7 @@
                                 type="date"
                                 id="fecha_inicio"
                                 wire:model="fechaInicio"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
 
                         <div>
@@ -149,7 +149,7 @@
                                 type="date"
                                 id="fecha_fin"
                                 wire:model="fechaFin"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
                     </div>
                 </div>
@@ -165,7 +165,7 @@
                             <select
                                 id="tipo_reporte"
                                 wire:model="tipoReporte"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Seleccione un tipo</option>
                                 @foreach ($reportesInventario as $reporte)
                                     <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
@@ -178,7 +178,7 @@
                             <select
                                 id="bodega"
                                 wire:model="bodegaSeleccionada"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Todas</option>
                                 @foreach ($bodegas as $bodega)
                                     <option value="{{ $bodega['id'] }}">{{ $bodega['nombre'] }}</option>
@@ -191,7 +191,7 @@
                             <select
                                 id="usuario"
                                 wire:model="usuarioSeleccionado"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Todos</option>
                                 @foreach ($usuarios as $usuario)
                                     <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
@@ -205,7 +205,7 @@
                                 type="date"
                                 id="fecha_fin"
                                 wire:model="fechaFin"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
                     </div>
                 </div>
@@ -221,7 +221,7 @@
                             <select
                                 id="tipo_reporte"
                                 wire:model="tipoReporte"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Seleccione un tipo</option>
                                 @foreach ($reportesBitacora as $reporte)
                                     <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
@@ -234,7 +234,7 @@
                             <select
                                 id="usuario"
                                 wire:model="usuarioSeleccionado"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                                 <option value="">Todos</option>
                                 @foreach ($usuarios as $usuario)
                                     <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
@@ -248,7 +248,7 @@
                                 type="date"
                                 id="fecha_inicio"
                                 wire:model="fechaInicio"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
 
                         <div>
@@ -257,7 +257,7 @@
                                 type="date"
                                 id="fecha_fin"
                                 wire:model="fechaFin"
-                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
                         </div>
                     </div>
                 </div>
@@ -267,7 +267,7 @@
             <div class="mt-6 flex justify-end">
                 <button
                     wire:click="generarReporte"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
                     Generar Reporte
                 </button>
             </div>
@@ -281,12 +281,12 @@
             <div class="flex space-x-2">
                 <button
                     wire:click="imprimir"
-                    class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg">
+                    class="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
                     Imprimir
                 </button>
                 <button
                     wire:click="exportarExcel"
-                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
                     Exportar a XLS
                 </button>
             </div>

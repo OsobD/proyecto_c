@@ -105,6 +105,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/bitacora', \App\Livewire\BitacoraSistema::class)->name('bitacora');
     });
 
+    // Rutas de Aprobaciones
+    Route::middleware('permission:aprobaciones.ver')->group(function () {
+        Route::get('/aprobaciones', \App\Livewire\AprobacionesPendientes::class)->name('aprobaciones');
+    });
+
     // Rutas de Configuración
     Route::middleware('permission:configuracion.acceder')->group(function () {
         Route::get('/configuracion', \App\Livewire\ConfiguracionSistema::class)->name('configuracion');
