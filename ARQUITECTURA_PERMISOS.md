@@ -21,10 +21,10 @@ Ejemplos:
 - compras.aprobar
 ```
 
-## 2. Roles Definidos
+## 2. Roles Definidos (Roles Reales del Sistema)
 
-### ROL: Colaborador (Operativo)
-**Descripción**: Usuario operativo que registra movimientos diarios
+### ROL: Colaborador de Bodega
+**Descripción**: Usuario operativo que registra movimientos diarios de inventario
 
 **Accesos**:
 - ✅ Compras: acceder, crear
@@ -34,42 +34,67 @@ Ejemplos:
 - ✅ Productos: acceder, crear
 - ✅ Categorías: acceder, crear
 - ✅ Proveedores: acceder, crear
+- ✅ Personas: acceder, crear
 - ✅ Bodegas: acceder (solo ver)
 - ✅ Tarjetas: acceder (solo ver)
 - ❌ Usuarios: NO accede
 - ❌ Puestos: NO accede
-- ❌ Bitácora/Reportes: NO accede
+- ❌ Bitácora: NO accede
+- ❌ Reportes: NO accede
 - ❌ Configuración: NO accede
 
 **Restricciones**:
-- Puede CREAR todo lo que tiene acceso
-- NO puede EDITAR sin aprobación
+- Puede CREAR todo lo que tiene acceso (se registra directamente)
+- Puede EDITAR pero requiere aprobación (genera tarea para Jefe/Admin)
 - NO puede ELIMINAR/DESACTIVAR
 
 ---
 
-### ROL: Supervisor
-**Descripción**: Puede crear y APROBAR cambios
+### ROL: Jefe de Bodega
+**Descripción**: Supervisa operaciones de bodega y aprueba cambios
 
-**Hereda de**: Colaborador
+**Hereda de**: Colaborador de Bodega
 
 **Permisos adicionales**:
 - ✅ Aprobar cambios en: compras, traslados, requisiciones, devoluciones
-- ✅ Editar SIN aprobación: productos, categorías, proveedores
-- ✅ Gestionar: bodegas, tarjetas (crear, editar)
-- ✅ Reportes: acceder
+- ✅ Editar SIN aprobación: productos, categorías, proveedores, personas
+- ✅ Gestionar: bodegas, tarjetas (crear, editar, desactivar)
+- ✅ Reportes: acceder a todos los reportes
+- ✅ Bitácora: acceder (vía Reportes)
+- ✅ Ver tareas pendientes de aprobación
+- ❌ Usuarios: NO accede
+- ❌ Puestos: NO accede
+- ❌ Configuración: NO accede
 
 ---
 
-### ROL: Administrador
-**Descripción**: Control total del sistema
+### ROL: Colaborador de Contabilidad
+**Descripción**: Consulta reportes y bitácora para auditoría
+
+**Accesos**:
+- ✅ Reportes: acceder a todos los reportes (solo lectura)
+- ✅ Bitácora: acceder (vía Reportes, solo lectura)
+- ❌ NO puede crear, editar o eliminar NADA
+- ❌ NO accede a ninguna otra sección del sistema
+
+**Restricciones**:
+- Solo lectura en Reportes y Bitácora
+- No puede aprobar cambios
+- No puede exportar datos sensibles (opcional, según necesidad)
+
+---
+
+### ROL: Administrador TI
+**Descripción**: Control total del sistema, configuración y gestión de usuarios
 
 **Permisos**:
 - ✅ TODO sin restricciones
-- ✅ Gestión de usuarios
+- ✅ Gestión de usuarios y puestos
 - ✅ Configuración del sistema
+- ✅ Gestión de roles y permisos
 - ✅ Bitácora completa
 - ✅ Aprobar cualquier cosa
+- ✅ Acceso a todas las funcionalidades
 
 ---
 
@@ -176,31 +201,57 @@ class NavigationService
 
 ## 6. Flujo de Trabajo
 
-### Caso 1: Colaborador crea una compra
+### Caso 1: Colaborador crea una compra (NO requiere aprobación)
 ```
-1. Colaborador llena formulario de compra
-2. Al guardar, se crea registro en `cambios_pendientes` con estado='pendiente'
-3. Se notifica a supervisores
-4. Compra NO aparece en el sistema hasta aprobación
-5. Supervisor aprueba → se crea el registro real en `compras`
-6. Se marca el cambio_pendiente como 'aprobado'
+1. Colaborador de Bodega llena formulario de compra
+2. Al guardar, se crea registro DIRECTAMENTE en `compras`
+3. Se registra en bitácora automáticamente
+4. La compra está disponible inmediatamente en el sistema
 ```
 
-### Caso 2: Supervisor edita un producto
+### Caso 2: Jefe de Bodega edita un producto (SIN aprobación)
 ```
-1. Supervisor edita producto
+1. Jefe de Bodega edita producto
 2. Tiene permiso `productos.editar.sin_aprobacion`
 3. Cambio se aplica DIRECTAMENTE sin pasar por aprobaciones
 4. Se registra en bitácora
 ```
 
-### Caso 3: Colaborador intenta editar una compra
+### Caso 3: Colaborador edita una compra (CON aprobación - Sistema de Tareas)
 ```
-1. Colaborador ve botón "Solicitar Edición" (no "Editar")
+1. Colaborador de Bodega ve botón "Editar" (habilitado)
 2. Llena formulario con cambios propuestos
-3. Se crea registro en `cambios_pendientes` con datos_anteriores + datos_nuevos
-4. Supervisor compara cambios y aprueba/rechaza
-5. Si aprueba → se actualiza el registro original
+3. Al guardar:
+   a. El registro original NO se modifica aún
+   b. Se crea registro en `cambios_pendientes` con:
+      - datos_anteriores (estado actual)
+      - datos_nuevos (cambios propuestos)
+      - estado = 'pendiente'
+      - tipo = 'edicion'
+   c. Se muestra mensaje: "Cambios enviados para aprobación"
+4. Jefe de Bodega / Admin TI ve en "Tareas Pendientes" (en Reportes):
+   - Lista de cambios pendientes
+   - Comparación lado a lado (antes/después)
+   - Justificación del colaborador (si se agregó)
+5. Jefe aprueba o rechaza:
+   - Si APRUEBA → se actualiza el registro original con datos_nuevos
+   - Si RECHAZA → se marca como rechazado, registro original no cambia
+6. Colaborador ve notificación del resultado
+```
+
+### Caso 4: Colaborador intenta eliminar (SIN permiso)
+```
+1. Colaborador de Bodega NO ve botón de eliminar/desactivar
+2. El botón está oculto por @can('compras.eliminar')
+3. Si intenta acceder directo por URL → middleware bloquea con 403
+```
+
+### Caso 5: Administrador TI gestiona usuarios (SIN restricciones)
+```
+1. Admin TI accede a /usuarios
+2. Puede crear, editar, eliminar directamente
+3. No requiere aprobaciones
+4. Todo se registra en bitácora
 ```
 
 ---
