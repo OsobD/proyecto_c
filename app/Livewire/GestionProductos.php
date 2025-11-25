@@ -182,12 +182,31 @@ class GestionProductos extends Component
 
         $productos = $query->paginate(10);
 
-        // Obtener lotes paginados si hay un producto expandido
+        // Obtener ubicaciones de lotes paginadas si hay un producto expandido
+        // Cada fila muestra un lote en una bodega específica
         $lotesPaginados = null;
         if ($this->productoIdLotesExpandido) {
-            $lotesPaginados = Lote::where('id_producto', $this->productoIdLotesExpandido)
-                ->with('bodega')
-                ->orderBy('fecha_ingreso', 'desc')
+            $lotesPaginados = DB::table('lote_bodega as lb')
+                ->join('lote as l', 'lb.id_lote', '=', 'l.id')
+                ->join('bodega as b', 'lb.id_bodega', '=', 'b.id')
+                ->where('l.id_producto', $this->productoIdLotesExpandido)
+                ->where('lb.cantidad', '>', 0)  // Solo mostrar ubicaciones con stock
+                ->select(
+                    'lb.id as lote_bodega_id',
+                    'lb.id_lote',
+                    'lb.id_bodega',
+                    'lb.cantidad',
+                    'l.id as lote_id',
+                    'l.cantidad_inicial',
+                    'l.cantidad_disponible',
+                    'l.precio_ingreso',
+                    'l.fecha_ingreso',
+                    'l.observaciones',
+                    'l.estado',
+                    'b.nombre as bodega_nombre'
+                )
+                ->orderBy('l.fecha_ingreso', 'desc')
+                ->orderBy('b.nombre', 'asc')
                 ->paginate($this->lotesPerPage, ['*'], 'lotesPage', $this->lotesPage);
         }
 
