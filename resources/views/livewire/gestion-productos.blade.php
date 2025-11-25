@@ -192,10 +192,10 @@
                                                 <table class="min-w-full bg-white border border-gray-300">
                                                     <thead class="bg-indigo-100 text-gray-700 text-sm">
                                                         <tr>
-                                                            <th class="py-3 px-4 text-left">Bodega</th>
                                                             <th class="py-3 px-4 text-center">Lote ID</th>
-                                                            <th class="py-3 px-4 text-center">Cantidad en Bodega</th>
-                                                            <th class="py-3 px-4 text-center">Cantidad Inicial del Lote</th>
+                                                            <th class="py-3 px-4 text-center">Bodegas</th>
+                                                            <th class="py-3 px-4 text-center">Cantidad Disponible</th>
+                                                            <th class="py-3 px-4 text-center">Cantidad Inicial</th>
                                                             <th class="py-3 px-4 text-right">Precio Ingreso</th>
                                                             <th class="py-3 px-4 text-center">Fecha Ingreso</th>
                                                             <th class="py-3 px-4 text-left">Observaciones</th>
@@ -205,20 +205,7 @@
                                                     </thead>
                                                     <tbody class="text-gray-600 text-sm">
                                                         @foreach($lotesPaginados as $lote)
-                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 {{ $editingLoteId === $lote->lote_id ? 'bg-blue-50' : '' }}" wire:key="lote-bodega-{{ $lote->lote_bodega_id }}">
-                                                                {{-- Bodega --}}
-                                                                <td class="py-3 px-4 text-left">
-                                                                    @if($editingLoteId === $lote->lote_id)
-                                                                        <select wire:model="loteBodegaId" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                                                                            @foreach($bodegas as $bodega)
-                                                                                <option value="{{ $bodega->id }}">{{ $bodega->nombre }}</option>
-                                                                            @endforeach
-                                                                        </select>
-                                                                    @else
-                                                                        {{ $lote->bodega_nombre ?? 'Sin bodega' }}
-                                                                    @endif
-                                                                </td>
-
+                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 {{ $editingLoteId === $lote->lote_id ? 'bg-blue-50' : '' }}" wire:key="lote-{{ $lote->lote_id }}">
                                                                 {{-- Lote ID --}}
                                                                 <td class="py-3 px-4 text-center">
                                                                     <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
@@ -226,13 +213,24 @@
                                                                     </span>
                                                                 </td>
 
-                                                                {{-- Cantidad en esta Bodega --}}
+                                                                {{-- Número de Bodegas --}}
+                                                                <td class="py-3 px-4 text-center">
+                                                                    @if($lote->num_bodegas > 0)
+                                                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                                                                            {{ $lote->num_bodegas }} {{ $lote->num_bodegas == 1 ? 'bodega' : 'bodegas' }}
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="text-gray-400 text-xs">Sin ubicación</span>
+                                                                    @endif
+                                                                </td>
+
+                                                                {{-- Cantidad Disponible Total --}}
                                                                 <td class="py-3 px-4 text-center font-semibold">
                                                                     @if($editingLoteId === $lote->lote_id)
                                                                         <input type="number" wire:model="loteCantidad" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center" min="0">
                                                                     @else
-                                                                        <span class="{{ $lote->cantidad > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                                                            {{ $lote->cantidad }}
+                                                                        <span class="{{ $lote->cantidad_disponible > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                                                            {{ $lote->cantidad_disponible }}
                                                                         </span>
                                                                     @endif
                                                                 </td>

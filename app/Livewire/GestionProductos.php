@@ -182,20 +182,17 @@ class GestionProductos extends Component
 
         $productos = $query->paginate(10);
 
-        // Obtener ubicaciones de lotes paginadas si hay un producto expandido
-        // Cada fila muestra un lote en una bodega específica
+        // Obtener lotes agrupados con resumen de ubicaciones
+        // Muestra cada lote una vez con contador de bodegas donde está ubicado
         $lotesPaginados = null;
         if ($this->productoIdLotesExpandido) {
-            $lotesPaginados = DB::table('lote_bodega as lb')
-                ->join('lote as l', 'lb.id_lote', '=', 'l.id')
-                ->join('bodega as b', 'lb.id_bodega', '=', 'b.id')
+            $lotesPaginados = DB::table('lote as l')
+                ->leftJoin('lote_bodega as lb', function($join) {
+                    $join->on('l.id', '=', 'lb.id_lote')
+                         ->where('lb.cantidad', '>', 0);
+                })
                 ->where('l.id_producto', $this->productoIdLotesExpandido)
-                ->where('lb.cantidad', '>', 0)  // Solo mostrar ubicaciones con stock
                 ->select(
-                    'lb.id as lote_bodega_id',
-                    'lb.id_lote',
-                    'lb.id_bodega',
-                    'lb.cantidad',
                     'l.id as lote_id',
                     'l.cantidad_inicial',
                     'l.cantidad_disponible',
@@ -203,10 +200,12 @@ class GestionProductos extends Component
                     'l.fecha_ingreso',
                     'l.observaciones',
                     'l.estado',
-                    'b.nombre as bodega_nombre'
+                    'l.id_bodega',
+                    DB::raw('COUNT(DISTINCT lb.id_bodega) as num_bodegas'),
+                    DB::raw('COALESCE(SUM(lb.cantidad), 0) as cantidad_en_bodegas')
                 )
+                ->groupBy('l.id', 'l.cantidad_inicial', 'l.cantidad_disponible', 'l.precio_ingreso', 'l.fecha_ingreso', 'l.observaciones', 'l.estado', 'l.id_bodega')
                 ->orderBy('l.fecha_ingreso', 'desc')
-                ->orderBy('b.nombre', 'asc')
                 ->paginate($this->lotesPerPage, ['*'], 'lotesPage', $this->lotesPage);
         }
 
