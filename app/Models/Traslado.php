@@ -15,6 +15,7 @@ class Traslado extends Model
         'fecha',
         'no_requisicion',
         'correlativo',
+        'numero_serie',
         'estado',
         'total',
         'descripcion',

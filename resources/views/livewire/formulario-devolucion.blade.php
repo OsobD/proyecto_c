@@ -236,12 +236,12 @@
                                         Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
                                     </td>
                                     <td class="py-3 px-6 text-center">
-                                        <button
-                                            type="button"
-                                            wire:click="eliminarProducto('{{ $producto['id'] }}')"
-                                            class="text-red-600 hover:text-red-800 font-medium">
-                                            Eliminar
-                                        </button>
+                                        <div class="flex justify-center items-center">
+                                            <x-action-button
+                                                type="delete"
+                                                title="Eliminar producto"
+                                                wire:click="eliminarProducto('{{ $producto['id'] }}')" />
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

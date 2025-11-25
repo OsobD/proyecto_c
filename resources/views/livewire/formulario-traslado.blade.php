@@ -228,12 +228,12 @@
                                     </td>
                                     <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
-                                        <button
-                                            type="button"
-                                            wire:click="eliminarProducto('{{ $producto['id'] }}')"
-                                            class="text-red-600 hover:text-red-800 font-medium">
-                                            Eliminar
-                                        </button>
+                                        <div class="flex justify-center items-center">
+                                            <x-action-button
+                                                type="delete"
+                                                title="Eliminar producto"
+                                                wire:click="eliminarProducto('{{ $producto['id'] }}')" />
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -328,6 +328,7 @@
                                         <th class="py-2 px-4 text-right text-sm">Cantidad</th>
                                         <th class="py-2 px-4 text-right text-sm">Precio Unit.</th>
                                         <th class="py-2 px-4 text-right text-sm">Subtotal</th>
+                                        <th class="py-2 px-4 text-center text-sm">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -349,11 +350,20 @@
                                             <td class="py-2 px-4 text-sm text-right">{{ $producto['cantidad'] }}</td>
                                             <td class="py-2 px-4 text-sm text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
                                             <td class="py-2 px-4 text-sm text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
+                                            <td class="py-2 px-4 text-sm text-center">
+                                                <div class="flex justify-center items-center">
+                                                    <x-action-button
+                                                        type="delete"
+                                                        title="Eliminar producto"
+                                                        wire:click="eliminarProducto('{{ $producto['id'] }}')" />
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforeach
                                     <tr class="bg-gray-50 font-bold">
                                         <td colspan="5" class="py-3 px-4 text-right text-gray-800">TOTAL:</td>
                                         <td class="py-3 px-4 text-right text-lg text-blue-600">Q{{ number_format((float)$this->subtotal, 2) }}</td>
+                                        <td></td>
                                     </tr>
                                 </tbody>
                             </table>
