@@ -234,43 +234,49 @@ class FormularioDevolucion extends Component
 
         if (isset($this->selectedOrigen['tarjetas']) && !empty($this->selectedOrigen['tarjetas'])) {
             // Filtrar por productos en las tarjetas de la persona
+            // IMPORTANTE: Solo productos NO consumibles están en tarjetas
             $productosFiltrados = DB::table('tarjeta_producto as tp')
                 ->join('producto as p', 'tp.id_producto', '=', 'p.id')
                 ->join('lote as l', 'tp.id_lote', '=', 'l.id')
                 ->whereIn('tp.id_tarjeta', $this->selectedOrigen['tarjetas'])
                 ->where('l.estado', true)
                 ->where('l.cantidad_disponible', '>', 0)
+                // Solo productos NO consumibles (validación adicional)
+                ->where('p.es_consumible', false)
                 ->when(!empty($search), function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('p.descripcion', 'LIKE', "%{$search}%")
                             ->orWhere('p.id', 'LIKE', "%{$search}%");
                     });
                 })
-                ->select('p.id', 'p.descripcion', DB::raw('AVG(l.precio_ingreso) as precio'))
-                ->groupBy('p.id', 'p.descripcion')
+                ->select('p.id', 'p.descripcion', 'p.es_consumible', DB::raw('AVG(l.precio_ingreso) as precio'))
+                ->groupBy('p.id', 'p.descripcion', 'p.es_consumible')
                 ->limit(20)
                 ->get()
                 ->map(function ($producto) {
                     return [
                         'id' => $producto->id,
                         'descripcion' => $producto->descripcion,
-                        'precio' => $producto->precio ?? 0
+                        'precio' => $producto->precio ?? 0,
+                        'es_consumible' => $producto->es_consumible
                     ];
                 })
                 ->toArray();
         } else {
             // Mostrar productos con lotes activos
+            // Solo productos NO consumibles pueden devolverse
             $productosFiltrados = Producto::whereHas('lotes', function ($query) {
                 $query->where('estado', true)
                     ->where('cantidad_disponible', '>', 0);
             })
+                ->where('es_consumible', false)  // Solo NO consumibles
                 ->when(!empty($search), function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('descripcion', 'LIKE', "%{$search}%")
                             ->orWhere('id', 'LIKE', "%{$search}%");
                     });
                 })
-                ->select('id', 'descripcion')
+                ->select('id', 'descripcion', 'es_consumible')
                 ->limit(20)
                 ->get()
                 ->map(function ($producto) {
@@ -283,7 +289,8 @@ class FormularioDevolucion extends Component
                     return [
                         'id' => $producto->id,
                         'descripcion' => $producto->descripcion,
-                        'precio' => $precioPromedio ?? 0
+                        'precio' => $precioPromedio ?? 0,
+                        'es_consumible' => $producto->es_consumible
                     ];
                 })
                 ->toArray();
