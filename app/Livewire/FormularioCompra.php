@@ -372,6 +372,15 @@ class FormularioCompra extends Component
 
     public function eliminarProducto($productoId)
     {
+        // Si el ID es negativo, es un producto temporal nuevo
+        if ($productoId < 0) {
+            $this->nuevosProductos = array_values(
+                array_filter($this->nuevosProductos, function ($item) use ($productoId) {
+                    return $item['id'] !== $productoId;
+                })
+            );
+        }
+
         // Filtrar y reindexar en una sola operación para forzar reactividad
         $this->productosSeleccionados = array_values(
             array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
