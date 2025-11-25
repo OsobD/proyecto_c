@@ -31,10 +31,8 @@ return new class extends Migration
         // - unique_lote_bodega (id_lote, id_bodega)
 
         // Crear índice compuesto para consultas frecuentes de stock por bodega
-        DB::statement('
-            CREATE INDEX idx_lote_bodega_stock ON lote_bodega(id_bodega, cantidad)
-            WHERE cantidad > 0
-        ');
+        // Nota: MySQL no soporta índices parciales con WHERE como PostgreSQL
+        DB::statement('CREATE INDEX idx_lote_bodega_stock ON lote_bodega(id_bodega, cantidad)');
     }
 
     /**
