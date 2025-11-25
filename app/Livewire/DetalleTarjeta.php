@@ -15,7 +15,7 @@ class DetalleTarjeta extends Component
     public $tarjetaId;
     public $search = '';
     public $categoriaId = '';
-    public $estado = '';
+    // public $estado = ''; // Eliminado según requerimiento
 
     // Filtros y Ordenamiento
     public $showFilterModal = false;
@@ -47,7 +47,7 @@ class DetalleTarjeta extends Component
     public function clearFilters()
     {
         $this->categoriaId = '';
-        $this->estado = '';
+        // $this->estado = '';
         $this->tipoProducto = '';
         $this->search = '';
         $this->resetPage();
@@ -96,13 +96,6 @@ class DetalleTarjeta extends Component
             });
         }
 
-        // Filtro por estado del lote
-        if ($this->estado !== '') {
-            $query->whereHas('lote', function($q) {
-                $q->where('estado', $this->estado == '1');
-            });
-        }
-
         // Ordenamiento
         if ($this->sortField === 'producto_id') {
             $query->join('producto', 'tarjeta_producto.id_producto', '=', 'producto.id')
@@ -121,13 +114,17 @@ class DetalleTarjeta extends Component
             }
         }
 
+        // Calcular total antes de paginar
+        $totalPrecio = $query->sum('precio_asignacion');
+
         $activos = $query->paginate(15);
         $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
 
         return view('livewire.detalle-tarjeta', [
             'tarjeta' => $tarjeta,
             'activos' => $activos,
-            'categorias' => $categorias
+            'categorias' => $categorias,
+            'totalPrecio' => $totalPrecio
         ]);
     }
 }
