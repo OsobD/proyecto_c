@@ -240,7 +240,7 @@
 
                                                                 {{-- Precio Ingreso --}}
                                                                 <td class="py-3 px-4 text-right font-semibold">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="number" wire:model="lotePrecioIngreso" step="0.01" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-right" min="0">
                                                                     @else
                                                                         Q{{ number_format($lote->precio_ingreso, 2) }}
@@ -249,7 +249,7 @@
 
                                                                 {{-- Fecha Ingreso --}}
                                                                 <td class="py-3 px-4 text-center text-xs">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="date" wire:model="loteFechaIngreso" class="w-32 px-2 py-1 border border-gray-300 rounded text-sm">
                                                                     @else
                                                                         {{ $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') : 'N/A' }}
@@ -258,7 +258,7 @@
 
                                                                 {{-- Observaciones --}}
                                                                 <td class="py-3 px-4 text-left text-xs text-gray-500 max-w-xs truncate">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="text" wire:model="loteObservaciones" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Observaciones">
                                                                     @else
                                                                         {{ $lote->observaciones ?? '-' }}
