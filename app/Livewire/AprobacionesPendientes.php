@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\CambioPendiente;
 use Livewire\Component;
 
 /**
@@ -39,35 +40,68 @@ class AprobacionesPendientes extends Component
      */
     public function cargarPendientes()
     {
-        // Mock data - Reemplazar con queries reales
-        $this->pendientes = [
-            [
-                'id' => 1,
-                'tipo' => 'requisicion',
-                'numero' => 'REQ-2023-001',
-                'solicitante' => 'Juan Pérez',
-                'fecha' => '2023-10-26',
-                'descripcion' => 'Requisición de materiales de oficina',
-                'estado' => 'pendiente'
-            ],
-            [
-                'id' => 2,
-                'tipo' => 'traslado',
-                'numero' => 'TRA-2023-015',
-                'solicitante' => 'María García',
-                'fecha' => '2023-10-25',
-                'descripcion' => 'Traslado de herramientas a Bodega Central',
-                'estado' => 'pendiente'
-            ],
-            [
-                'id' => 3,
-                'tipo' => 'compra',
-                'numero' => 'COM-2023-045',
-                'solicitante' => 'Carlos López',
-                'fecha' => '2023-10-24',
-                'descripcion' => 'Compra de equipos de protección',
-                'estado' => 'pendiente'
-            ],
+        // Cargar cambios pendientes de la base de datos
+        $cambiosPendientes = CambioPendiente::with(['usuarioSolicitante', 'usuarioAprobador'])
+            ->pendientes()
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $this->pendientes = $cambiosPendientes->map(function ($cambio) {
+            // Determinar el tipo de acción y descripción
+            $tipoDescripcion = $this->obtenerDescripcionCambio($cambio);
+
+            return [
+                'id' => $cambio->id,
+                'tipo' => strtolower($cambio->accion),
+                'modelo' => $cambio->modelo,
+                'numero' => $tipoDescripcion['numero'],
+                'solicitante' => $cambio->usuarioSolicitante ? $cambio->usuarioSolicitante->name : 'Desconocido',
+                'fecha' => $cambio->created_at->format('Y-m-d'),
+                'fecha_completa' => $cambio->created_at->format('d/m/Y H:i'),
+                'descripcion' => $tipoDescripcion['descripcion'],
+                'justificacion' => $cambio->justificacion,
+                'estado' => $cambio->estado,
+                'accion' => ucfirst($cambio->accion),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Obtiene la descripción del cambio según el modelo y acción
+     *
+     * @param CambioPendiente $cambio
+     * @return array
+     */
+    private function obtenerDescripcionCambio($cambio)
+    {
+        $numero = '';
+        $descripcion = '';
+
+        switch ($cambio->modelo) {
+            case 'Salida':
+                $numero = 'REQ-' . $cambio->modelo_id;
+                $descripcion = "Solicitud de {$cambio->accion} de Requisición (Salida)";
+                break;
+
+            case 'Traslado':
+                $numero = 'TRA-' . $cambio->modelo_id;
+                $descripcion = "Solicitud de {$cambio->accion} de Traslado/Requisición";
+                break;
+
+            case 'Compra':
+                $numero = 'COM-' . $cambio->modelo_id;
+                $descripcion = "Solicitud de {$cambio->accion} de Compra";
+                break;
+
+            default:
+                $numero = $cambio->modelo . '-' . $cambio->modelo_id;
+                $descripcion = "Solicitud de {$cambio->accion} de {$cambio->modelo}";
+                break;
+        }
+
+        return [
+            'numero' => $numero,
+            'descripcion' => $descripcion,
         ];
     }
 
@@ -95,9 +129,29 @@ class AprobacionesPendientes extends Component
      */
     public function aprobar($id)
     {
-        // TODO: Implementar lógica de aprobación
-        session()->flash('message', 'Elemento aprobado exitosamente.');
-        $this->cargarPendientes();
+        try {
+            $cambio = CambioPendiente::findOrFail($id);
+            $usuario = auth()->user();
+
+            if (!$usuario) {
+                session()->flash('error', 'Debe iniciar sesión.');
+                return;
+            }
+
+            // Aprobar el cambio (esto aplicará automáticamente el cambio según el modelo)
+            $cambio->aprobar($usuario->id, 'Aprobado por el administrador');
+
+            session()->flash('success', 'Solicitud aprobada y aplicada exitosamente.');
+            $this->cargarPendientes();
+
+        } catch (\Exception $e) {
+            \Log::error('Error al aprobar cambio', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            session()->flash('error', 'Error al aprobar la solicitud: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -108,9 +162,29 @@ class AprobacionesPendientes extends Component
      */
     public function rechazar($id)
     {
-        // TODO: Implementar lógica de rechazo
-        session()->flash('message', 'Elemento rechazado.');
-        $this->cargarPendientes();
+        try {
+            $cambio = CambioPendiente::findOrFail($id);
+            $usuario = auth()->user();
+
+            if (!$usuario) {
+                session()->flash('error', 'Debe iniciar sesión.');
+                return;
+            }
+
+            // Rechazar el cambio
+            $cambio->rechazar($usuario->id, 'Rechazado por el administrador');
+
+            session()->flash('success', 'Solicitud rechazada exitosamente.');
+            $this->cargarPendientes();
+
+        } catch (\Exception $e) {
+            \Log::error('Error al rechazar cambio', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            session()->flash('error', 'Error al rechazar la solicitud: ' . $e->getMessage());
+        }
     }
 
     /**
