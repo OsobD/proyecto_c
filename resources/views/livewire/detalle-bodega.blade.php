@@ -54,6 +54,18 @@
             </div>
         </div>
 
+        {{-- Resumen de Totales --}}
+        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-blue-900">Resumen de Inventario</h3>
+                <p class="text-blue-700 text-sm">Total valorizado de los productos listados</p>
+            </div>
+            <div class="text-right">
+                <span class="block text-xs text-blue-600 uppercase font-bold tracking-wider">Total Precio</span>
+                <span class="text-2xl font-bold text-blue-800">Q{{ number_format($totalPrecio, 2) }}</span>
+            </div>
+        </div>
+
         {{-- Tabla --}}
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">

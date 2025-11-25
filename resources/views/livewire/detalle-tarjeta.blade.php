@@ -44,13 +44,25 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                     </svg>
                     <span class="font-medium">Filtros / Ajustes</span>
-                    @if($categoriaId || $estado !== '' || $tipoProducto !== '')
+                    @if($categoriaId || $tipoProducto !== '')
                         <span class="flex h-3 w-3 relative">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
                         </span>
                     @endif
                 </button>
+            </div>
+        </div>
+
+        {{-- Resumen de Totales --}}
+        <div class="mb-6 bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-indigo-900">Resumen de Asignaciones</h3>
+                <p class="text-indigo-700 text-sm">Total valorizado de activos asignados</p>
+            </div>
+            <div class="text-right">
+                <span class="block text-xs text-indigo-600 uppercase font-bold tracking-wider">Total Asignado</span>
+                <span class="text-2xl font-bold text-indigo-800">Q{{ number_format($totalPrecio, 2) }}</span>
             </div>
         </div>
 
@@ -240,16 +252,6 @@
                             @foreach($categorias as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
                             @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Estado --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                        <select wire:model.live="estado" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                            <option value="">Todos</option>
-                            <option value="1">Activos</option>
-                            <option value="0">Inactivos</option>
                         </select>
                     </div>
                 </div>

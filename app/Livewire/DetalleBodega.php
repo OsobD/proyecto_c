@@ -121,13 +121,19 @@ class DetalleBodega extends Component
             }
         }
 
+        // Calcular total antes de paginar
+        $totalPrecio = $query->get()->sum(function($lote) {
+            return $lote->cantidad * $lote->precio_ingreso;
+        });
+
         $lotes = $query->paginate(15);
         $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
 
         return view('livewire.detalle-bodega', [
             'bodega' => $bodega,
             'lotes' => $lotes,
-            'categorias' => $categorias
+            'categorias' => $categorias,
+            'totalPrecio' => $totalPrecio
         ]);
     }
 }
