@@ -505,6 +505,7 @@ class FormularioTraslado extends Component
             $traslado = Traslado::create([
                 'fecha' => now(),
                 'correlativo' => $this->correlativo,
+                'numero_serie' => $this->numeroSerie,
                 'no_requisicion' => null,
                 'total' => $this->subtotal,
                 'descripcion' => null,
