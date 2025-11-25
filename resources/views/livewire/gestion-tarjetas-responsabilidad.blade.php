@@ -168,7 +168,7 @@
                                                 ->whereHas('producto', function($query) {
                                                     $query->where('es_consumible', 0);
                                                 })
-                                                ->latest() // Ordenar por fecha de creación (asignación) descendente
+                                                ->latest('id') // Ordenar por ID descendente (ya que no hay created_at)
                                                 ->take(5) // LIMITAR A 5
                                                 ->get();
 
