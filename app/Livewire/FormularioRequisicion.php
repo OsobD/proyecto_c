@@ -591,7 +591,12 @@ class FormularioRequisicion extends Component
                 // Procesar cada producto no consumible
                 $totalTarjeta = 0;
                 foreach ($productosNoConsumibles as $producto) {
-                    $totalTarjeta += $this->procesarProductoNoConsumible($producto, $salida, $tarjeta);
+                    $totalTarjeta += $this->procesarProductoNoConsumible(
+                        $producto,
+                        $salida,
+                        $tarjeta,
+                        $this->selectedOrigen['bodega_id']
+                    );
                 }
 
                 // Actualizar total de la tarjeta sin triggear eventos
@@ -700,9 +705,9 @@ class FormularioRequisicion extends Component
                 'id_bodega' => $idBodega,
             ]);
 
-            // Actualizar cantidad del lote (salida)
-            $loteModel->cantidad -= $cantidadDelLote;
-            $loteModel->save();
+            // Actualizar cantidad del lote (salida consumible)
+            // El flag true indica que es consumo, reduce cantidad_disponible total
+            $loteModel->decrementarEnBodega($idBodega, $cantidadDelLote, true);
 
             // Crear transacción de salida
             if ($tipoTraslado) {
@@ -728,7 +733,7 @@ class FormularioRequisicion extends Component
     /**
      * Procesa un producto no consumible (va a Salida + TarjetaProducto)
      */
-    private function procesarProductoNoConsumible($producto, $salida, $tarjeta)
+    private function procesarProductoNoConsumible($producto, $salida, $tarjeta, $idBodega)
     {
         $cantidadRestante = $producto['cantidad'];
         $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
@@ -751,9 +756,9 @@ class FormularioRequisicion extends Component
                 'precio_salida' => $loteModel->precio_ingreso,
             ]);
 
-            // Actualizar cantidad del lote
-            $loteModel->cantidad -= $cantidadDelLote;
-            $loteModel->save();
+            // Actualizar cantidad del lote (asignación a persona)
+            // El flag true indica que reduce cantidad_disponible (producto asignado, no disponible)
+            $loteModel->decrementarEnBodega($idBodega, $cantidadDelLote, true);
 
             // Crear asignación en tarjeta de responsabilidad
             $precioAsignacion = $loteModel->precio_ingreso * $cantidadDelLote;

@@ -431,11 +431,17 @@ class FormularioDevolucion extends Component
         // Si se obtuvieron lotes de la tarjeta, devolver cantidad a esos lotes originales
         if (!empty($lotesDevueltos)) {
             foreach ($lotesDevueltos as $loteDevuelto) {
-                // Devolver la cantidad al lote original
+                // Devolver la cantidad al lote original en la bodega destino
                 $lote = Lote::find($loteDevuelto['id_lote']);
                 if ($lote) {
-                    $lote->cantidad += $loteDevuelto['cantidad'];
-                    $lote->save();
+                    // Incrementar en bodega destino y reactivar si estaba inactivo
+                    $lote->incrementarEnBodega($bodegaId, $loteDevuelto['cantidad']);
+
+                    // Si el lote estaba inactivo, reactivarlo
+                    if (!$lote->estado) {
+                        $lote->estado = true;
+                        $lote->save();
+                    }
 
                     // Crear detalle de devolución por cada lote
                     DetalleDevolucion::create([
@@ -447,19 +453,20 @@ class FormularioDevolucion extends Component
                 }
             }
         } else {
-            // Si no hay lotes de tarjeta, buscar lote en bodega destino (caso raro)
+            // Si no hay lotes de tarjeta, buscar el lote más antiguo del producto (FIFO)
+            // Esto puede ocurrir en devoluciones sin persona origen
             $lote = Lote::where('id_producto', $producto['id'])
-                ->where('id_bodega', $bodegaId)
                 ->where('estado', true)
                 ->orderBy('fecha_ingreso', 'asc')
                 ->first();
 
             if ($lote) {
-                $lote->cantidad += $producto['cantidad'];
-                $lote->save();
+                // Incrementar en bodega destino usando el lote existente
+                $lote->incrementarEnBodega($bodegaId, $producto['cantidad']);
                 $idLote = $lote->id;
             } else {
-                // Crear lote nuevo solo si es absolutamente necesario
+                // CASO EXCEPCIONAL: Crear lote nuevo solo si no existe ningún lote del producto
+                // Esto solo debería ocurrir si es la primera vez que se registra este producto
                 $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Devolución']);
                 $transaccion = Transaccion::create([
                     'fecha' => now(),
@@ -468,17 +475,19 @@ class FormularioDevolucion extends Component
                 ]);
 
                 $lote = Lote::create([
-                    'cantidad' => $producto['cantidad'],
+                    'cantidad_disponible' => $producto['cantidad'],
                     'cantidad_inicial' => $producto['cantidad'],
                     'fecha_ingreso' => now(),
                     'precio_ingreso' => $producto['precio'],
                     'observaciones' => 'Lote creado por devolución' . ($this->motivo ? ': ' . $this->motivo : ''),
                     'id_producto' => $producto['id'],
-                    'id_bodega' => $bodegaId,
+                    'id_bodega' => $bodegaId,  // Mantenido temporalmente para compatibilidad
                     'estado' => true,
                     'id_transaccion' => $transaccion->id,
                 ]);
 
+                // Registrar ubicación del lote en la bodega
+                $lote->incrementarEnBodega($bodegaId, $producto['cantidad']);
                 $idLote = $lote->id;
             }
 

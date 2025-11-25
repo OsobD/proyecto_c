@@ -552,19 +552,44 @@ class GestionProductos extends Component
             // Actualizar lote existente (edición inline)
             $lote = Lote::find($this->editingLoteId);
             if ($lote) {
-                $cantidadAnterior = $lote->cantidad;
-                $lote->cantidad = $this->loteCantidad;
+                $cantidadAnterior = $lote->cantidad_disponible;
+                $bodegaAnterior = $lote->id_bodega;
+
+                // Actualizar cantidad disponible
+                $lote->cantidad_disponible = $this->loteCantidad;
+
                 // Ajustar cantidad_inicial si cambió la cantidad
                 if ($cantidadAnterior != $this->loteCantidad) {
                     $diferencia = $this->loteCantidad - $cantidadAnterior;
                     $lote->cantidad_inicial = $lote->cantidad_inicial + $diferencia;
+
+                    // Actualizar también en lote_bodega si la bodega no cambió
+                    if ($bodegaAnterior == $this->loteBodegaId) {
+                        $ubicacion = $lote->obtenerUbicacion($this->loteBodegaId);
+                        $ubicacion->cantidad += $diferencia;
+                        $ubicacion->save();
+                    }
                 }
+
+                // Si cambió la bodega, mover el lote
+                if ($bodegaAnterior != $this->loteBodegaId) {
+                    // Mover toda la cantidad a la nueva bodega
+                    $ubicacionAnterior = $lote->ubicaciones()->where('id_bodega', $bodegaAnterior)->first();
+                    if ($ubicacionAnterior) {
+                        $cantidadAMover = $ubicacionAnterior->cantidad;
+                        $ubicacionAnterior->cantidad = 0;
+                        $ubicacionAnterior->save();
+
+                        $ubicacionNueva = $lote->obtenerUbicacion($this->loteBodegaId);
+                        $ubicacionNueva->cantidad += $cantidadAMover;
+                        $ubicacionNueva->save();
+                    }
+                }
+
                 $lote->precio_ingreso = $this->lotePrecioIngreso;
                 $lote->fecha_ingreso = $this->loteFechaIngreso;
-                $lote->id_bodega = $this->loteBodegaId;
+                $lote->id_bodega = $this->loteBodegaId;  // Mantenido para compatibilidad
                 $lote->observaciones = $this->loteObservaciones;
-                $lote->save();
-
                 $lote->save();
 
                 // Registrar en bitácora
@@ -580,17 +605,20 @@ class GestionProductos extends Component
                 session()->flash('message', 'Lote actualizado exitosamente.');
             }
         } else {
-            // Crear nuevo lote desde modal
+            // Crear nuevo lote desde modal (independiente de bodega)
             $lote = Lote::create([
                 'id_producto' => $this->loteProductoId,
-                'cantidad' => $this->loteCantidad,
+                'cantidad_disponible' => $this->loteCantidad,
                 'cantidad_inicial' => $this->loteCantidad,
                 'precio_ingreso' => $this->lotePrecioIngreso,
                 'fecha_ingreso' => $this->loteFechaIngreso,
-                'id_bodega' => $this->loteBodegaId,
+                'id_bodega' => $this->loteBodegaId,  // Mantenido temporalmente para compatibilidad
                 'observaciones' => $this->loteObservaciones,
                 'estado' => true,
             ]);
+
+            // Registrar ubicación del lote en la bodega especificada
+            $lote->incrementarEnBodega($this->loteBodegaId, $this->loteCantidad);
 
             // Registrar en bitácora
             Bitacora::create([

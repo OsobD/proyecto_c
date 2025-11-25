@@ -683,18 +683,21 @@ class FormularioCompra extends Component
                     'cantidad' => $cantidad,
                 ]);
 
-                // 10. Crear Lote
-                Lote::create([
-                    'cantidad' => $cantidad,
+                // 10. Crear Lote (independiente de bodega)
+                $lote = Lote::create([
+                    'cantidad_disponible' => $cantidad,
                     'cantidad_inicial' => $cantidad,
                     'fecha_ingreso' => now(),
                     'precio_ingreso' => $costoSinIva,
                     'observaciones' => $observaciones,
                     'id_producto' => $productoIdReal,
-                    'id_bodega' => $this->selectedBodega['id'],
+                    'id_bodega' => $this->selectedBodega['id'], // Mantenido temporalmente para compatibilidad
                     'estado' => true,
                     'id_transaccion' => $transaccion->id,
                 ]);
+
+                // 11. Registrar ubicación del lote en la bodega
+                $lote->incrementarEnBodega($this->selectedBodega['id'], $cantidad);
             }
 
             // Registrar Compra en bitácora
