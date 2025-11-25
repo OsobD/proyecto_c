@@ -45,6 +45,18 @@ class HistorialTraslados extends Component
     /** @var array|null Movimiento seleccionado para ver */
     public $movimientoSeleccionado = null;
 
+    /** @var bool Controla visibilidad del modal de solicitud de eliminación */
+    public $showModalEliminar = false;
+
+    /** @var int|null ID del movimiento a eliminar */
+    public $movimientoEliminarId = null;
+
+    /** @var string|null Tipo del movimiento a eliminar */
+    public $movimientoEliminarTipo = null;
+
+    /** @var string Justificación para la eliminación */
+    public $justificacionEliminacion = '';
+
     /**
      * Se ejecuta cuando cambia el término de búsqueda
      *
@@ -101,30 +113,30 @@ class HistorialTraslados extends Component
         // Cargar Requisiciones (Salidas tipo "Uso Interno") - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Requisición') {
             $salidas = Salida::with(['bodega', 'persona', 'tipo', 'usuario', 'detallesSalida.producto'])
-                ->whereHas('tipo', function($q) {
+                ->whereHas('tipo', function ($q) {
                     $q->where('nombre', 'Salida por Uso Interno');
                 })
-                ->when($this->search, function($q) {
-                    $q->where(function($query) {
+                ->when($this->search, function ($q) {
+                    $q->where(function ($query) {
                         $query->where('ubicacion', 'like', '%' . $this->search . '%')
-                            ->orWhereHas('bodega', function($q) {
+                            ->orWhereHas('bodega', function ($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             })
-                            ->orWhereHas('persona', function($q) {
+                            ->orWhereHas('persona', function ($q) {
                                 $q->whereRaw("CONCAT(nombres, ' ', apellidos) like ?", ['%' . $this->search . '%']);
                             });
                     });
                 })
-                ->when($this->fechaInicio, function($q) {
+                ->when($this->fechaInicio, function ($q) {
                     $q->where('fecha', '>=', $this->fechaInicio);
                 })
-                ->when($this->fechaFin, function($q) {
+                ->when($this->fechaFin, function ($q) {
                     $q->where('fecha', '<=', $this->fechaFin);
                 })
                 ->orderBy('fecha', 'desc')
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
-                ->map(function($salida) {
+                ->map(function ($salida) {
                     // Determinar tipo de productos
                     $detalles = $salida->detallesSalida;
                     $tieneConsumibles = false;
@@ -178,33 +190,33 @@ class HistorialTraslados extends Component
         // Cargar Traslados - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Traslado') {
             $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario', 'persona', 'detalles.producto'])
-                ->when($this->search, function($q) {
-                    $q->where(function($query) {
+                ->when($this->search, function ($q) {
+                    $q->where(function ($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
-                            ->orWhereHas('bodegaOrigen', function($q) {
+                            ->orWhereHas('bodegaOrigen', function ($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             })
-                            ->orWhereHas('bodegaDestino', function($q) {
+                            ->orWhereHas('bodegaDestino', function ($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             })
-                            ->orWhereHas('persona', function($q) {
+                            ->orWhereHas('persona', function ($q) {
                                 $q->whereRaw("CONCAT(nombres, ' ', apellidos) like ?", ['%' . $this->search . '%']);
                             });
                     });
                 })
-                ->when($this->estadoFiltro, function($q) {
+                ->when($this->estadoFiltro, function ($q) {
                     $q->where('estado', $this->estadoFiltro);
                 })
-                ->when($this->fechaInicio, function($q) {
+                ->when($this->fechaInicio, function ($q) {
                     $q->where('fecha', '>=', $this->fechaInicio);
                 })
-                ->when($this->fechaFin, function($q) {
+                ->when($this->fechaFin, function ($q) {
                     $q->where('fecha', '<=', $this->fechaFin);
                 })
                 ->orderBy('fecha', 'desc')
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
-                ->map(function($traslado) {
+                ->map(function ($traslado) {
                     // Si tiene persona asociada, es una requisición
                     $esRequisicion = $traslado->id_persona && $traslado->persona;
 
@@ -262,29 +274,29 @@ class HistorialTraslados extends Component
         // Cargar Devoluciones - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Devolución') {
             $devoluciones = Devolucion::with(['bodega', 'persona', 'usuario'])
-                ->when($this->search, function($q) {
-                    $q->where(function($query) {
+                ->when($this->search, function ($q) {
+                    $q->where(function ($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
                             ->orWhere('no_formulario', 'like', '%' . $this->search . '%')
-                            ->orWhereHas('bodega', function($q) {
+                            ->orWhereHas('bodega', function ($q) {
                                 $q->where('nombre', 'like', '%' . $this->search . '%');
                             })
-                            ->orWhereHas('persona', function($q) {
+                            ->orWhereHas('persona', function ($q) {
                                 $q->where('nombres', 'like', '%' . $this->search . '%')
-                                  ->orWhere('apellidos', 'like', '%' . $this->search . '%');
+                                    ->orWhere('apellidos', 'like', '%' . $this->search . '%');
                             });
                     });
                 })
-                ->when($this->fechaInicio, function($q) {
+                ->when($this->fechaInicio, function ($q) {
                     $q->where('fecha', '>=', $this->fechaInicio);
                 })
-                ->when($this->fechaFin, function($q) {
+                ->when($this->fechaFin, function ($q) {
                     $q->where('fecha', '<=', $this->fechaFin);
                 })
                 ->orderBy('fecha', 'desc')
                 ->limit($limit) // OPTIMIZACIÓN: Limitar registros cargados
                 ->get()
-                ->map(function($devolucion) {
+                ->map(function ($devolucion) {
                     return [
                         'id' => $devolucion->id,
                         'tipo' => 'Devolución',
@@ -311,7 +323,7 @@ class HistorialTraslados extends Component
 
         // Aplicar filtro de estado si no es traslado
         if ($this->estadoFiltro && $this->tipoFiltro !== 'Traslado') {
-            $movimientos = $movimientos->filter(function($mov) {
+            $movimientos = $movimientos->filter(function ($mov) {
                 return $mov['estado'] === $this->estadoFiltro;
             });
         }
@@ -436,7 +448,7 @@ class HistorialTraslados extends Component
                         'fecha' => $salida->fecha->format('d/m/Y'),
                         'total' => $salida->total,
                         'observaciones' => $salida->descripcion,
-                        'productos' => $salida->detallesSalida->map(function($detalle) {
+                        'productos' => $salida->detallesSalida->map(function ($detalle) {
                             return [
                                 'codigo' => $detalle->producto->id,
                                 'descripcion' => $detalle->producto->descripcion,
@@ -461,7 +473,7 @@ class HistorialTraslados extends Component
                         'fecha' => $traslado->fecha->format('d/m/Y'),
                         'total' => $traslado->total,
                         'observaciones' => $traslado->observaciones,
-                        'productos' => $traslado->detallesTraslado->map(function($detalle) {
+                        'productos' => $traslado->detallesTraslado->map(function ($detalle) {
                             return [
                                 'codigo' => $detalle->producto->id,
                                 'descripcion' => $detalle->producto->descripcion,
@@ -488,7 +500,7 @@ class HistorialTraslados extends Component
                         'fecha' => $devolucion->fecha->format('d/m/Y'),
                         'total' => $devolucion->total,
                         'observaciones' => '',
-                        'productos' => $devolucion->detalles->map(function($detalle) {
+                        'productos' => $devolucion->detalles->map(function ($detalle) {
                             $precio = $detalle->lote ? $detalle->lote->precio_ingreso : 0;
                             return [
                                 'codigo' => $detalle->producto->id,
@@ -545,7 +557,7 @@ class HistorialTraslados extends Component
 
                         $totalCombinado += $salida->total;
 
-                        $productosSalida = $salida->detallesSalida->map(function($detalle) {
+                        $productosSalida = $salida->detallesSalida->map(function ($detalle) {
                             return [
                                 'codigo' => $detalle->producto->id,
                                 'descripcion' => $detalle->producto->descripcion,
@@ -581,7 +593,7 @@ class HistorialTraslados extends Component
 
                         $totalCombinado += $traslado->total;
 
-                        $productosTraslado = $traslado->detallesTraslado->map(function($detalle) {
+                        $productosTraslado = $traslado->detallesTraslado->map(function ($detalle) {
                             return [
                                 'codigo' => $detalle->producto->id,
                                 'descripcion' => $detalle->producto->descripcion,
@@ -617,6 +629,128 @@ class HistorialTraslados extends Component
     {
         $this->showModalVer = false;
         $this->movimientoSeleccionado = null;
+    }
+
+    /**
+     * Abre el modal para solicitar eliminación
+     *
+     * @param int $id
+     * @param string $tipo
+     * @return void
+     */
+    public function abrirModalEliminar($id, $tipo)
+    {
+        $this->movimientoEliminarId = $id;
+        $this->movimientoEliminarTipo = $tipo;
+        $this->justificacionEliminacion = '';
+        $this->showModalEliminar = true;
+    }
+
+    /**
+     * Cierra el modal de eliminación
+     *
+     * @return void
+     */
+    public function closeModalEliminar()
+    {
+        $this->showModalEliminar = false;
+        $this->movimientoEliminarId = null;
+        $this->movimientoEliminarTipo = null;
+        $this->justificacionEliminacion = '';
+    }
+
+    /**
+     * Solicita la eliminación de una requisición
+     *
+     * @return void
+     */
+    public function solicitarEliminacion()
+    {
+        // Validar justificación
+        if (empty(trim($this->justificacionEliminacion))) {
+            session()->flash('error', 'Debe proporcionar una justificación para la eliminación.');
+            return;
+        }
+
+        try {
+            $usuario = auth()->user();
+
+            if (!$usuario) {
+                session()->flash('error', 'Debe iniciar sesión.');
+                return;
+            }
+
+            // Determinar el modelo y obtener los datos
+            $modelo = null;
+            $datosActuales = [];
+
+            switch ($this->movimientoEliminarTipo) {
+                case 'salida':
+                    $registro = \App\Models\Salida::find($this->movimientoEliminarId);
+                    $modelo = 'Salida';
+                    if ($registro) {
+                        $datosActuales = $registro->toArray();
+                    }
+                    break;
+
+                case 'traslado':
+                case 'requisicion':
+                    $registro = \App\Models\Traslado::find($this->movimientoEliminarId);
+                    $modelo = 'Traslado';
+                    if ($registro) {
+                        $datosActuales = $registro->toArray();
+                    }
+                    break;
+
+                default:
+                    session()->flash('error', 'Tipo de movimiento no válido.');
+                    return;
+            }
+
+            if (!$registro) {
+                session()->flash('error', 'Registro no encontrado.');
+                return;
+            }
+
+            // Verificar que no esté ya eliminado
+            if (!$registro->estaActivo()) {
+                session()->flash('error', 'Este registro ya está eliminado.');
+                return;
+            }
+
+            // Crear solicitud de cambio pendiente
+            \App\Models\CambioPendiente::create([
+                'modelo' => $modelo,
+                'modelo_id' => $this->movimientoEliminarId,
+                'accion' => 'eliminar',
+                'datos_anteriores' => $datosActuales,
+                'datos_nuevos' => array_merge($datosActuales, ['activo' => false]),
+                'usuario_solicitante_id' => $usuario->id,
+                'estado' => 'pendiente',
+                'justificacion' => $this->justificacionEliminacion,
+            ]);
+
+            // Registrar en bitácora
+            \App\Models\Bitacora::create([
+                'accion' => 'Solicitar Eliminación',
+                'modelo' => $modelo,
+                'modelo_id' => $this->movimientoEliminarId,
+                'descripcion' => "Solicitó eliminación de {$modelo} ID {$this->movimientoEliminarId}",
+                'id_usuario' => $usuario->id,
+                'created_at' => now(),
+            ]);
+
+            session()->flash('success', 'Solicitud de eliminación enviada. Pendiente de aprobación por un administrador.');
+            $this->closeModalEliminar();
+
+        } catch (\Exception $e) {
+            \Log::error('Error al solicitar eliminación', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            session()->flash('error', 'Error al solicitar eliminación: ' . $e->getMessage());
+        }
     }
 
     /**

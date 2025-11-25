@@ -148,21 +148,28 @@
                 </thead>
                 <tbody class="text-gray-600 text-sm font-light">
                     @forelse($this->trasladosFiltrados as $traslado)
-                        <tr class="border-b border-gray-200 hover:bg-gray-50 {{ !$traslado['activo'] ? 'opacity-50' : '' }}">
+                        <tr class="border-b border-gray-200 hover:bg-gray-50 {{ !$traslado['activo'] ? 'bg-red-50' : '' }}">
                             <td class="py-3 px-6 text-left">
-                                @if($traslado['tipo'] === 'Requisición')
-                                    <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                        Requisición
-                                    </span>
-                                @elseif($traslado['tipo'] === 'Traslado')
-                                    <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                        Traslado
-                                    </span>
-                                @else
-                                    <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
-                                        Devolución
-                                    </span>
-                                @endif
+                                <div class="flex items-center gap-2">
+                                    @if($traslado['tipo'] === 'Requisición')
+                                        <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                            Requisición
+                                        </span>
+                                        @if(!$traslado['activo'])
+                                            <span class="bg-red-200 text-red-800 py-1 px-2 rounded-full text-xs font-semibold">
+                                                Eliminado
+                                            </span>
+                                        @endif
+                                    @elseif($traslado['tipo'] === 'Traslado')
+                                        <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                            Traslado
+                                        </span>
+                                    @else
+                                        <span class="bg-purple-200 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                            Devolución
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-3 px-6 text-left whitespace-nowrap">
                                 @if(isset($traslado['tipo_badge']) && isset($traslado['tipo_color']))
@@ -204,6 +211,12 @@
                                             type="view"
                                             title="Ver detalle"
                                             wire:click="verDetalle({{ $traslado['id'] }}, '{{ $traslado['tipo_clase'] }}')" />
+                                        @if($traslado['tipo'] === 'Requisición' && $traslado['activo'])
+                                            <x-action-button
+                                                type="delete"
+                                                title="Solicitar eliminación"
+                                                wire:click="abrirModalEliminar({{ $traslado['id'] }}, '{{ $traslado['tipo_clase'] }}')" />
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -344,6 +357,73 @@
                     </div>
                 </div>
             @endif
+        </div>
+    </div>
+
+    {{-- Modal de Solicitud de Eliminación --}}
+    <div x-data="{
+            show: @entangle('showModalEliminar').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeModalEliminar">
+        <div class="relative p-6 border w-full max-w-md shadow-xl rounded-lg bg-white"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Solicitar Eliminación</h3>
+                <button wire:click="closeModalEliminar" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <p class="text-sm text-yellow-800">
+                        <strong>Importante:</strong> Esta solicitud será enviada a un administrador para su aprobación. 
+                        El registro permanecerá visible en el historial.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="justificacion" class="block text-sm font-medium text-gray-700 mb-2">
+                        Justificación <span class="text-red-600">*</span>
+                    </label>
+                    <textarea
+                        id="justificacion"
+                        wire:model="justificacionEliminacion"
+                        rows="4"
+                        class="block w-full px-4 py-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder="Explique el motivo de la eliminación..."></textarea>
+                    @error('justificacionEliminacion')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button
+                        type="button"
+                        wire:click="closeModalEliminar"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="solicitarEliminacion"
+                        wire:loading.attr="disabled"
+                        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="solicitarEliminacion">Solicitar Eliminación</span>
+                        <span wire:loading wire:target="solicitarEliminacion">Enviando...</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

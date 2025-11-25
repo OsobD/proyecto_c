@@ -21,6 +21,7 @@ class Salida extends Model
         'id_bodega',
         'id_tipo',
         'id_persona',
+        'activo',
     ];
 
     protected $casts = [
@@ -76,5 +77,22 @@ class Salida extends Model
     public function transacciones()
     {
         return $this->hasMany(Transaccion::class, 'id_salida');
+    }
+
+    // Scopes para soft delete
+    public function scopeActivo($query)
+    {
+        return $query->where('activo', true);
+    }
+
+    public function scopeInactivo($query)
+    {
+        return $query->where('activo', false);
+    }
+
+    // Helper methods
+    public function estaActivo()
+    {
+        return $this->activo === true || $this->activo === 1;
     }
 }

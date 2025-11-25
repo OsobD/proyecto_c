@@ -93,4 +93,21 @@ class Traslado extends Model
     {
         return $this->hasMany(Transaccion::class, 'id_traslado');
     }
+
+    // Scopes para soft delete
+    public function scopeActivo($query)
+    {
+        return $query->where('activo', true);
+    }
+
+    public function scopeInactivo($query)
+    {
+        return $query->where('activo', false);
+    }
+
+    // Helper methods
+    public function estaActivo()
+    {
+        return $this->activo === true || $this->activo === 1;
+    }
 }
