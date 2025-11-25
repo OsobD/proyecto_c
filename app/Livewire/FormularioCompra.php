@@ -13,6 +13,7 @@ use App\Models\Proveedor;
 use App\Models\RegimenTributario;
 use App\Models\Transaccion;
 use App\Models\TipoTransaccion;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -371,6 +372,15 @@ class FormularioCompra extends Component
 
     public function eliminarProducto($productoId)
     {
+        // Si el ID es negativo, es un producto temporal nuevo
+        if ($productoId < 0) {
+            $this->nuevosProductos = array_values(
+                array_filter($this->nuevosProductos, function ($item) use ($productoId) {
+                    return $item['id'] !== $productoId;
+                })
+            );
+        }
+
         // Filtrar y reindexar en una sola operación para forzar reactividad
         $this->productosSeleccionados = array_values(
             array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
@@ -424,26 +434,59 @@ class FormularioCompra extends Component
     }
 
     // Asegurar que los valores sean numéricos cuando se actualizan
-    public function updated($propertyName)
+    // Validaciones en tiempo real
+    public function updatedCorrelativo()
     {
-        if (str_starts_with($propertyName, 'productosSeleccionados.')) {
-            $parts = explode('.', $propertyName);
-            if (count($parts) === 3) {
-                $index = $parts[1];
-                $field = $parts[2];
+        $this->validateOnly('correlativo', [
+            'correlativo' => 'required|min:3|unique:compra,correlativo'
+        ], [
+            'correlativo.unique' => 'Este correlativo ya existe en el sistema.',
+            'correlativo.required' => 'El correlativo es obligatorio.',
+            'correlativo.min' => 'El correlativo debe tener al menos 3 caracteres.'
+        ]);
+    }
 
-                if ($field === 'cantidad') {
-                    $valor = $this->productosSeleccionados[$index]['cantidad'];
-                    // Si está vacío o es null, establecer 1 como mínimo
-                    $this->productosSeleccionados[$index]['cantidad'] = empty($valor) ? 1 : max(1, (int) $valor);
-                } elseif ($field === 'costo') {
-                    $valor = $this->productosSeleccionados[$index]['costo'];
-                    // Si está vacío o es null, establecer 0
-                    $this->productosSeleccionados[$index]['costo'] = ($valor === '' || $valor === null) ? 0 : max(0, (float) $valor);
-                }
-            }
+    public function updatedNumeroFactura()
+    {
+        $this->validarFacturaUnica();
+    }
+
+    public function updatedNumeroSerie()
+    {
+        $this->validarFacturaUnica();
+    }
+
+    public function updatedSelectedProveedor()
+    {
+        // Si se selecciona un proveedor, validar si la factura ya existe
+        if ($this->selectedProveedor) {
+            $this->validarFacturaUnica();
         }
     }
+
+    protected function validarFacturaUnica()
+    {
+        // Solo validar si tenemos factura y proveedor
+        if (!empty($this->numeroFactura) && !empty($this->selectedProveedor)) {
+             $this->validate([
+                'numeroFactura' => [
+                    Rule::unique('compra', 'no_factura')->where(function ($query) {
+                        return $query->where('id_proveedor', $this->selectedProveedor['id'])
+                                     ->where('no_serie', $this->numeroSerie);
+                    }),
+                ],
+            ], [
+                'numeroFactura.unique' => 'Esta factura ya ha sido registrada.'
+            ]);
+        }
+    }
+
+    // Asegurar que los valores sean numéricos cuando se actualizan
+    // public function updated($propertyName)
+    // {
+    //     // Lógica eliminada para evitar conflictos con la escritura rápida del usuario
+    //     // La validación se encarga de asegurar los tipos de datos
+    // }
 
     /**
      * Abre el modal de confirmación pre-guardado
@@ -453,17 +496,26 @@ class FormularioCompra extends Component
         $this->validate([
             'selectedBodega' => 'required',
             'selectedProveedor' => 'required',
-            'numeroFactura' => 'required|min:3',
+            'numeroFactura' => [
+                'required',
+                'min:3',
+                Rule::unique('compra', 'no_factura')->where(function ($query) {
+                    return $query->where('id_proveedor', $this->selectedProveedor['id'] ?? null)
+                                 ->where('no_serie', $this->numeroSerie);
+                }),
+            ],
             'numeroSerie' => 'nullable|min:1',
-            'correlativo' => 'required|min:3',
+            'correlativo' => 'required|min:3|unique:compra,correlativo',
             'precioFactura' => 'nullable|numeric|min:0',
             'productosSeleccionados' => 'required|array|min:1',
         ], [
             'selectedBodega.required' => 'Debe seleccionar una bodega destino.',
             'selectedProveedor.required' => 'Debe seleccionar un proveedor.',
             'numeroFactura.required' => 'El número de factura es obligatorio.',
+            'numeroFactura.unique' => 'Esta factura ya ha sido registrada para este proveedor.',
             'numeroSerie.min' => 'El número de serie debe tener al menos 1 carácter.',
             'correlativo.required' => 'El correlativo es obligatorio.',
+            'correlativo.unique' => 'Este correlativo ya existe en el sistema.',
             'precioFactura.numeric' => 'El precio de factura debe ser un número válido.',
             'precioFactura.min' => 'El precio de factura debe ser mayor o igual a 0.',
             'productosSeleccionados.required' => 'Debe agregar al menos un producto a la compra.',

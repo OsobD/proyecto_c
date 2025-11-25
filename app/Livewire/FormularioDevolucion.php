@@ -239,7 +239,7 @@ class FormularioDevolucion extends Component
                 ->join('lote as l', 'tp.id_lote', '=', 'l.id')
                 ->whereIn('tp.id_tarjeta', $this->selectedOrigen['tarjetas'])
                 ->where('l.estado', true)
-                ->where('l.cantidad', '>', 0)
+                ->where('l.cantidad_disponible', '>', 0)
                 ->when(!empty($search), function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('p.descripcion', 'LIKE', "%{$search}%")
@@ -262,7 +262,7 @@ class FormularioDevolucion extends Component
             // Mostrar productos con lotes activos
             $productosFiltrados = Producto::whereHas('lotes', function ($query) {
                 $query->where('estado', true)
-                    ->where('cantidad', '>', 0);
+                    ->where('cantidad_disponible', '>', 0);
             })
                 ->when(!empty($search), function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
@@ -277,7 +277,7 @@ class FormularioDevolucion extends Component
                     // Calcular precio promedio de lotes activos
                     $precioPromedio = Lote::where('id_producto', $producto->id)
                         ->where('estado', true)
-                        ->where('cantidad', '>', 0)
+                        ->where('cantidad_disponible', '>', 0)
                         ->avg('precio_ingreso');
 
                     return [

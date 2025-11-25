@@ -311,9 +311,14 @@ class FormularioTraslado extends Component
         $query = Producto::where('activo', true)
             ->with([
                 'lotes' => function ($q) use ($bodegaId) {
-                    $q->where('id_bodega', $bodegaId)
-                        ->where('cantidad', '>', 0)
-                        ->orderBy('fecha_ingreso', 'asc'); // FIFO
+                    $q->whereHas('ubicaciones', function ($q2) use ($bodegaId) {
+                        $q2->where('id_bodega', $bodegaId)
+                           ->where('cantidad', '>', 0);
+                    })
+                    ->with(['ubicaciones' => function ($q3) use ($bodegaId) {
+                        $q3->where('id_bodega', $bodegaId);
+                    }])
+                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
                 }
             ]);
 
@@ -329,7 +334,9 @@ class FormularioTraslado extends Component
                 return $producto->lotes->count() > 0; // Solo productos con stock
             })
             ->map(function ($producto) {
-                $cantidadDisponible = $producto->lotes->sum('cantidad');
+                $cantidadDisponible = $producto->lotes->sum(function ($lote) {
+                    return $lote->ubicaciones->first()?->cantidad ?? 0;
+                });
                 $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
 
                 return [
@@ -533,17 +540,18 @@ class FormularioTraslado extends Component
                 }
 
                 // Obtener lotes ordenados por FIFO
-                $lotes = Lote::where('id_producto', $producto->id)
-                    ->where('id_bodega', $this->selectedOrigen['bodega_id'])
-                    ->where('cantidad', '>', 0)
-                    ->orderBy('fecha_ingreso', 'asc')
-                    ->get();
+                // Obtener lotes ordenados por FIFO
+                $lotes = Lote::obtenerLotesFIFO(
+                    $producto->id,
+                    $this->selectedOrigen['bodega_id']
+                );
 
                 foreach ($lotes as $lote) {
                     if ($cantidadRestante <= 0)
                         break;
 
-                    $cantidadAUsar = min($cantidadRestante, $lote->cantidad);
+                    $cantidadEnBodega = $lote->ubicaciones->first()?->cantidad ?? 0;
+                    $cantidadAUsar = min($cantidadRestante, $cantidadEnBodega);
 
                     // Crear detalle de traslado
                     DetalleTraslado::create([

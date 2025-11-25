@@ -193,15 +193,21 @@ class FormularioRequisicion extends Component
         // Obtener productos con lotes disponibles en la bodega
         $query = Producto::where('activo', true)
             ->whereHas('lotes', function ($q) use ($bodegaId) {
-                $q->where('id_bodega', $bodegaId)
-                    ->where('cantidad', '>', 0)
-                    ->where('estado', true);
+                $q->whereHas('ubicaciones', function ($q2) use ($bodegaId) {
+                    $q2->where('id_bodega', $bodegaId)
+                       ->where('cantidad', '>', 0);
+                })->where('estado', true);
             })
             ->with(['lotes' => function ($q) use ($bodegaId) {
-                $q->where('id_bodega', $bodegaId)
-                    ->where('cantidad', '>', 0)
-                    ->where('estado', true)
-                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
+                $q->whereHas('ubicaciones', function ($q2) use ($bodegaId) {
+                    $q2->where('id_bodega', $bodegaId)
+                       ->where('cantidad', '>', 0);
+                })
+                ->with(['ubicaciones' => function ($q3) use ($bodegaId) {
+                    $q3->where('id_bodega', $bodegaId);
+                }])
+                ->where('estado', true)
+                ->orderBy('fecha_ingreso', 'asc'); // FIFO
             }, 'categoria']);
 
         // Filtrar por búsqueda si existe
@@ -214,7 +220,9 @@ class FormularioRequisicion extends Component
         }
 
         return $query->get()->map(function ($producto) {
-            $cantidadTotal = $producto->lotes->sum('cantidad');
+            $cantidadTotal = $producto->lotes->sum(function ($lote) {
+                return $lote->ubicaciones->first()?->cantidad ?? 0;
+            });
             $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
 
             return [
@@ -679,9 +687,11 @@ class FormularioRequisicion extends Component
             if ($cantidadRestante <= 0) break;
 
             $loteModel = Lote::find($lote['id']);
-            if (!$loteModel || $loteModel->cantidad <= 0) continue;
+            $cantidadEnBodega = $loteModel ? $loteModel->cantidadEnBodega($idBodega) : 0;
+            
+            if (!$loteModel || $cantidadEnBodega <= 0) continue;
 
-            $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+            $cantidadDelLote = min($cantidadRestante, $cantidadEnBodega);
 
             // Crear detalle de traslado
             DetalleTraslado::create([
@@ -743,9 +753,11 @@ class FormularioRequisicion extends Component
             if ($cantidadRestante <= 0) break;
 
             $loteModel = Lote::find($lote['id']);
-            if (!$loteModel || $loteModel->cantidad <= 0) continue;
+            $cantidadEnBodega = $loteModel ? $loteModel->cantidadEnBodega($idBodega) : 0;
 
-            $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+            if (!$loteModel || $cantidadEnBodega <= 0) continue;
+
+            $cantidadDelLote = min($cantidadRestante, $cantidadEnBodega);
 
             // Crear detalle de salida
             DetalleSalida::create([
