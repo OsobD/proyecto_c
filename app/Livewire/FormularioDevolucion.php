@@ -434,8 +434,8 @@ class FormularioDevolucion extends Component
                 // Devolver la cantidad al lote original en la bodega destino
                 $lote = Lote::find($loteDevuelto['id_lote']);
                 if ($lote) {
-                    // Incrementar en bodega destino y reactivar si estaba inactivo
-                    $lote->incrementarEnBodega($bodegaId, $loteDevuelto['cantidad']);
+                    // Incrementar en bodega destino Y cantidad_disponible (es stock que regresa)
+                    $lote->incrementarEnBodega($bodegaId, $loteDevuelto['cantidad'], true);
 
                     // Si el lote estaba inactivo, reactivarlo
                     if (!$lote->estado) {
@@ -461,8 +461,8 @@ class FormularioDevolucion extends Component
                 ->first();
 
             if ($lote) {
-                // Incrementar en bodega destino usando el lote existente
-                $lote->incrementarEnBodega($bodegaId, $producto['cantidad']);
+                // Incrementar en bodega destino Y cantidad_disponible (es devolución, agrega stock)
+                $lote->incrementarEnBodega($bodegaId, $producto['cantidad'], true);
                 $idLote = $lote->id;
             } else {
                 // CASO EXCEPCIONAL: Crear lote nuevo solo si no existe ningún lote del producto
@@ -486,8 +486,8 @@ class FormularioDevolucion extends Component
                     'id_transaccion' => $transaccion->id,
                 ]);
 
-                // Registrar ubicación del lote en la bodega
-                $lote->incrementarEnBodega($bodegaId, $producto['cantidad']);
+                // Registrar ubicación del lote en la bodega (NO incrementar, ya está en cantidad_disponible)
+                $lote->incrementarEnBodega($bodegaId, $producto['cantidad'], false);
                 $idLote = $lote->id;
             }
 

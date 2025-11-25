@@ -113,15 +113,22 @@ class Lote extends Model
      *
      * @param int $idBodega
      * @param int $cantidad
+     * @param bool $incrementarDisponible Si true, también incrementa cantidad_disponible (ej: devoluciones)
+     *                                      Si false, solo registra ubicación (ej: creación inicial)
      * @return bool
      */
-    public function incrementarEnBodega($idBodega, $cantidad)
+    public function incrementarEnBodega($idBodega, $cantidad, $incrementarDisponible = false)
     {
         $ubicacion = $this->obtenerUbicacion($idBodega);
         $ubicacion->incrementarCantidad($cantidad);
 
-        // Actualizar cantidad_disponible del lote
-        return $this->increment('cantidad_disponible', $cantidad);
+        // Solo incrementar cantidad_disponible si se solicita explícitamente
+        // (por ejemplo, en devoluciones donde se está agregando stock nuevo)
+        if ($incrementarDisponible) {
+            return $this->increment('cantidad_disponible', $cantidad);
+        }
+
+        return true;
     }
 
     /**
