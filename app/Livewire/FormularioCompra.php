@@ -424,26 +424,12 @@ class FormularioCompra extends Component
     }
 
     // Asegurar que los valores sean numéricos cuando se actualizan
-    public function updated($propertyName)
-    {
-        if (str_starts_with($propertyName, 'productosSeleccionados.')) {
-            $parts = explode('.', $propertyName);
-            if (count($parts) === 3) {
-                $index = $parts[1];
-                $field = $parts[2];
-
-                if ($field === 'cantidad') {
-                    $valor = $this->productosSeleccionados[$index]['cantidad'];
-                    // Si está vacío o es null, establecer 1 como mínimo
-                    $this->productosSeleccionados[$index]['cantidad'] = empty($valor) ? 1 : max(1, (int) $valor);
-                } elseif ($field === 'costo') {
-                    $valor = $this->productosSeleccionados[$index]['costo'];
-                    // Si está vacío o es null, establecer 0
-                    $this->productosSeleccionados[$index]['costo'] = ($valor === '' || $valor === null) ? 0 : max(0, (float) $valor);
-                }
-            }
-        }
-    }
+    // Asegurar que los valores sean numéricos cuando se actualizan
+    // public function updated($propertyName)
+    // {
+    //     // Lógica eliminada para evitar conflictos con la escritura rápida del usuario
+    //     // La validación se encarga de asegurar los tipos de datos
+    // }
 
     /**
      * Abre el modal de confirmación pre-guardado
