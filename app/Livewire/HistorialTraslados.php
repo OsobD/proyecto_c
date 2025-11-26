@@ -461,6 +461,34 @@ class HistorialTraslados extends Component
                     ];
                     break;
 
+                case 'requisicion':
+                    // Requisiciones de productos consumibles guardadas como Traslado
+                    $traslado = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona', 'detallesTraslado.producto', 'detallesTraslado.lote'])
+                        ->findOrFail($id);
+
+                    $this->movimientoSeleccionado = [
+                        'tipo' => 'Requisición',
+                        'correlativo' => $traslado->correlativo ?? 'REQ-' . $traslado->id,
+                        'origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
+                        'destino' => $traslado->persona ?
+                            trim(($traslado->persona->nombres ?? '') . ' ' . ($traslado->persona->apellidos ?? '')) :
+                            ($traslado->bodegaDestino->nombre ?? 'N/A'),
+                        'fecha' => $traslado->fecha->format('d/m/Y'),
+                        'total' => $traslado->total,
+                        'observaciones' => $traslado->observaciones,
+                        'productos' => $traslado->detallesTraslado->map(function ($detalle) {
+                            return [
+                                'codigo' => $detalle->producto->id,
+                                'descripcion' => $detalle->producto->descripcion,
+                                'cantidad' => $detalle->cantidad,
+                                'precio' => $detalle->lote->precio_ingreso ?? 0,
+                                'subtotal' => $detalle->cantidad * ($detalle->lote->precio_ingreso ?? 0),
+                                'es_consumible' => $detalle->producto->es_consumible ?? false,
+                            ];
+                        })->toArray(),
+                    ];
+                    break;
+
                 case 'traslado':
                     $traslado = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'detallesTraslado.producto', 'detallesTraslado.lote'])
                         ->findOrFail($id);
