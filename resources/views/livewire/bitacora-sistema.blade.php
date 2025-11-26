@@ -13,20 +13,20 @@
         {{-- Filters --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
-                <label for="search_usuario" class="block text-sm font-medium text-gray-700">Buscar por Usuario</label>
+                <label for="search_usuario" class="block text-sm font-medium text-gray-700 mb-2">Buscar por Usuario</label>
                 <input type="text" wire:model.live.debounce.300ms="searchUsuario" id="search_usuario"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                     placeholder="Nombre o email...">
             </div>
             <div>
-                <label for="fecha_inicio" class="block text-sm font-medium text-gray-700">Desde</label>
+                <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">Desde</label>
                 <input type="date" wire:model.live="fechaInicio" id="fecha_inicio"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
             </div>
             <div>
-                <label for="fecha_fin" class="block text-sm font-medium text-gray-700">Hasta</label>
+                <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">Hasta</label>
                 <input type="date" wire:model.live="fechaFin" id="fecha_fin"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base">
             </div>
         </div>
 
@@ -70,12 +70,15 @@
                                 </div>
                             </td>
                             <td class="py-3 px-6 text-left">
+                                @php
+                                    $accionLower = strtolower($bitacora->accion);
+                                @endphp
                                 <span class="py-1 px-3 rounded-full text-xs font-bold
-                                            @if ($bitacora->accion == 'Crear') bg-green-100 text-green-700
-                                            @elseif($bitacora->accion == 'Actualizar') bg-blue-100 text-blue-700
-                                            @elseif($bitacora->accion == 'Eliminar' || $bitacora->accion == 'Desactivar') bg-red-100 text-red-700
+                                            @if ($accionLower == 'crear') bg-green-100 text-green-700
+                                            @elseif($accionLower == 'actualizar') bg-blue-100 text-blue-700
+                                            @elseif($accionLower == 'eliminar' || $accionLower == 'desactivar') bg-red-100 text-red-700
                                             @else bg-gray-100 text-gray-700 @endif">
-                                    {{ $bitacora->accion }}
+                                    {{ ucfirst($accionLower) }}
                                 </span>
                             </td>
                             <td class="py-3 px-6 text-left">
