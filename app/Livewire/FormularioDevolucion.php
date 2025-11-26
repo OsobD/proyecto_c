@@ -249,7 +249,7 @@ class FormularioDevolucion extends Component
                             ->orWhere('p.id', 'LIKE', "%{$search}%");
                     });
                 })
-                ->select('p.id', 'p.descripcion', 'p.es_consumible', DB::raw('AVG(l.precio_ingreso) as precio'))
+                ->select('p.id', 'p.descripcion', 'p.es_consumible', DB::raw('AVG(l.precio_ingreso) as precio'), DB::raw('COUNT(*) as cantidad_disponible'))
                 ->groupBy('p.id', 'p.descripcion', 'p.es_consumible')
                 ->limit(20)
                 ->get()
@@ -258,7 +258,8 @@ class FormularioDevolucion extends Component
                         'id' => $producto->id,
                         'descripcion' => $producto->descripcion,
                         'precio' => $producto->precio ?? 0,
-                        'es_consumible' => $producto->es_consumible
+                        'es_consumible' => $producto->es_consumible,
+                        'cantidad_disponible' => $producto->cantidad_disponible
                     ];
                 })
                 ->toArray();
@@ -309,7 +310,9 @@ class FormularioDevolucion extends Component
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
                 'precio' => $producto['precio'] ?? 0,
-                'cantidad' => 1
+                'cantidad' => 1,
+                'cantidad_disponible' => $producto['cantidad_disponible'] ?? 0,
+                'es_consumible' => $producto['es_consumible'] ?? false
             ];
         }
         $this->searchProducto = '';
@@ -328,7 +331,13 @@ class FormularioDevolucion extends Component
     {
         foreach ($this->productosSeleccionados as &$producto) {
             if ($producto['id'] == $productoId) { // Use == for loose comparison
-                $producto['cantidad'] = max(1, (int) $cantidad);
+                $cantidadMaxima = $producto['cantidad_disponible'] ?? PHP_INT_MAX;
+                $producto['cantidad'] = max(1, min((int) $cantidad, $cantidadMaxima));
+
+                // Mostrar mensaje si se excedió el límite
+                if ((int) $cantidad > $cantidadMaxima) {
+                    session()->flash('error', "La cantidad máxima disponible para devolver de '{$producto['descripcion']}' es {$cantidadMaxima}.");
+                }
                 break;
             }
         }

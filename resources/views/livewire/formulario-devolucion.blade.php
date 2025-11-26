@@ -225,12 +225,20 @@
                                         Q{{ number_format($producto['precio'], 2) }}
                                     </td>
                                     <td class="py-3 px-6 text-center">
-                                        <input
-                                            type="number"
-                                            wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
-                                            wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
-                                            min="1"
-                                            class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                        <div class="flex flex-col items-center">
+                                            <input
+                                                type="number"
+                                                wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
+                                                wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
+                                                min="1"
+                                                max="{{ $producto['cantidad_disponible'] ?? 999 }}"
+                                                class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                            @if(isset($producto['cantidad_disponible']))
+                                                <span class="text-xs text-gray-500 mt-1">
+                                                    Disponibles: {{ $producto['cantidad_disponible'] }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="py-3 px-6 text-right font-semibold">
                                         Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
