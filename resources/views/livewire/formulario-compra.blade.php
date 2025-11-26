@@ -497,8 +497,7 @@
          wire:click.self="closeModalProducto"
          wire:ignore.self>
         <div class="relative p-6 border w-full max-w-lg shadow-lg rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-bold text-gray-900">Crear Nuevo Producto</h3>
                     <button wire:click="closeModalProducto" class="text-gray-400 hover:text-gray-600">
@@ -548,11 +547,9 @@
                         </label>
                         <div class="relative">
                             @if($selectedCategoria)
-                                <div class="flex items-center justify-between w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm @error('categoriaId') border-red-500 @enderror">
+                                <div wire:click.prevent="clearCategoria" class="flex items-center justify-between w-full px-4 py-2 border-2 border-gray-300 rounded-md shadow-sm cursor-pointer hover:border-indigo-400 transition-colors @error('categoriaId') border-red-500 @enderror">
                                     <span>{{ $selectedCategoria['nombre'] }}</span>
-                                    <button type="button" wire:click.prevent="clearCategoria" class="text-gray-400 hover:text-gray-600">
-                                        ×
-                                    </button>
+                                    <span class="text-gray-400 text-xl">⟲</span>
                                 </div>
                             @else
                                 <div class="relative" x-data="{ open: @entangle('showCategoriaDropdown').live }" @click.outside="open = false">

@@ -311,9 +311,14 @@ class FormularioTraslado extends Component
         $query = Producto::where('activo', true)
             ->with([
                 'lotes' => function ($q) use ($bodegaId) {
-                    $q->where('id_bodega', $bodegaId)
-                        ->where('cantidad', '>', 0)
-                        ->orderBy('fecha_ingreso', 'asc'); // FIFO
+                    $q->whereHas('ubicaciones', function ($q2) use ($bodegaId) {
+                        $q2->where('id_bodega', $bodegaId)
+                           ->where('cantidad', '>', 0);
+                    })
+                    ->with(['ubicaciones' => function ($q3) use ($bodegaId) {
+                        $q3->where('id_bodega', $bodegaId);
+                    }])
+                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
                 }
             ]);
 
@@ -329,7 +334,9 @@ class FormularioTraslado extends Component
                 return $producto->lotes->count() > 0; // Solo productos con stock
             })
             ->map(function ($producto) {
-                $cantidadDisponible = $producto->lotes->sum('cantidad');
+                $cantidadDisponible = $producto->lotes->sum(function ($lote) {
+                    return $lote->ubicaciones->first()?->cantidad ?? 0;
+                });
                 $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
 
                 return [
@@ -533,17 +540,18 @@ class FormularioTraslado extends Component
                 }
 
                 // Obtener lotes ordenados por FIFO
-                $lotes = Lote::where('id_producto', $producto->id)
-                    ->where('id_bodega', $this->selectedOrigen['bodega_id'])
-                    ->where('cantidad', '>', 0)
-                    ->orderBy('fecha_ingreso', 'asc')
-                    ->get();
+                // Obtener lotes ordenados por FIFO
+                $lotes = Lote::obtenerLotesFIFO(
+                    $producto->id,
+                    $this->selectedOrigen['bodega_id']
+                );
 
                 foreach ($lotes as $lote) {
                     if ($cantidadRestante <= 0)
                         break;
 
-                    $cantidadAUsar = min($cantidadRestante, $lote->cantidad);
+                    $cantidadEnBodega = $lote->ubicaciones->first()?->cantidad ?? 0;
+                    $cantidadAUsar = min($cantidadRestante, $cantidadEnBodega);
 
                     // Crear detalle de traslado
                     DetalleTraslado::create([
@@ -554,9 +562,13 @@ class FormularioTraslado extends Component
                         'precio_traslado' => $lote->precio_ingreso,
                     ]);
 
-                    // Disminuir cantidad en lote de bodega origen
-                    $lote->cantidad -= $cantidadAUsar;
-                    $lote->save();
+                    // NUEVO COMPORTAMIENTO: Mover el lote entre bodegas sin crear uno nuevo
+                    // El mismo lote mantiene su identidad, solo cambia su ubicación
+                    $lote->moverEntreBodegas(
+                        $this->selectedOrigen['bodega_id'],
+                        $this->selectedDestino['bodega_id'],
+                        $cantidadAUsar
+                    );
 
                     // Crear transacción de salida (bodega origen)
                     Transaccion::create([
@@ -569,34 +581,14 @@ class FormularioTraslado extends Component
                         'id_traslado' => $traslado->id,
                     ]);
 
-                    // Crear o actualizar lote en bodega destino
-                    $loteDestino = Lote::where('id_producto', $producto->id)
-                        ->where('id_bodega', $this->selectedDestino['bodega_id'])
-                        ->where('precio_ingreso', $lote->precio_ingreso)
-                        ->where('fecha_ingreso', $lote->fecha_ingreso)
-                        ->first();
-
-                    if ($loteDestino) {
-                        $loteDestino->cantidad += $cantidadAUsar;
-                        $loteDestino->save();
-                    } else {
-                        $loteDestino = Lote::create([
-                            'cantidad' => $cantidadAUsar,
-                            'precio_ingreso' => $lote->precio_ingreso,
-                            'fecha_ingreso' => $lote->fecha_ingreso,
-                            'fecha_vencimiento' => $lote->fecha_vencimiento,
-                            'id_producto' => $producto->id,
-                            'id_bodega' => $this->selectedDestino['bodega_id'],
-                        ]);
-                    }
-
                     // Crear transacción de entrada (bodega destino)
+                    // Nota: Usamos el MISMO lote, no se crea uno nuevo
                     Transaccion::create([
                         'fecha' => now(),
                         'tipo' => 'Entrada',
                         'descripcion' => "Traslado desde {$this->selectedOrigen['nombre']} - {$producto->descripcion}",
                         'cantidad' => $cantidadAUsar,
-                        'id_lote' => $loteDestino->id,
+                        'id_lote' => $lote->id,  // Mismo lote (no se creó uno nuevo)
                         'id_tipo_transaccion' => $tipoTraslado?->id,
                         'id_traslado' => $traslado->id,
                     ]);
@@ -609,7 +601,7 @@ class FormularioTraslado extends Component
                             'precio_asignacion' => $lote->precio_ingreso * $cantidadAUsar,
                             'id_tarjeta' => $tarjetaResponsabilidad->id,
                             'id_producto' => $producto->id,
-                            'id_lote' => $loteDestino->id,
+                            'id_lote' => $lote->id,  // Usar el mismo lote, no uno nuevo
                         ]);
 
                         // Actualizar el total de la tarjeta

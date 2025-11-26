@@ -120,16 +120,16 @@
                     @forelse($lotes as $lote)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-gray-900">
-                                {{ $lote->producto->id }}
+                                {{ $lote->producto_id }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                {{ $lote->producto->descripcion }}
+                                {{ $lote->producto_descripcion }}
                                 @if($lote->observaciones)
                                     <p class="text-xs text-gray-500 mt-1 truncate max-w-xs">{{ $lote->observaciones }}</p>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $lote->producto->categoria ? $lote->producto->categoria->nombre : '-' }}
+                                {{ $lote->categoria_nombre ?? '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">

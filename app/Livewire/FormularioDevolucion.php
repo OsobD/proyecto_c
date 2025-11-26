@@ -234,56 +234,64 @@ class FormularioDevolucion extends Component
 
         if (isset($this->selectedOrigen['tarjetas']) && !empty($this->selectedOrigen['tarjetas'])) {
             // Filtrar por productos en las tarjetas de la persona
+            // IMPORTANTE: Solo productos NO consumibles están en tarjetas
             $productosFiltrados = DB::table('tarjeta_producto as tp')
                 ->join('producto as p', 'tp.id_producto', '=', 'p.id')
                 ->join('lote as l', 'tp.id_lote', '=', 'l.id')
                 ->whereIn('tp.id_tarjeta', $this->selectedOrigen['tarjetas'])
                 ->where('l.estado', true)
-                ->where('l.cantidad', '>', 0)
+                ->where('l.cantidad_disponible', '>', 0)
+                // Solo productos NO consumibles (validación adicional)
+                ->where('p.es_consumible', false)
                 ->when(!empty($search), function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('p.descripcion', 'LIKE', "%{$search}%")
                             ->orWhere('p.id', 'LIKE', "%{$search}%");
                     });
                 })
-                ->select('p.id', 'p.descripcion', DB::raw('AVG(l.precio_ingreso) as precio'))
-                ->groupBy('p.id', 'p.descripcion')
+                ->select('p.id', 'p.descripcion', 'p.es_consumible', DB::raw('AVG(l.precio_ingreso) as precio'), DB::raw('COUNT(*) as cantidad_disponible'))
+                ->groupBy('p.id', 'p.descripcion', 'p.es_consumible')
                 ->limit(20)
                 ->get()
                 ->map(function ($producto) {
                     return [
                         'id' => $producto->id,
                         'descripcion' => $producto->descripcion,
-                        'precio' => $producto->precio ?? 0
+                        'precio' => $producto->precio ?? 0,
+                        'es_consumible' => $producto->es_consumible,
+                        'cantidad_disponible' => $producto->cantidad_disponible
                     ];
                 })
                 ->toArray();
         } else {
             // Mostrar productos con lotes activos
+            // Solo productos NO consumibles pueden devolverse
             $productosFiltrados = Producto::whereHas('lotes', function ($query) {
                 $query->where('estado', true)
-                    ->where('cantidad', '>', 0);
+                    ->where('cantidad_disponible', '>', 0);
             })
+                ->where('es_consumible', false)  // Solo NO consumibles
                 ->when(!empty($search), function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('descripcion', 'LIKE', "%{$search}%")
                             ->orWhere('id', 'LIKE', "%{$search}%");
                     });
                 })
-                ->select('id', 'descripcion')
+                ->select('id', 'descripcion', 'es_consumible')
                 ->limit(20)
                 ->get()
                 ->map(function ($producto) {
                     // Calcular precio promedio de lotes activos
                     $precioPromedio = Lote::where('id_producto', $producto->id)
                         ->where('estado', true)
-                        ->where('cantidad', '>', 0)
+                        ->where('cantidad_disponible', '>', 0)
                         ->avg('precio_ingreso');
 
                     return [
                         'id' => $producto->id,
                         'descripcion' => $producto->descripcion,
-                        'precio' => $precioPromedio ?? 0
+                        'precio' => $precioPromedio ?? 0,
+                        'es_consumible' => $producto->es_consumible
                     ];
                 })
                 ->toArray();
@@ -302,7 +310,9 @@ class FormularioDevolucion extends Component
                 'id' => $producto['id'],
                 'descripcion' => $producto['descripcion'],
                 'precio' => $producto['precio'] ?? 0,
-                'cantidad' => 1
+                'cantidad' => 1,
+                'cantidad_disponible' => $producto['cantidad_disponible'] ?? 0,
+                'es_consumible' => $producto['es_consumible'] ?? false
             ];
         }
         $this->searchProducto = '';
@@ -321,7 +331,13 @@ class FormularioDevolucion extends Component
     {
         foreach ($this->productosSeleccionados as &$producto) {
             if ($producto['id'] == $productoId) { // Use == for loose comparison
-                $producto['cantidad'] = max(1, (int) $cantidad);
+                $cantidadMaxima = $producto['cantidad_disponible'] ?? PHP_INT_MAX;
+                $producto['cantidad'] = max(1, min((int) $cantidad, $cantidadMaxima));
+
+                // Mostrar mensaje si se excedió el límite
+                if ((int) $cantidad > $cantidadMaxima) {
+                    session()->flash('error', "La cantidad máxima disponible para devolver de '{$producto['descripcion']}' es {$cantidadMaxima}.");
+                }
                 break;
             }
         }
@@ -431,11 +447,17 @@ class FormularioDevolucion extends Component
         // Si se obtuvieron lotes de la tarjeta, devolver cantidad a esos lotes originales
         if (!empty($lotesDevueltos)) {
             foreach ($lotesDevueltos as $loteDevuelto) {
-                // Devolver la cantidad al lote original
+                // Devolver la cantidad al lote original en la bodega destino
                 $lote = Lote::find($loteDevuelto['id_lote']);
                 if ($lote) {
-                    $lote->cantidad += $loteDevuelto['cantidad'];
-                    $lote->save();
+                    // Incrementar en bodega destino Y cantidad_disponible (es stock que regresa)
+                    $lote->incrementarEnBodega($bodegaId, $loteDevuelto['cantidad'], true);
+
+                    // Si el lote estaba inactivo, reactivarlo
+                    if (!$lote->estado) {
+                        $lote->estado = true;
+                        $lote->save();
+                    }
 
                     // Crear detalle de devolución por cada lote
                     DetalleDevolucion::create([
@@ -447,19 +469,20 @@ class FormularioDevolucion extends Component
                 }
             }
         } else {
-            // Si no hay lotes de tarjeta, buscar lote en bodega destino (caso raro)
+            // Si no hay lotes de tarjeta, buscar el lote más antiguo del producto (FIFO)
+            // Esto puede ocurrir en devoluciones sin persona origen
             $lote = Lote::where('id_producto', $producto['id'])
-                ->where('id_bodega', $bodegaId)
                 ->where('estado', true)
                 ->orderBy('fecha_ingreso', 'asc')
                 ->first();
 
             if ($lote) {
-                $lote->cantidad += $producto['cantidad'];
-                $lote->save();
+                // Incrementar en bodega destino Y cantidad_disponible (es devolución, agrega stock)
+                $lote->incrementarEnBodega($bodegaId, $producto['cantidad'], true);
                 $idLote = $lote->id;
             } else {
-                // Crear lote nuevo solo si es absolutamente necesario
+                // CASO EXCEPCIONAL: Crear lote nuevo solo si no existe ningún lote del producto
+                // Esto solo debería ocurrir si es la primera vez que se registra este producto
                 $tipoTransaccion = TipoTransaccion::firstOrCreate(['nombre' => 'Devolución']);
                 $transaccion = Transaccion::create([
                     'fecha' => now(),
@@ -468,17 +491,19 @@ class FormularioDevolucion extends Component
                 ]);
 
                 $lote = Lote::create([
-                    'cantidad' => $producto['cantidad'],
+                    'cantidad_disponible' => $producto['cantidad'],
                     'cantidad_inicial' => $producto['cantidad'],
                     'fecha_ingreso' => now(),
                     'precio_ingreso' => $producto['precio'],
                     'observaciones' => 'Lote creado por devolución' . ($this->motivo ? ': ' . $this->motivo : ''),
                     'id_producto' => $producto['id'],
-                    'id_bodega' => $bodegaId,
+                    'id_bodega' => $bodegaId,  // Mantenido temporalmente para compatibilidad
                     'estado' => true,
                     'id_transaccion' => $transaccion->id,
                 ]);
 
+                // Registrar ubicación del lote en la bodega (NO incrementar, ya está en cantidad_disponible)
+                $lote->incrementarEnBodega($bodegaId, $producto['cantidad'], false);
                 $idLote = $lote->id;
             }
 

@@ -163,20 +163,31 @@
                                         </div>
 
                                         @php
-                                            // Obtener los lotes de esta bodega agrupados por producto (LIMITADO A 5 RECIENTES)
-                                            // Nota: La limitación real idealmente debería ser en la consulta, pero como agrupamos por producto,
-                                            // tomaremos los 5 lotes más recientes para la vista previa.
-                                            $lotes = $bodega->lotes()
-                                                ->with(['producto.categoria'])
-                                                ->orderBy('fecha_ingreso', 'desc')
-                                                ->take(5) // LIMITAR A 5
-                                                ->get()
-                                                ->filter(function($lote) {
-                                                    return $lote->producto !== null;
-                                                });
+                                            // NUEVA ESTRUCTURA: Obtener lotes desde lote_bodega
+                                            $loteBodegas = DB::table('lote_bodega as lb')
+                                                ->join('lote as l', 'lb.id_lote', '=', 'l.id')
+                                                ->join('producto as p', 'l.id_producto', '=', 'p.id')
+                                                ->leftJoin('categoria as c', 'p.id_categoria', '=', 'c.id')
+                                                ->where('lb.id_bodega', $bodega->id)
+                                                ->where('lb.cantidad', '>', 0)
+                                                ->where('l.estado', true)
+                                                ->orderBy('l.fecha_ingreso', 'desc')
+                                                ->take(5)
+                                                ->select(
+                                                    'p.id as producto_id',
+                                                    'p.descripcion',
+                                                    'c.nombre as categoria',
+                                                    'l.id as lote_id',
+                                                    'lb.cantidad',  // Cantidad en esta bodega específica
+                                                    'l.estado'
+                                                )
+                                                ->get();
 
-                                            $productosAgrupados = $lotes->groupBy('id_producto');
-                                            $totalLotes = $bodega->lotes()->count();
+                                            $productosAgrupados = $loteBodegas->groupBy('producto_id');
+                                            $totalLotes = DB::table('lote_bodega')
+                                                ->where('id_bodega', $bodega->id)
+                                                ->where('cantidad', '>', 0)
+                                                ->count();
                                         @endphp
 
                                         @if($productosAgrupados->count() > 0)
@@ -195,22 +206,22 @@
                                                     <tbody class="text-gray-600 text-sm">
                                                         @foreach($productosAgrupados as $productoId => $lotesProducto)
                                                             @foreach($lotesProducto as $index => $lote)
-                                                                <tr class="border-b border-gray-200 hover:bg-gray-50" wire:key="lote-{{ $lote->id }}">
+                                                                <tr class="border-b border-gray-200 hover:bg-gray-50" wire:key="lote-{{ $lote->lote_id }}">
                                                                     @if($index === 0)
                                                                         <td class="py-3 px-4 font-mono font-semibold" rowspan="{{ $lotesProducto->count() }}">
-                                                                            {{ $lote->producto?->id ?? 'N/A' }}
+                                                                            {{ $lote->producto_id ?? 'N/A' }}
                                                                         </td>
                                                                         <td class="py-3 px-4" rowspan="{{ $lotesProducto->count() }}">
-                                                                            {{ $lote->producto?->descripcion ?? 'Producto no disponible' }}
+                                                                            {{ $lote->descripcion ?? 'Producto no disponible' }}
                                                                         </td>
                                                                         <td class="py-3 px-4 text-sm text-gray-500" rowspan="{{ $lotesProducto->count() }}">
-                                                                            {{ $lote->producto?->categoria?->nombre ?? 'Sin categoría' }}
+                                                                            {{ $lote->categoria ?? 'Sin categoría' }}
                                                                         </td>
                                                                     @endif
 
                                                                     <td class="py-3 px-4 text-center">
                                                                         <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
-                                                                            #{{ $lote->id }}
+                                                                            #{{ $lote->lote_id }}
                                                                         </span>
                                                                     </td>
                                                                     <td class="py-3 px-4 text-center">

@@ -193,15 +193,21 @@ class FormularioRequisicion extends Component
         // Obtener productos con lotes disponibles en la bodega
         $query = Producto::where('activo', true)
             ->whereHas('lotes', function ($q) use ($bodegaId) {
-                $q->where('id_bodega', $bodegaId)
-                    ->where('cantidad', '>', 0)
-                    ->where('estado', true);
+                $q->whereHas('ubicaciones', function ($q2) use ($bodegaId) {
+                    $q2->where('id_bodega', $bodegaId)
+                       ->where('cantidad', '>', 0);
+                })->where('estado', true);
             })
             ->with(['lotes' => function ($q) use ($bodegaId) {
-                $q->where('id_bodega', $bodegaId)
-                    ->where('cantidad', '>', 0)
-                    ->where('estado', true)
-                    ->orderBy('fecha_ingreso', 'asc'); // FIFO
+                $q->whereHas('ubicaciones', function ($q2) use ($bodegaId) {
+                    $q2->where('id_bodega', $bodegaId)
+                       ->where('cantidad', '>', 0);
+                })
+                ->with(['ubicaciones' => function ($q3) use ($bodegaId) {
+                    $q3->where('id_bodega', $bodegaId);
+                }])
+                ->where('estado', true)
+                ->orderBy('fecha_ingreso', 'asc'); // FIFO
             }, 'categoria']);
 
         // Filtrar por búsqueda si existe
@@ -214,7 +220,9 @@ class FormularioRequisicion extends Component
         }
 
         return $query->get()->map(function ($producto) {
-            $cantidadTotal = $producto->lotes->sum('cantidad');
+            $cantidadTotal = $producto->lotes->sum(function ($lote) {
+                return $lote->ubicaciones->first()?->cantidad ?? 0;
+            });
             $precioPromedio = $producto->lotes->avg('precio_ingreso') ?? 0;
 
             return [
@@ -591,7 +599,12 @@ class FormularioRequisicion extends Component
                 // Procesar cada producto no consumible
                 $totalTarjeta = 0;
                 foreach ($productosNoConsumibles as $producto) {
-                    $totalTarjeta += $this->procesarProductoNoConsumible($producto, $salida, $tarjeta);
+                    $totalTarjeta += $this->procesarProductoNoConsumible(
+                        $producto,
+                        $salida,
+                        $tarjeta,
+                        $this->selectedOrigen['bodega_id']
+                    );
                 }
 
                 // Actualizar total de la tarjeta sin triggear eventos
@@ -674,9 +687,11 @@ class FormularioRequisicion extends Component
             if ($cantidadRestante <= 0) break;
 
             $loteModel = Lote::find($lote['id']);
-            if (!$loteModel || $loteModel->cantidad <= 0) continue;
+            $cantidadEnBodega = $loteModel ? $loteModel->cantidadEnBodega($idBodega) : 0;
+            
+            if (!$loteModel || $cantidadEnBodega <= 0) continue;
 
-            $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+            $cantidadDelLote = min($cantidadRestante, $cantidadEnBodega);
 
             // Crear detalle de traslado
             DetalleTraslado::create([
@@ -700,9 +715,9 @@ class FormularioRequisicion extends Component
                 'id_bodega' => $idBodega,
             ]);
 
-            // Actualizar cantidad del lote (salida)
-            $loteModel->cantidad -= $cantidadDelLote;
-            $loteModel->save();
+            // Actualizar cantidad del lote (salida consumible)
+            // El flag true indica que es consumo, reduce cantidad_disponible total
+            $loteModel->decrementarEnBodega($idBodega, $cantidadDelLote, true);
 
             // Crear transacción de salida
             if ($tipoTraslado) {
@@ -728,7 +743,7 @@ class FormularioRequisicion extends Component
     /**
      * Procesa un producto no consumible (va a Salida + TarjetaProducto)
      */
-    private function procesarProductoNoConsumible($producto, $salida, $tarjeta)
+    private function procesarProductoNoConsumible($producto, $salida, $tarjeta, $idBodega)
     {
         $cantidadRestante = $producto['cantidad'];
         $lotes = collect($producto['lotes'])->sortBy('fecha_ingreso'); // FIFO
@@ -738,9 +753,11 @@ class FormularioRequisicion extends Component
             if ($cantidadRestante <= 0) break;
 
             $loteModel = Lote::find($lote['id']);
-            if (!$loteModel || $loteModel->cantidad <= 0) continue;
+            $cantidadEnBodega = $loteModel ? $loteModel->cantidadEnBodega($idBodega) : 0;
 
-            $cantidadDelLote = min($cantidadRestante, $loteModel->cantidad);
+            if (!$loteModel || $cantidadEnBodega <= 0) continue;
+
+            $cantidadDelLote = min($cantidadRestante, $cantidadEnBodega);
 
             // Crear detalle de salida
             DetalleSalida::create([
@@ -751,9 +768,9 @@ class FormularioRequisicion extends Component
                 'precio_salida' => $loteModel->precio_ingreso,
             ]);
 
-            // Actualizar cantidad del lote
-            $loteModel->cantidad -= $cantidadDelLote;
-            $loteModel->save();
+            // Actualizar cantidad del lote (asignación a persona)
+            // El flag true indica que reduce cantidad_disponible (producto asignado, no disponible)
+            $loteModel->decrementarEnBodega($idBodega, $cantidadDelLote, true);
 
             // Crear asignación en tarjeta de responsabilidad
             $precioAsignacion = $loteModel->precio_ingreso * $cantidadDelLote;

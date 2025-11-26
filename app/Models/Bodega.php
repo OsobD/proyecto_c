@@ -31,9 +31,55 @@ class Bodega extends Model
     }
 
     // Relaciones de negocio
+
+    /**
+     * Relación con LoteBodega (nueva estructura)
+     * Esta es la relación correcta para obtener los lotes que están en esta bodega
+     */
+    public function loteBodegas()
+    {
+        return $this->hasMany(LoteBodega::class, 'id_bodega');
+    }
+
+    /**
+     * Relación con Lote a través de LoteBodega
+     * Obtiene los lotes que tienen stock en esta bodega
+     */
     public function lotes()
     {
-        return $this->hasMany(Lote::class, 'id_bodega');
+        return $this->hasManyThrough(
+            Lote::class,      // Modelo final
+            LoteBodega::class, // Modelo intermedio
+            'id_bodega',      // FK en lote_bodega
+            'id',             // FK en lote
+            'id',             // PK en bodega
+            'id_lote'         // PK en lote_bodega
+        );
+    }
+
+    /**
+     * Método helper: Obtiene productos con su stock en esta bodega
+     * Agrupa por producto y suma las cantidades de todos los lotes
+     */
+    public function productosConStock()
+    {
+        return \DB::table('lote_bodega as lb')
+            ->join('lote as l', 'lb.id_lote', '=', 'l.id')
+            ->join('producto as p', 'l.id_producto', '=', 'p.id')
+            ->leftJoin('categoria as c', 'p.id_categoria', '=', 'c.id')
+            ->where('lb.id_bodega', $this->id)
+            ->where('lb.cantidad', '>', 0)
+            ->where('l.estado', true)
+            ->select(
+                'p.id as producto_id',
+                'p.descripcion',
+                'p.es_consumible',
+                'c.nombre as categoria',
+                \DB::raw('SUM(lb.cantidad) as cantidad_total'),
+                \DB::raw('GROUP_CONCAT(DISTINCT l.id) as lotes_ids')
+            )
+            ->groupBy('p.id', 'p.descripcion', 'p.es_consumible', 'c.nombre')
+            ->get();
     }
 
     public function compras()

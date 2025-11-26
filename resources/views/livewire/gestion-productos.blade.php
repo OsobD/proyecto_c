@@ -192,8 +192,8 @@
                                                 <table class="min-w-full bg-white border border-gray-300">
                                                     <thead class="bg-indigo-100 text-gray-700 text-sm">
                                                         <tr>
-                                                            <th class="py-3 px-4 text-left">Bodega</th>
                                                             <th class="py-3 px-4 text-center">Lote ID</th>
+                                                            <th class="py-3 px-4 text-center">Bodegas</th>
                                                             <th class="py-3 px-4 text-center">Cantidad Disponible</th>
                                                             <th class="py-3 px-4 text-center">Cantidad Inicial</th>
                                                             <th class="py-3 px-4 text-right">Precio Ingreso</th>
@@ -205,34 +205,32 @@
                                                     </thead>
                                                     <tbody class="text-gray-600 text-sm">
                                                         @foreach($lotesPaginados as $lote)
-                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 {{ $editingLoteId === $lote->id ? 'bg-blue-50' : '' }}" wire:key="lote-{{ $lote->id }}">
-                                                                {{-- Bodega --}}
-                                                                <td class="py-3 px-4 text-left">
-                                                                    @if($editingLoteId === $lote->id)
-                                                                        <select wire:model="loteBodegaId" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                                                                            @foreach($bodegas as $bodega)
-                                                                                <option value="{{ $bodega->id }}">{{ $bodega->nombre }}</option>
-                                                                            @endforeach
-                                                                        </select>
-                                                                    @else
-                                                                        {{ $lote->bodega->nombre ?? 'Sin bodega' }}
-                                                                    @endif
-                                                                </td>
-
+                                                            <tr class="border-b border-gray-200 hover:bg-gray-50 {{ $editingLoteId === $lote->lote_id ? 'bg-blue-50' : '' }}" wire:key="lote-{{ $lote->lote_id }}">
                                                                 {{-- Lote ID --}}
                                                                 <td class="py-3 px-4 text-center">
                                                                     <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
-                                                                        #{{ $lote->id }}
+                                                                        #{{ $lote->lote_id }}
                                                                     </span>
                                                                 </td>
 
-                                                                {{-- Cantidad Disponible --}}
+                                                                {{-- Número de Bodegas --}}
+                                                                <td class="py-3 px-4 text-center">
+                                                                    @if($lote->num_bodegas > 0)
+                                                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                                                                            {{ $lote->num_bodegas }} {{ $lote->num_bodegas == 1 ? 'bodega' : 'bodegas' }}
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="text-gray-400 text-xs">Sin ubicación</span>
+                                                                    @endif
+                                                                </td>
+
+                                                                {{-- Cantidad Disponible Total --}}
                                                                 <td class="py-3 px-4 text-center font-semibold">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="number" wire:model="loteCantidad" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center" min="0">
                                                                     @else
-                                                                        <span class="{{ $lote->cantidad > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                                                            {{ $lote->cantidad }}
+                                                                        <span class="{{ $lote->cantidad_disponible > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                                                            {{ $lote->cantidad_disponible }}
                                                                         </span>
                                                                     @endif
                                                                 </td>
@@ -242,7 +240,7 @@
 
                                                                 {{-- Precio Ingreso --}}
                                                                 <td class="py-3 px-4 text-right font-semibold">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="number" wire:model="lotePrecioIngreso" step="0.01" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-right" min="0">
                                                                     @else
                                                                         Q{{ number_format($lote->precio_ingreso, 2) }}
@@ -251,7 +249,7 @@
 
                                                                 {{-- Fecha Ingreso --}}
                                                                 <td class="py-3 px-4 text-center text-xs">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="date" wire:model="loteFechaIngreso" class="w-32 px-2 py-1 border border-gray-300 rounded text-sm">
                                                                     @else
                                                                         {{ $lote->fecha_ingreso ? \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') : 'N/A' }}
@@ -260,7 +258,7 @@
 
                                                                 {{-- Observaciones --}}
                                                                 <td class="py-3 px-4 text-left text-xs text-gray-500 max-w-xs truncate">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         <input type="text" wire:model="loteObservaciones" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Observaciones">
                                                                     @else
                                                                         {{ $lote->observaciones ?? '-' }}
@@ -297,17 +295,17 @@
                                                                         <div class="flex item-center justify-center gap-1">
                                                                             <x-action-button
                                                                                 type="edit"
-                                                                                wire:click="editarLote({{ $lote->id }})"
+                                                                                wire:click="editarLote({{ $lote->lote_id }})"
                                                                                 title="Editar lote" />
                                                                             @if($lote->estado)
                                                                                 <x-action-button
                                                                                     type="delete"
-                                                                                    wire:click="eliminarLote({{ $lote->id }})"
+                                                                                    wire:click="eliminarLote({{ $lote->lote_id }})"
                                                                                     title="Desactivar lote" />
                                                                             @else
                                                                                 <x-action-button
                                                                                     type="activate"
-                                                                                    wire:click="activarLote({{ $lote->id }})"
+                                                                                    wire:click="activarLote({{ $lote->lote_id }})"
                                                                                     title="Activar lote" />
                                                                             @endif
                                                                         </div>
