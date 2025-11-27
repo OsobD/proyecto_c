@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
     // Rutas de Productos y Categorías
     Route::middleware('permission:productos.acceder')->group(function () {
         Route::get('/productos', \App\Livewire\GestionProductos::class)->name('productos');
+        Route::get('/productos/lotes/{id}/ubicaciones', \App\Livewire\DetalleLote::class)->name('lotes.detalle');
     });
     Route::middleware('permission:categorias.acceder')->group(function () {
         Route::get('/productos/categorias', \App\Livewire\GestionCategorias::class)->name('productos.categorias');
