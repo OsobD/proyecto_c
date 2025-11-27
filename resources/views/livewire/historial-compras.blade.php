@@ -100,9 +100,24 @@
             <h2 class="text-xl font-semibold text-gray-800">
                 Compras encontradas: <span class="text-blue-600">{{ $comprasFiltradas->total() }}</span>
             </h2>
-            <p class="text-sm text-gray-600">
-                Mostrando {{ $comprasFiltradas->firstItem() ?? 0 }} - {{ $comprasFiltradas->lastItem() ?? 0 }} de {{ $comprasFiltradas->total() }}
-            </p>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">Mostrar:</span>
+                    <select wire:model.live="perPage" class="border-gray-300 rounded-md text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                
+                <p class="text-sm text-gray-600">
+                    Mostrando {{ $comprasFiltradas->firstItem() ?? 0 }} - {{ $comprasFiltradas->lastItem() ?? 0 }} de {{ $comprasFiltradas->total() }}
+                </p>
+            </div>
         </div>
 
         <div class="overflow-x-auto">

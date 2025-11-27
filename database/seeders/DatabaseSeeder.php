@@ -54,6 +54,8 @@ class DatabaseSeeder extends Seeder
         // 6. Datos de Prueba (OPCIONAL - comentar en producción)
         $this->call([
             ProveedorSeeder::class,        // Proveedores de ejemplo
+            PersonasTestSeeder::class,     // 20 personas para probar paginación
+            ComprasTestSeeder::class,      // 20 compras para probar paginación
         ]);
 
         $this->command->info('');
@@ -69,6 +71,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('  • 6 Tipos de salida');
         $this->command->info('  • Lotes de ajuste por bodega');
         $this->command->info('  • 2 Proveedores de prueba');
+        $this->command->info('  • 20 Personas de prueba');
+        $this->command->info('  • 20 Compras de prueba');
         $this->command->info('==================================================');
     }
 }

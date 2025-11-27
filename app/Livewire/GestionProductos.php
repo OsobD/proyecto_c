@@ -70,9 +70,6 @@ class GestionProductos extends Component
     /** @var string|null ID del producto cuyos lotes están expandidos */
     public $productoIdLotesExpandido = null;
 
-    /** @var int|null ID del lote cuyas bodegas están expandidas */
-    public $loteIdBodegasExpandido = null;
-
     /** @var string|null ID del producto en edición (null = modo creación) */
     public $editingId = null;
 
@@ -220,28 +217,11 @@ class GestionProductos extends Component
             ->orderBy('nombre')
             ->get();
 
-        // Obtener bodegas del lote expandido con cantidades
-        $bodegasDelLote = null;
-        if ($this->loteIdBodegasExpandido) {
-            $bodegasDelLote = DB::table('lote_bodega as lb')
-                ->join('bodega as b', 'lb.id_bodega', '=', 'b.id')
-                ->where('lb.id_lote', $this->loteIdBodegasExpandido)
-                ->where('lb.cantidad', '>', 0)
-                ->select(
-                    'b.id as bodega_id',
-                    'b.nombre as bodega_nombre',
-                    'lb.cantidad'
-                )
-                ->orderBy('b.nombre')
-                ->get();
-        }
-
         return view('livewire.gestion-productos', [
             'productos' => $productos,
             'lotesPaginados' => $lotesPaginados,
             'categorias' => $categorias,
             'bodegas' => $bodegas,
-            'bodegasDelLote' => $bodegasDelLote,
         ]);
     }
 
@@ -398,26 +378,9 @@ class GestionProductos extends Component
         if ($this->productoIdLotesExpandido === $id) {
             $this->productoIdLotesExpandido = null;
             $this->lotesPage = 1;
-            $this->loteIdBodegasExpandido = null; // Cerrar bodegas también
         } else {
             $this->productoIdLotesExpandido = $id;
             $this->lotesPage = 1; // Resetear a la primera página al abrir un nuevo producto
-            $this->loteIdBodegasExpandido = null; // Cerrar bodegas al cambiar de producto
-        }
-    }
-
-    /**
-     * Expande/colapsa las bodegas de un lote específico
-     *
-     * @param int $loteId ID del lote cuyas bodegas se desean ver
-     * @return void
-     */
-    public function toggleBodegasLote($loteId)
-    {
-        if ($this->loteIdBodegasExpandido === $loteId) {
-            $this->loteIdBodegasExpandido = null;
-        } else {
-            $this->loteIdBodegasExpandido = $loteId;
         }
     }
 
