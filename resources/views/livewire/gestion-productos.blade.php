@@ -276,7 +276,7 @@
 
                                                                 {{-- Acciones --}}
                                                                 <td class="py-3 px-4 text-center">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         {{-- Modo edición: mostrar guardar y cancelar --}}
                                                                         <div class="flex item-center justify-center gap-1">
                                                                             <button wire:click="guardarLote" class="bg-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-primary)] text-white p-1.5 rounded transition-colors" title="Guardar cambios">
