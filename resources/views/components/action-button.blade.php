@@ -69,10 +69,4 @@
     @else
         {{ $slot }}
     @endif
-
-    @if($badge !== null && $type === 'lotes')
-        <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-4 min-w-[1rem] flex items-center justify-center px-1">
-            {{ $badge }}
-        </span>
-    @endif
 </button>
