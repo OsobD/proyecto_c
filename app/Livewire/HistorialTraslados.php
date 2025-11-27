@@ -78,6 +78,26 @@ class HistorialTraslados extends Component
     }
 
     /**
+     * Se ejecuta cuando cambia la fecha de inicio
+     *
+     * @return void
+     */
+    public function updatingFechaInicio()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Se ejecuta cuando cambia la fecha de fin
+     *
+     * @return void
+     */
+    public function updatingFechaFin()
+    {
+        $this->resetPage();
+    }
+
+    /**
      * Limpia todos los filtros
      *
      * @return void

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Bodega;
 use App\Models\Compra;
 use App\Models\DetalleCompra;
 use App\Models\Proveedor;
@@ -43,6 +44,32 @@ class HistorialCompras extends Component
     /** @var array Listado de proveedores para filtro */
     public $proveedores = [];
 
+    // Propiedades para select buscable de proveedor
+    /** @var string Término de búsqueda de proveedor */
+    public $searchProveedorFiltro = '';
+
+    /** @var bool Controla visibilidad del dropdown de proveedores */
+    public $showProveedorDropdown = false;
+
+    /** @var array|null Proveedor seleccionado actual */
+    public $selectedProveedorFiltro = null;
+
+    // Propiedades para select buscable de bodega
+    /** @var string Término de búsqueda de bodega */
+    public $searchBodegaFiltro = '';
+
+    /** @var bool Controla visibilidad del dropdown de bodegas */
+    public $showBodegaDropdown = false;
+
+    /** @var array|null Bodega seleccionada actual */
+    public $selectedBodegaFiltro = null;
+
+    /** @var string Filtro por ID de bodega */
+    public $bodegaFiltro = '';
+
+    /** @var array Listado de bodegas para filtro */
+    public $bodegas = [];
+
     /** @var bool Controla visibilidad del modal de visualización */
     public $showModalVer = false;
 
@@ -73,6 +100,12 @@ class HistorialCompras extends Component
             ->get()
             ->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])
             ->toArray();
+
+        // Cargar bodegas activas para el filtro
+        $this->bodegas = Bodega::where('activo', true)
+            ->get()
+            ->map(fn($b) => ['id' => $b->id, 'nombre' => $b->nombre])
+            ->toArray();
     }
 
     public function updatingSearch()
@@ -85,6 +118,16 @@ class HistorialCompras extends Component
         $this->resetPage();
     }
 
+    public function updatingFechaInicio()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaFin()
+    {
+        $this->resetPage();
+    }
+
     public function limpiarFiltros()
     {
         $this->search = '';
@@ -92,6 +135,93 @@ class HistorialCompras extends Component
         $this->fechaFin = '';
         $this->estadoFiltro = '';
         $this->proveedorFiltro = '';
+        $this->bodegaFiltro = '';
+        $this->selectedProveedorFiltro = null;
+        $this->selectedBodegaFiltro = null;
+        $this->searchProveedorFiltro = '';
+        $this->searchBodegaFiltro = '';
+        $this->resetPage();
+    }
+
+    // Métodos para el select buscable de proveedor
+    public function updatedSearchProveedorFiltro()
+    {
+        $this->showProveedorDropdown = true;
+    }
+
+    public function getProveedorResultsProperty()
+    {
+        if (empty($this->searchProveedorFiltro)) {
+            return $this->proveedores;
+        }
+
+        $search = strtolower(trim($this->searchProveedorFiltro));
+
+        return array_filter($this->proveedores, function ($proveedor) use ($search) {
+            return str_contains(strtolower($proveedor['nombre']), $search);
+        });
+    }
+
+    public function selectProveedorFiltro($proveedorId)
+    {
+        $proveedor = collect($this->proveedores)->firstWhere('id', $proveedorId);
+
+        if ($proveedor) {
+            $this->selectedProveedorFiltro = $proveedor;
+            $this->proveedorFiltro = $proveedorId;
+            $this->searchProveedorFiltro = '';
+            $this->showProveedorDropdown = false;
+            $this->resetPage();
+        }
+    }
+
+    public function clearProveedorFiltro()
+    {
+        $this->selectedProveedorFiltro = null;
+        $this->proveedorFiltro = '';
+        $this->searchProveedorFiltro = '';
+        $this->showProveedorDropdown = false;
+        $this->resetPage();
+    }
+
+    // Métodos para el select buscable de bodega
+    public function updatedSearchBodegaFiltro()
+    {
+        $this->showBodegaDropdown = true;
+    }
+
+    public function getBodegaResultsProperty()
+    {
+        if (empty($this->searchBodegaFiltro)) {
+            return $this->bodegas;
+        }
+
+        $search = strtolower(trim($this->searchBodegaFiltro));
+
+        return array_filter($this->bodegas, function ($bodega) use ($search) {
+            return str_contains(strtolower($bodega['nombre']), $search);
+        });
+    }
+
+    public function selectBodegaFiltro($bodegaId)
+    {
+        $bodega = collect($this->bodegas)->firstWhere('id', $bodegaId);
+
+        if ($bodega) {
+            $this->selectedBodegaFiltro = $bodega;
+            $this->bodegaFiltro = $bodegaId;
+            $this->searchBodegaFiltro = '';
+            $this->showBodegaDropdown = false;
+            $this->resetPage();
+        }
+    }
+
+    public function clearBodegaFiltro()
+    {
+        $this->selectedBodegaFiltro = null;
+        $this->bodegaFiltro = '';
+        $this->searchBodegaFiltro = '';
+        $this->showBodegaDropdown = false;
         $this->resetPage();
     }
 
@@ -124,12 +254,19 @@ class HistorialCompras extends Component
             $query->where('id_proveedor', $this->proveedorFiltro);
         }
 
+        // Filtro por bodega
+        if ($this->bodegaFiltro) {
+            $query->where('id_bodega', $this->bodegaFiltro);
+        }
+
         // Filtro por rango de fechas
         if ($this->fechaInicio) {
+            \Log::info('Filtrando por fecha inicio', ['fecha' => $this->fechaInicio]);
             $query->whereDate('fecha', '>=', $this->fechaInicio);
         }
 
         if ($this->fechaFin) {
+            \Log::info('Filtrando por fecha fin', ['fecha' => $this->fechaFin]);
             $query->whereDate('fecha', '<=', $this->fechaFin);
         }
 
