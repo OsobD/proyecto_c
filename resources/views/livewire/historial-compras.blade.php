@@ -124,24 +124,52 @@
                 </div>
             </div>
 
-            {{-- Fecha Inicio con mejor estilo --}}
-            <div>
+            {{-- Fecha Inicio con Flatpickr --}}
+            <div x-data="{
+                initFlatpickr() {
+                    flatpickr(this.$refs.fechaInicio, {
+                        dateFormat: 'Y-m-d',
+                        locale: 'es',
+                        altInput: true,
+                        altFormat: 'd/m/Y',
+                        onChange: (selectedDates, dateStr) => {
+                            @this.set('fechaInicio', dateStr);
+                        }
+                    });
+                }
+            }" x-init="initFlatpickr()">
                 <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
                 <input
-                    type="date"
+                    x-ref="fechaInicio"
+                    type="text"
                     id="fecha_inicio"
-                    wire:model.live="fechaInicio"
-                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
+                    wire:model="fechaInicio"
+                    placeholder="Seleccionar fecha..."
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer">
             </div>
 
-            {{-- Fecha Fin con mejor estilo --}}
-            <div>
+            {{-- Fecha Fin con Flatpickr --}}
+            <div x-data="{
+                initFlatpickr() {
+                    flatpickr(this.$refs.fechaFin, {
+                        dateFormat: 'Y-m-d',
+                        locale: 'es',
+                        altInput: true,
+                        altFormat: 'd/m/Y',
+                        onChange: (selectedDates, dateStr) => {
+                            @this.set('fechaFin', dateStr);
+                        }
+                    });
+                }
+            }" x-init="initFlatpickr()">
                 <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
                 <input
-                    type="date"
+                    x-ref="fechaFin"
+                    type="text"
                     id="fecha_fin"
-                    wire:model.live="fechaFin"
-                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
+                    wire:model="fechaFin"
+                    placeholder="Seleccionar fecha..."
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer">
             </div>
 
             {{-- Botón Limpiar Filtros --}}
@@ -699,5 +727,65 @@
                 opacity: 0;
             }
         }
+
+        /* Estilos personalizados para Flatpickr */
+        .flatpickr-calendar {
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            border: 2px solid #e5e7eb !important;
+        }
+
+        .flatpickr-day {
+            border-radius: 8px !important;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .flatpickr-day:hover:not(.selected):not(.startRange):not(.endRange) {
+            background: #dbeafe !important;
+            border-color: #93c5fd !important;
+        }
+
+        .flatpickr-months .flatpickr-month {
+            background: #3b82f6 !important;
+            color: white !important;
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            background: #3b82f6 !important;
+            color: white !important;
+        }
+
+        .flatpickr-current-month .numInputWrapper input {
+            color: white !important;
+        }
+
+        .flatpickr-months .flatpickr-prev-month:hover svg,
+        .flatpickr-months .flatpickr-next-month:hover svg {
+            fill: white !important;
+        }
+
+        .flatpickr-weekdays {
+            background: #f3f4f6 !important;
+        }
+
+        .flatpickr-weekday {
+            color: #4b5563 !important;
+            font-weight: 600 !important;
+        }
     </style>
+
+    {{-- Scripts de Flatpickr --}}
+    @push('scripts')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    @endpush
 </div>
