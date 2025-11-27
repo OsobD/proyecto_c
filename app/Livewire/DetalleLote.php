@@ -84,7 +84,7 @@ class DetalleLote extends Component
             );
 
         // Obtener ubicaciones en tarjetas
-        $tarjetas = DB::table('producto_tarjeta as pt')
+        $tarjetas = DB::table('tarjeta_producto as pt')
             ->join('tarjeta_responsabilidad as tr', 'pt.id_tarjeta', '=', 'tr.id')
             ->join('persona as p', 'tr.id_persona', '=', 'p.id')
             ->where('pt.id_lote', $this->loteId)
@@ -125,7 +125,7 @@ class DetalleLote extends Component
             ->where('cantidad', '>', 0)
             ->count();
 
-        $totalTarjetas = DB::table('producto_tarjeta')
+        $totalTarjetas = DB::table('tarjeta_producto')
             ->where('id_lote', $this->loteId)
             ->where('cantidad', '>', 0)
             ->count();
@@ -134,7 +134,7 @@ class DetalleLote extends Component
             ->where('id_lote', $this->loteId)
             ->sum('cantidad');
 
-        $cantidadEnTarjetas = DB::table('producto_tarjeta')
+        $cantidadEnTarjetas = DB::table('tarjeta_producto')
             ->where('id_lote', $this->loteId)
             ->sum('cantidad');
 

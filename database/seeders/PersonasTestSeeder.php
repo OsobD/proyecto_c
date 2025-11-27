@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Persona;
+use App\Models\TarjetaResponsabilidad;
 use Illuminate\Database\Seeder;
 
 /**
@@ -42,13 +43,29 @@ class PersonasTestSeeder extends Seeder
             ];
         }
 
-        foreach ($personas as $persona) {
-            Persona::firstOrCreate(
-                ['dpi' => $persona['dpi']],
-                $persona
+        foreach ($personas as $personaData) {
+            // Crear persona
+            $persona = Persona::firstOrCreate(
+                ['dpi' => $personaData['dpi']],
+                $personaData
             );
+
+            // Crear tarjeta de responsabilidad automáticamente si no existe
+            $tarjetaExistente = TarjetaResponsabilidad::where('id_persona', $persona->id)->first();
+            
+            if (!$tarjetaExistente) {
+                TarjetaResponsabilidad::create([
+                    'nombre' => "{$persona->nombres} {$persona->apellidos}",
+                    'fecha_creacion' => now(),
+                    'total' => 0,
+                    'id_persona' => $persona->id,
+                    'activo' => $persona->estado,
+                    'created_by' => null,
+                    'updated_by' => null,
+                ]);
+            }
         }
 
-        $this->command->info('✓ 20 personas de prueba creadas exitosamente.');
+        $this->command->info('✓ 20 personas de prueba creadas exitosamente con sus tarjetas de responsabilidad.');
     }
 }
