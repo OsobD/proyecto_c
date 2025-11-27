@@ -28,66 +28,127 @@
     @endif
 
     {{-- Filtros --}}
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
         <h2 class="text-lg font-semibold text-gray-800 mb-6">Filtros de Búsqueda</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {{-- Búsqueda general --}}
             <div>
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
                 <input
                     type="text"
                     id="search"
                     wire:model.live.debounce.300ms="search"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
                     placeholder="No. Factura o Proveedor...">
             </div>
 
+            {{-- Filtro de Proveedor con búsqueda --}}
             <div>
-                <label for="proveedor" class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
-                <select
-                    id="proveedor"
-                    wire:model.live="proveedorFiltro"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos</option>
-                    @foreach($proveedores as $proveedor)
-                        <option value="{{ $proveedor['id'] }}">{{ $proveedor['nombre'] }}</option>
-                    @endforeach
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
+                <div class="relative">
+                    @if($selectedProveedorFiltro)
+                        <div wire:click="clearProveedorFiltro"
+                             class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                            <span class="font-medium text-gray-800">{{ $selectedProveedorFiltro['nombre'] }}</span>
+                            <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                        </div>
+                    @else
+                        <div class="relative" x-data="{ open: @entangle('showProveedorDropdown').live }" @click.outside="open = false">
+                            <input
+                                type="text"
+                                wire:model.live.debounce.300ms="searchProveedorFiltro"
+                                @click="open = true"
+                                class="block w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                                placeholder="Buscar proveedor...">
+                            <div x-show="open"
+                                 x-transition
+                                 class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                <ul>
+                                    <li wire:click.prevent="clearProveedorFiltro"
+                                        @click="open = false"
+                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                        Todos los proveedores
+                                    </li>
+                                    @foreach (array_slice($this->proveedorResults, 0, 8) as $proveedor)
+                                        <li wire:click.prevent="selectProveedorFiltro({{ $proveedor['id'] }})"
+                                            @click="open = false"
+                                            class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                            {{ $proveedor['nombre'] }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
+            {{-- Filtro de Bodega con búsqueda --}}
             <div>
-                <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                <select
-                    id="estado"
-                    wire:model.live="estadoFiltro"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos</option>
-                    <option value="Completada">Completada</option>
-                    <option value="Pendiente">Pendiente</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Bodega Destino</label>
+                <div class="relative">
+                    @if($selectedBodegaFiltro)
+                        <div wire:click="clearBodegaFiltro"
+                             class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                            <span class="font-medium text-gray-800">{{ $selectedBodegaFiltro['nombre'] }}</span>
+                            <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                        </div>
+                    @else
+                        <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }" @click.outside="open = false">
+                            <input
+                                type="text"
+                                wire:model.live.debounce.300ms="searchBodegaFiltro"
+                                @click="open = true"
+                                class="block w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                                placeholder="Buscar bodega...">
+                            <div x-show="open"
+                                 x-transition
+                                 class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                <ul>
+                                    <li wire:click.prevent="clearBodegaFiltro"
+                                        @click="open = false"
+                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                        Todas las bodegas
+                                    </li>
+                                    @foreach (array_slice($this->bodegaResults, 0, 8) as $bodega)
+                                        <li wire:click.prevent="selectBodegaFiltro({{ $bodega['id'] }})"
+                                            @click="open = false"
+                                            class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                            {{ $bodega['nombre'] }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
+            {{-- Fecha Inicio con mejor estilo --}}
             <div>
                 <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
                 <input
                     type="date"
                     id="fecha_inicio"
                     wire:model.live="fechaInicio"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
             </div>
 
+            {{-- Fecha Fin con mejor estilo --}}
             <div>
                 <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
                 <input
                     type="date"
                     id="fecha_fin"
                     wire:model.live="fechaFin"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
             </div>
 
+            {{-- Botón Limpiar Filtros --}}
             <div class="flex items-end">
                 <button
                     wire:click="limpiarFiltros"
-                    class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg">
+                    class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
                     Limpiar Filtros
                 </button>
             </div>
@@ -103,8 +164,9 @@
             
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-600">Mostrar:</span>
-                    <select wire:model.live="perPage" class="border-gray-300 rounded-md text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1">
+                    <span class="text-sm text-gray-600 font-medium">Mostrar:</span>
+                    <select wire:model.live="perPage"
+                            class="border-2 border-gray-300 rounded-lg text-sm shadow-sm py-1.5 px-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="15">15</option>
