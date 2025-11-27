@@ -37,6 +37,9 @@ class HistorialCompras extends Component
     /** @var string Filtro por ID de proveedor */
     public $proveedorFiltro = '';
 
+    /** @var int Cantidad de registros por página */
+    public $perPage = 15;
+
     /** @var array Listado de proveedores para filtro */
     public $proveedores = [];
 
@@ -73,6 +76,11 @@ class HistorialCompras extends Component
     }
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -134,7 +142,7 @@ class HistorialCompras extends Component
         $query->orderBy('fecha', 'desc');
 
         // OPTIMIZACIÓN: Paginación en lugar de get() para cargar solo registros necesarios
-        return $query->paginate(15);
+        return $query->paginate($this->perPage);
     }
 
     public function verDetalle($compraId)
