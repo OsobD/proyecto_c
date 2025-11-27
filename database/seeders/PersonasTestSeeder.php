@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Persona;
-use App\Models\Puesto;
 use Illuminate\Database\Seeder;
 
 /**
@@ -23,13 +22,6 @@ class PersonasTestSeeder extends Seeder
      */
     public function run()
     {
-        // Obtener un puesto por defecto
-        $puesto = Puesto::first();
-
-        if (!$puesto) {
-            $this->command->warn('⚠️  Advertencia: No se encontró ningún puesto. Las personas se crearán sin puesto asignado.');
-        }
-
         $nombres = ['Juan', 'María', 'Carlos', 'Ana', 'Luis', 'Carmen', 'José', 'Laura', 'Miguel', 'Elena'];
         $apellidos = ['García', 'Rodríguez', 'Martínez', 'López', 'González', 'Pérez', 'Sánchez', 'Ramírez', 'Torres', 'Flores'];
 
@@ -46,10 +38,7 @@ class PersonasTestSeeder extends Seeder
                 'correo' => strtolower($nombre . '.' . $apellido1 . $i . '@eemq.com'),
                 'telefono' => '2' . str_pad(rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
                 'dpi' => str_pad(rand(1000000000000, 9999999999999), 13, '0', STR_PAD_LEFT),
-                'id_puesto' => $puesto ? $puesto->id : null,
-                'activo' => $i <= 18, // 18 activos, 2 inactivos para probar filtros
-                'created_at' => now()->subDays(rand(1, 90)),
-                'updated_at' => now()->subDays(rand(0, 30)),
+                'estado' => $i <= 18, // 18 activos, 2 inactivos para probar filtros
             ];
         }
 
