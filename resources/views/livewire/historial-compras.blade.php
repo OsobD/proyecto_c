@@ -126,49 +126,67 @@
 
             {{-- Fecha Inicio con Flatpickr --}}
             <div x-data="{
+                picker: null,
                 initFlatpickr() {
-                    flatpickr(this.$refs.fechaInicio, {
+                    this.picker = flatpickr(this.$refs.fechaInicio, {
                         dateFormat: 'Y-m-d',
                         locale: 'es',
                         altInput: true,
                         altFormat: 'd/m/Y',
+                        allowInput: true,
                         onChange: (selectedDates, dateStr) => {
                             @this.set('fechaInicio', dateStr);
                         }
                     });
                 }
-            }" x-init="initFlatpickr()">
-                <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+            }"
+            x-init="initFlatpickr()"
+            @limpiar-filtros.window="if(picker) picker.clear()">
+                <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+                    <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Fecha Inicio
+                </label>
                 <input
                     x-ref="fechaInicio"
                     type="text"
                     id="fecha_inicio"
                     wire:model="fechaInicio"
-                    placeholder="Seleccionar fecha..."
+                    placeholder="dd/mm/aaaa"
                     class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer">
             </div>
 
             {{-- Fecha Fin con Flatpickr --}}
             <div x-data="{
+                picker: null,
                 initFlatpickr() {
-                    flatpickr(this.$refs.fechaFin, {
+                    this.picker = flatpickr(this.$refs.fechaFin, {
                         dateFormat: 'Y-m-d',
                         locale: 'es',
                         altInput: true,
                         altFormat: 'd/m/Y',
+                        allowInput: true,
                         onChange: (selectedDates, dateStr) => {
                             @this.set('fechaFin', dateStr);
                         }
                     });
                 }
-            }" x-init="initFlatpickr()">
-                <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+            }"
+            x-init="initFlatpickr()"
+            @limpiar-filtros.window="if(picker) picker.clear()">
+                <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">
+                    <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Fecha Fin
+                </label>
                 <input
                     x-ref="fechaFin"
                     type="text"
                     id="fecha_fin"
                     wire:model="fechaFin"
-                    placeholder="Seleccionar fecha..."
+                    placeholder="dd/mm/aaaa"
                     class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer">
             </div>
 
@@ -176,7 +194,11 @@
             <div class="flex items-end">
                 <button
                     wire:click="limpiarFiltros"
+                    @click="$dispatch('limpiar-filtros')"
                     class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
+                    <svg class="inline w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
                     Limpiar Filtros
                 </button>
             </div>
@@ -728,64 +750,170 @@
             }
         }
 
-        /* Estilos personalizados para Flatpickr */
+        /* Estilos personalizados para Flatpickr - Tema moderno y suave */
         .flatpickr-calendar {
-            border-radius: 12px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-            border: 2px solid #e5e7eb !important;
+            background: white !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
+            border: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            padding: 0 !important;
+            margin-top: 8px !important;
         }
 
-        .flatpickr-day {
-            border-radius: 8px !important;
+        .flatpickr-calendar.open {
+            animation: slideDown 0.2s ease-out !important;
         }
 
-        .flatpickr-day.selected,
-        .flatpickr-day.startRange,
-        .flatpickr-day.endRange {
-            background: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-        }
-
-        .flatpickr-day:hover:not(.selected):not(.startRange):not(.endRange) {
-            background: #dbeafe !important;
-            border-color: #93c5fd !important;
+        /* Header del calendario */
+        .flatpickr-months {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            padding: 16px 12px !important;
+            border-radius: 16px 16px 0 0 !important;
         }
 
         .flatpickr-months .flatpickr-month {
-            background: #3b82f6 !important;
+            background: transparent !important;
             color: white !important;
-            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .flatpickr-current-month {
+            padding: 4px 0 !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months {
-            background: #3b82f6 !important;
+            background: transparent !important;
             color: white !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+            border: none !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
         }
 
-        .flatpickr-current-month .numInputWrapper input {
-            color: white !important;
+        .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
         }
 
-        .flatpickr-months .flatpickr-prev-month:hover svg,
-        .flatpickr-months .flatpickr-next-month:hover svg {
+        .flatpickr-current-month .numInputWrapper {
+            width: 70px !important;
+        }
+
+        .flatpickr-current-month .numInputWrapper input,
+        .flatpickr-current-month .cur-year {
+            color: white !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 4px !important;
+        }
+
+        .flatpickr-current-month .numInputWrapper:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-radius: 6px !important;
+        }
+
+        /* Flechas de navegación */
+        .flatpickr-months .flatpickr-prev-month,
+        .flatpickr-months .flatpickr-next-month {
+            fill: white !important;
+            padding: 8px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .flatpickr-months .flatpickr-prev-month:hover,
+        .flatpickr-months .flatpickr-next-month:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .flatpickr-months .flatpickr-prev-month svg,
+        .flatpickr-months .flatpickr-next-month svg {
             fill: white !important;
         }
 
+        /* Días de la semana */
         .flatpickr-weekdays {
-            background: #f3f4f6 !important;
+            background: #f8fafc !important;
+            padding: 12px 0 8px 0 !important;
+            border-bottom: 1px solid #e5e7eb !important;
         }
 
         .flatpickr-weekday {
-            color: #4b5563 !important;
+            color: #64748b !important;
             font-weight: 600 !important;
+            font-size: 12px !important;
+            text-transform: uppercase !important;
+        }
+
+        /* Contenedor de días */
+        .flatpickr-days {
+            padding: 8px !important;
+        }
+
+        /* Días individuales */
+        .flatpickr-day {
+            border-radius: 10px !important;
+            border: none !important;
+            color: #334155 !important;
+            font-weight: 500 !important;
+            margin: 2px !important;
+            transition: all 0.2s ease !important;
+            height: 38px !important;
+            line-height: 38px !important;
+        }
+
+        /* Día actual (hoy) */
+        .flatpickr-day.today {
+            border: 2px solid #3b82f6 !important;
+            background: white !important;
+            color: #3b82f6 !important;
+            font-weight: 700 !important;
+        }
+
+        .flatpickr-day.today:hover {
+            background: #eff6ff !important;
+            border-color: #3b82f6 !important;
+        }
+
+        /* Día seleccionado */
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        /* Hover en días normales */
+        .flatpickr-day:not(.selected):not(.startRange):not(.endRange):not(.flatpickr-disabled):hover {
+            background: #eff6ff !important;
+            border: none !important;
+            color: #3b82f6 !important;
+            transform: scale(1.05) !important;
+        }
+
+        /* Días deshabilitados (fuera del mes) */
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay {
+            color: #cbd5e1 !important;
+        }
+
+        .flatpickr-day.flatpickr-disabled {
+            color: #e2e8f0 !important;
+        }
+
+        .flatpickr-day.flatpickr-disabled:hover {
+            background: transparent !important;
+            transform: none !important;
+            cursor: not-allowed !important;
         }
     </style>
 
     {{-- Scripts de Flatpickr --}}
-    @push('scripts')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-    @endpush
 </div>
