@@ -125,41 +125,57 @@
             </div>
 
             {{-- Fecha Inicio con Flatpickr --}}
-            <div x-data="{
+            <div wire:ignore x-data="{
                 picker: null,
+                fechaActual: @entangle('fechaInicio').live,
                 initFlatpickr() {
                     const input = this.$refs.fechaInicio;
 
                     // Destruir instancia previa si existe
                     if (this.picker) {
                         this.picker.destroy();
+                        this.picker = null;
                     }
 
                     // Configuración de Flatpickr
                     this.picker = flatpickr(input, {
                         dateFormat: 'Y-m-d',
-                        locale: 'es',
+                        locale: {
+                            ...flatpickr.l10ns.es,
+                            months: {
+                                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                                longhand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+                            },
+                            weekdays: {
+                                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+                            }
+                        },
                         altInput: true,
                         altFormat: 'd/m/Y',
                         allowInput: false,
                         clickOpens: true,
-                        static: false,
-                        onChange: (selectedDates, dateStr) => {
-                            if (dateStr) {
-                                @this.set('fechaInicio', dateStr);
-                            }
+                        disableMobile: true,
+                        maxDate: 'today',
+                        defaultDate: this.fechaActual || null,
+                        onChange: (selectedDates, dateStr, instance) => {
+                            this.fechaActual = dateStr;
+                            console.log('Fecha Inicio seleccionada:', dateStr);
+                        },
+                        onClose: (selectedDates, dateStr, instance) => {
+                            // No hacer nada al cerrar
                         }
                     });
-
-                    // Setear valor inicial si existe
-                    const initialValue = @this.get('fechaInicio');
-                    if (initialValue) {
-                        this.picker.setDate(initialValue, false);
+                },
+                resetPicker() {
+                    if (this.picker) {
+                        this.picker.clear();
+                        this.fechaActual = '';
                     }
                 }
             }"
-            x-init="$nextTick(() => initFlatpickr())"
-            @limpiar-filtros.window="if(picker) { picker.clear(); @this.set('fechaInicio', ''); }">
+            x-init="initFlatpickr()"
+            @limpiar-filtros.window="resetPicker()">
                 <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                     <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -176,41 +192,57 @@
             </div>
 
             {{-- Fecha Fin con Flatpickr --}}
-            <div x-data="{
+            <div wire:ignore x-data="{
                 picker: null,
+                fechaActual: @entangle('fechaFin').live,
                 initFlatpickr() {
                     const input = this.$refs.fechaFin;
 
                     // Destruir instancia previa si existe
                     if (this.picker) {
                         this.picker.destroy();
+                        this.picker = null;
                     }
 
                     // Configuración de Flatpickr
                     this.picker = flatpickr(input, {
                         dateFormat: 'Y-m-d',
-                        locale: 'es',
+                        locale: {
+                            ...flatpickr.l10ns.es,
+                            months: {
+                                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                                longhand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+                            },
+                            weekdays: {
+                                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+                            }
+                        },
                         altInput: true,
                         altFormat: 'd/m/Y',
                         allowInput: false,
                         clickOpens: true,
-                        static: false,
-                        onChange: (selectedDates, dateStr) => {
-                            if (dateStr) {
-                                @this.set('fechaFin', dateStr);
-                            }
+                        disableMobile: true,
+                        maxDate: 'today',
+                        defaultDate: this.fechaActual || null,
+                        onChange: (selectedDates, dateStr, instance) => {
+                            this.fechaActual = dateStr;
+                            console.log('Fecha Fin seleccionada:', dateStr);
+                        },
+                        onClose: (selectedDates, dateStr, instance) => {
+                            // No hacer nada al cerrar
                         }
                     });
-
-                    // Setear valor inicial si existe
-                    const initialValue = @this.get('fechaFin');
-                    if (initialValue) {
-                        this.picker.setDate(initialValue, false);
+                },
+                resetPicker() {
+                    if (this.picker) {
+                        this.picker.clear();
+                        this.fechaActual = '';
                     }
                 }
             }"
-            x-init="$nextTick(() => initFlatpickr())"
-            @limpiar-filtros.window="if(picker) { picker.clear(); @this.set('fechaFin', ''); }">
+            x-init="initFlatpickr()"
+            @limpiar-filtros.window="resetPicker()">
                 <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">
                     <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -836,61 +868,105 @@
             background: white !important;
             color: #1e40af !important;
             font-weight: 600 !important;
-            font-size: 15px !important;
-            border: none !important;
+            font-size: 14px !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
             padding: 8px 16px !important;
             border-radius: 8px !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
-            min-width: 100px !important;
+            min-width: 85px !important;
+            appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231e40af' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 8px center !important;
+            background-size: 10px !important;
+            padding-right: 30px !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
-            background: #eff6ff !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            background-color: #f0f9ff !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231e40af' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 8px center !important;
+            background-size: 10px !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
         }
 
-        /* Estilos para las opciones del dropdown de mes */
+        .flatpickr-current-month .flatpickr-monthDropdown-months:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231e40af' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 8px center !important;
+            background-size: 10px !important;
+        }
+
+        /* Estilos para las opciones del dropdown de mes - Limpio como el de proveedor */
         .flatpickr-monthDropdown-months option {
             background: white !important;
-            color: #1e40af !important;
-            padding: 8px !important;
+            color: #334155 !important;
+            padding: 10px 16px !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+            border: none !important;
+            border-bottom: 1px solid #e5e7eb !important;
+        }
+
+        .flatpickr-monthDropdown-months option:last-child {
+            border-bottom: none !important;
+        }
+
+        .flatpickr-monthDropdown-months option:hover {
+            background: #f8fafc !important;
+            color: #3b82f6 !important;
+        }
+
+        .flatpickr-monthDropdown-months option:checked,
+        .flatpickr-monthDropdown-months option[selected] {
+            background: #eff6ff !important;
+            color: #3b82f6 !important;
+            font-weight: 600 !important;
         }
 
         .flatpickr-current-month .numInputWrapper {
             width: auto !important;
-            min-width: 80px !important;
+            min-width: 75px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            position: relative !important;
+            position: static !important;
+            flex-shrink: 0 !important;
         }
 
         .flatpickr-current-month .numInputWrapper input,
         .flatpickr-current-month .cur-year {
             color: white !important;
             font-weight: 700 !important;
-            font-size: 17px !important;
-            background: rgba(255, 255, 255, 0.2) !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            font-size: 16px !important;
+            background: rgba(255, 255, 255, 0.25) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
             padding: 8px 14px !important;
             border-radius: 8px !important;
             transition: all 0.2s ease !important;
             text-align: center !important;
-            width: 80px !important;
+            width: 75px !important;
             letter-spacing: 0.5px !important;
-            line-height: 1.5 !important;
-            height: auto !important;
+            line-height: 1.4 !important;
+            height: 38px !important;
             min-height: 38px !important;
             box-sizing: border-box !important;
+            display: block !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
         }
 
         .flatpickr-current-month .numInputWrapper:hover input,
         .flatpickr-current-month .numInputWrapper:hover .cur-year {
-            background: rgba(255, 255, 255, 0.3) !important;
+            background: rgba(255, 255, 255, 0.35) !important;
             border-color: rgba(255, 255, 255, 0.5) !important;
-            transform: translateY(-1px) !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
         }
 
         /* Flechas del año (arriba y abajo del input de año) */

@@ -118,6 +118,16 @@ class HistorialCompras extends Component
         $this->resetPage();
     }
 
+    public function updatingFechaInicio()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaFin()
+    {
+        $this->resetPage();
+    }
+
     public function limpiarFiltros()
     {
         $this->search = '';
@@ -251,10 +261,12 @@ class HistorialCompras extends Component
 
         // Filtro por rango de fechas
         if ($this->fechaInicio) {
+            \Log::info('Filtrando por fecha inicio', ['fecha' => $this->fechaInicio]);
             $query->whereDate('fecha', '>=', $this->fechaInicio);
         }
 
         if ($this->fechaFin) {
+            \Log::info('Filtrando por fecha fin', ['fecha' => $this->fechaFin]);
             $query->whereDate('fecha', '<=', $this->fechaFin);
         }
 
