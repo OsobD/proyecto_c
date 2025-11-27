@@ -130,6 +130,11 @@
                 initFlatpickr() {
                     const input = this.$refs.fechaInicio;
 
+                    // Destruir instancia previa si existe
+                    if (this.picker) {
+                        this.picker.destroy();
+                    }
+
                     // Configuración de Flatpickr
                     this.picker = flatpickr(input, {
                         dateFormat: 'Y-m-d',
@@ -138,13 +143,11 @@
                         altFormat: 'd/m/Y',
                         allowInput: false,
                         clickOpens: true,
+                        static: false,
                         onChange: (selectedDates, dateStr) => {
-                            // Actualizar Livewire solo cuando hay una fecha válida
-                            @this.set('fechaInicio', dateStr);
-                        },
-                        onClose: (selectedDates, dateStr) => {
-                            // Asegurar que se actualice al cerrar
-                            @this.set('fechaInicio', dateStr);
+                            if (dateStr) {
+                                @this.set('fechaInicio', dateStr);
+                            }
                         }
                     });
 
@@ -178,6 +181,11 @@
                 initFlatpickr() {
                     const input = this.$refs.fechaFin;
 
+                    // Destruir instancia previa si existe
+                    if (this.picker) {
+                        this.picker.destroy();
+                    }
+
                     // Configuración de Flatpickr
                     this.picker = flatpickr(input, {
                         dateFormat: 'Y-m-d',
@@ -186,13 +194,11 @@
                         altFormat: 'd/m/Y',
                         allowInput: false,
                         clickOpens: true,
+                        static: false,
                         onChange: (selectedDates, dateStr) => {
-                            // Actualizar Livewire solo cuando hay una fecha válida
-                            @this.set('fechaFin', dateStr);
-                        },
-                        onClose: (selectedDates, dateStr) => {
-                            // Asegurar que se actualice al cerrar
-                            @this.set('fechaFin', dateStr);
+                            if (dateStr) {
+                                @this.set('fechaFin', dateStr);
+                            }
                         }
                     });
 
@@ -798,11 +804,12 @@
         /* Header del calendario */
         .flatpickr-months {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-            padding: 16px 12px !important;
+            padding: 18px 16px !important;
             border-radius: 16px 16px 0 0 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
+            min-height: 64px !important;
         }
 
         .flatpickr-months .flatpickr-month {
@@ -812,14 +819,17 @@
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            height: auto !important;
         }
 
         .flatpickr-current-month {
             padding: 0 !important;
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
+            justify-content: center !important;
+            gap: 12px !important;
             height: auto !important;
+            position: static !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months {
@@ -828,10 +838,11 @@
             font-weight: 600 !important;
             font-size: 15px !important;
             border: none !important;
-            padding: 6px 12px !important;
+            padding: 8px 16px !important;
             border-radius: 8px !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
+            min-width: 100px !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
@@ -848,25 +859,30 @@
 
         .flatpickr-current-month .numInputWrapper {
             width: auto !important;
-            min-width: 60px !important;
+            min-width: 80px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            position: relative !important;
         }
 
         .flatpickr-current-month .numInputWrapper input,
         .flatpickr-current-month .cur-year {
             color: white !important;
             font-weight: 700 !important;
-            font-size: 16px !important;
+            font-size: 17px !important;
             background: rgba(255, 255, 255, 0.2) !important;
             border: 1px solid rgba(255, 255, 255, 0.3) !important;
-            padding: 8px 12px !important;
+            padding: 8px 14px !important;
             border-radius: 8px !important;
             transition: all 0.2s ease !important;
             text-align: center !important;
-            width: 70px !important;
+            width: 80px !important;
             letter-spacing: 0.5px !important;
+            line-height: 1.5 !important;
+            height: auto !important;
+            min-height: 38px !important;
+            box-sizing: border-box !important;
         }
 
         .flatpickr-current-month .numInputWrapper:hover input,
@@ -893,10 +909,13 @@
             padding: 10px !important;
             border-radius: 10px !important;
             transition: all 0.2s ease !important;
-            width: 40px !important;
-            height: 40px !important;
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
             top: auto !important;
             transform: none !important;
+            flex-shrink: 0 !important;
         }
 
         .flatpickr-months .flatpickr-prev-month:hover,
@@ -908,8 +927,8 @@
         .flatpickr-months .flatpickr-prev-month svg,
         .flatpickr-months .flatpickr-next-month svg {
             fill: white !important;
-            width: 16px !important;
-            height: 16px !important;
+            width: 18px !important;
+            height: 18px !important;
         }
 
         /* Días de la semana */
