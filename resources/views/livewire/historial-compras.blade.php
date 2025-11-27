@@ -128,20 +128,35 @@
             <div x-data="{
                 picker: null,
                 initFlatpickr() {
-                    this.picker = flatpickr(this.$refs.fechaInicio, {
+                    const input = this.$refs.fechaInicio;
+
+                    // Configuración de Flatpickr
+                    this.picker = flatpickr(input, {
                         dateFormat: 'Y-m-d',
                         locale: 'es',
                         altInput: true,
                         altFormat: 'd/m/Y',
-                        allowInput: true,
+                        allowInput: false,
+                        clickOpens: true,
                         onChange: (selectedDates, dateStr) => {
+                            // Actualizar Livewire solo cuando hay una fecha válida
+                            @this.set('fechaInicio', dateStr);
+                        },
+                        onClose: (selectedDates, dateStr) => {
+                            // Asegurar que se actualice al cerrar
                             @this.set('fechaInicio', dateStr);
                         }
                     });
+
+                    // Setear valor inicial si existe
+                    const initialValue = @this.get('fechaInicio');
+                    if (initialValue) {
+                        this.picker.setDate(initialValue, false);
+                    }
                 }
             }"
-            x-init="initFlatpickr()"
-            @limpiar-filtros.window="if(picker) picker.clear()">
+            x-init="$nextTick(() => initFlatpickr())"
+            @limpiar-filtros.window="if(picker) { picker.clear(); @this.set('fechaInicio', ''); }">
                 <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                     <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -152,29 +167,44 @@
                     x-ref="fechaInicio"
                     type="text"
                     id="fecha_inicio"
-                    wire:model="fechaInicio"
-                    placeholder="dd/mm/aaaa"
-                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer">
+                    placeholder="Seleccionar fecha..."
+                    readonly
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer bg-white">
             </div>
 
             {{-- Fecha Fin con Flatpickr --}}
             <div x-data="{
                 picker: null,
                 initFlatpickr() {
-                    this.picker = flatpickr(this.$refs.fechaFin, {
+                    const input = this.$refs.fechaFin;
+
+                    // Configuración de Flatpickr
+                    this.picker = flatpickr(input, {
                         dateFormat: 'Y-m-d',
                         locale: 'es',
                         altInput: true,
                         altFormat: 'd/m/Y',
-                        allowInput: true,
+                        allowInput: false,
+                        clickOpens: true,
                         onChange: (selectedDates, dateStr) => {
+                            // Actualizar Livewire solo cuando hay una fecha válida
+                            @this.set('fechaFin', dateStr);
+                        },
+                        onClose: (selectedDates, dateStr) => {
+                            // Asegurar que se actualice al cerrar
                             @this.set('fechaFin', dateStr);
                         }
                     });
+
+                    // Setear valor inicial si existe
+                    const initialValue = @this.get('fechaFin');
+                    if (initialValue) {
+                        this.picker.setDate(initialValue, false);
+                    }
                 }
             }"
-            x-init="initFlatpickr()"
-            @limpiar-filtros.window="if(picker) picker.clear()">
+            x-init="$nextTick(() => initFlatpickr())"
+            @limpiar-filtros.window="if(picker) { picker.clear(); @this.set('fechaFin', ''); }">
                 <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">
                     <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -185,9 +215,9 @@
                     x-ref="fechaFin"
                     type="text"
                     id="fecha_fin"
-                    wire:model="fechaFin"
-                    placeholder="dd/mm/aaaa"
-                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer">
+                    placeholder="Seleccionar fecha..."
+                    readonly
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer bg-white">
             </div>
 
             {{-- Botón Limpiar Filtros --}}
@@ -817,27 +847,34 @@
         }
 
         .flatpickr-current-month .numInputWrapper {
-            width: 70px !important;
+            width: auto !important;
+            min-width: 60px !important;
             display: flex !important;
             align-items: center !important;
+            justify-content: center !important;
         }
 
         .flatpickr-current-month .numInputWrapper input,
         .flatpickr-current-month .cur-year {
             color: white !important;
-            font-weight: 600 !important;
-            font-size: 15px !important;
-            background: rgba(255, 255, 255, 0.15) !important;
-            border: none !important;
-            padding: 6px 8px !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            padding: 8px 12px !important;
             border-radius: 8px !important;
             transition: all 0.2s ease !important;
             text-align: center !important;
+            width: 70px !important;
+            letter-spacing: 0.5px !important;
         }
 
         .flatpickr-current-month .numInputWrapper:hover input,
         .flatpickr-current-month .numInputWrapper:hover .cur-year {
-            background: rgba(255, 255, 255, 0.25) !important;
+            background: rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
         }
 
         /* Flechas del año (arriba y abajo del input de año) */
