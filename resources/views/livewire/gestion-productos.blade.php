@@ -216,9 +216,16 @@
                                                                 {{-- Número de Bodegas --}}
                                                                 <td class="py-3 px-4 text-center">
                                                                     @if($lote->num_bodegas > 0)
-                                                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                                                                        <button
+                                                                            wire:click="toggleBodegasLote({{ $lote->lote_id }})"
+                                                                            class="bg-purple-100 hover:bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                                            title="Click para ver detalles de ubicación">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                            </svg>
                                                                             {{ $lote->num_bodegas }} {{ $lote->num_bodegas == 1 ? 'bodega' : 'bodegas' }}
-                                                                        </span>
+                                                                        </button>
                                                                     @else
                                                                         <span class="text-gray-400 text-xs">Sin ubicación</span>
                                                                     @endif
@@ -276,7 +283,7 @@
 
                                                                 {{-- Acciones --}}
                                                                 <td class="py-3 px-4 text-center">
-                                                                    @if($editingLoteId === $lote->id)
+                                                                    @if($editingLoteId === $lote->lote_id)
                                                                         {{-- Modo edición: mostrar guardar y cancelar --}}
                                                                         <div class="flex item-center justify-center gap-1">
                                                                             <button wire:click="guardarLote" class="bg-[var(--color-eemq-interactive)] hover:bg-[var(--color-eemq-primary)] text-white p-1.5 rounded transition-colors" title="Guardar cambios">
@@ -312,6 +319,44 @@
                                                                     @endif
                                                                 </td>
                                                             </tr>
+
+                                                            {{-- Acordeón anidado: Detalle de bodegas del lote --}}
+                                                            @if($loteIdBodegasExpandido === $lote->lote_id && $bodegasDelLote && $bodegasDelLote->count() > 0)
+                                                                <tr class="bg-indigo-50" wire:key="bodegas-lote-{{ $lote->lote_id }}">
+                                                                    <td colspan="9" class="py-4 px-6">
+                                                                        <div class="bg-white rounded-lg p-4 border-2 border-indigo-200">
+                                                                            <h4 class="text-sm font-semibold text-indigo-900 mb-3 flex items-center gap-2">
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                                </svg>
+                                                                                Ubicaciones del Lote #{{ $lote->lote_id }}
+                                                                            </h4>
+                                                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                                                @foreach($bodegasDelLote as $bodega)
+                                                                                    <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                                                                                        <div class="flex items-center justify-between">
+                                                                                            <div class="flex-1">
+                                                                                                <div class="flex items-center gap-2 mb-1">
+                                                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                                                                    </svg>
+                                                                                                    <span class="text-sm font-semibold text-gray-800">{{ $bodega->bodega_nombre }}</span>
+                                                                                                </div>
+                                                                                                <p class="text-xs text-gray-500">Bodega ID: {{ $bodega->bodega_id }}</p>
+                                                                                            </div>
+                                                                                            <div class="text-right">
+                                                                                                <div class="text-2xl font-bold text-purple-700">{{ $bodega->cantidad }}</div>
+                                                                                                <div class="text-xs text-gray-500">unidades</div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
                                                         @endforeach
                                                     </tbody>
                                                 </table>
