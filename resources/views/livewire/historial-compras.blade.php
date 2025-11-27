@@ -770,33 +770,56 @@
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
             padding: 16px 12px !important;
             border-radius: 16px 16px 0 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
         }
 
         .flatpickr-months .flatpickr-month {
             background: transparent !important;
             color: white !important;
+            flex: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
         .flatpickr-current-month {
-            padding: 4px 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            height: auto !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months {
-            background: transparent !important;
-            color: white !important;
+            background: white !important;
+            color: #1e40af !important;
             font-weight: 600 !important;
             font-size: 15px !important;
             border: none !important;
-            padding: 4px 8px !important;
-            border-radius: 6px !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
-            background: rgba(255, 255, 255, 0.15) !important;
+            background: #eff6ff !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Estilos para las opciones del dropdown de mes */
+        .flatpickr-monthDropdown-months option {
+            background: white !important;
+            color: #1e40af !important;
+            padding: 8px !important;
         }
 
         .flatpickr-current-month .numInputWrapper {
             width: 70px !important;
+            display: flex !important;
+            align-items: center !important;
         }
 
         .flatpickr-current-month .numInputWrapper input,
@@ -804,33 +827,52 @@
             color: white !important;
             font-weight: 600 !important;
             font-size: 15px !important;
-            background: transparent !important;
-            border: none !important;
-            padding: 4px !important;
-        }
-
-        .flatpickr-current-month .numInputWrapper:hover {
             background: rgba(255, 255, 255, 0.15) !important;
-            border-radius: 6px !important;
-        }
-
-        /* Flechas de navegación */
-        .flatpickr-months .flatpickr-prev-month,
-        .flatpickr-months .flatpickr-next-month {
-            fill: white !important;
-            padding: 8px !important;
+            border: none !important;
+            padding: 6px 8px !important;
             border-radius: 8px !important;
             transition: all 0.2s ease !important;
+            text-align: center !important;
+        }
+
+        .flatpickr-current-month .numInputWrapper:hover input,
+        .flatpickr-current-month .numInputWrapper:hover .cur-year {
+            background: rgba(255, 255, 255, 0.25) !important;
+        }
+
+        /* Flechas del año (arriba y abajo del input de año) */
+        .flatpickr-current-month .numInputWrapper span {
+            display: none !important;
+        }
+
+        /* Flechas de navegación de mes - CENTRADAS */
+        .flatpickr-months .flatpickr-prev-month,
+        .flatpickr-months .flatpickr-next-month {
+            position: static !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            fill: white !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+            transition: all 0.2s ease !important;
+            width: 40px !important;
+            height: 40px !important;
+            top: auto !important;
+            transform: none !important;
         }
 
         .flatpickr-months .flatpickr-prev-month:hover,
         .flatpickr-months .flatpickr-next-month:hover {
             background: rgba(255, 255, 255, 0.2) !important;
+            transform: scale(1.1) !important;
         }
 
         .flatpickr-months .flatpickr-prev-month svg,
         .flatpickr-months .flatpickr-next-month svg {
             fill: white !important;
+            width: 16px !important;
+            height: 16px !important;
         }
 
         /* Días de la semana */
