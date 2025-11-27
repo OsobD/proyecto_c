@@ -83,16 +83,16 @@ class DetalleLote extends Component
                 DB::raw("'bodega' as tipo")
             );
 
-        // Obtener ubicaciones en tarjetas
+        // Obtener ubicaciones en tarjetas (cada registro = 1 unidad)
         $tarjetas = DB::table('tarjeta_producto as pt')
             ->join('tarjeta_responsabilidad as tr', 'pt.id_tarjeta', '=', 'tr.id')
             ->join('persona as p', 'tr.id_persona', '=', 'p.id')
             ->where('pt.id_lote', $this->loteId)
-            ->where('pt.cantidad', '>', 0)
+            ->groupBy('tr.id', 'p.nombres', 'p.apellidos')
             ->select(
                 'tr.id',
                 DB::raw("CONCAT(p.nombres, ' ', p.apellidos, ' (Tarjeta #', tr.id, ')') as nombre"),
-                'pt.cantidad',
+                DB::raw('COUNT(*) as cantidad'),
                 DB::raw("'tarjeta' as tipo")
             );
 
@@ -127,8 +127,8 @@ class DetalleLote extends Component
 
         $totalTarjetas = DB::table('tarjeta_producto')
             ->where('id_lote', $this->loteId)
-            ->where('cantidad', '>', 0)
-            ->count();
+            ->distinct('id_tarjeta')
+            ->count('id_tarjeta');
 
         $cantidadEnBodegas = DB::table('lote_bodega')
             ->where('id_lote', $this->loteId)
@@ -136,7 +136,7 @@ class DetalleLote extends Component
 
         $cantidadEnTarjetas = DB::table('tarjeta_producto')
             ->where('id_lote', $this->loteId)
-            ->sum('cantidad');
+            ->count();
 
         return view('livewire.detalle-lote', [
             'lote' => $lote,

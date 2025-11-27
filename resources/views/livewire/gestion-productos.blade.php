@@ -71,6 +71,32 @@
             </div>
         </div>
 
+        {{-- Controles de paginación y conteo --}}
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">
+                Productos encontrados: <span class="text-blue-600">{{ $productos->total() }}</span>
+            </h2>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600 font-medium">Mostrar:</span>
+                    <select wire:model.live="perPage"
+                            class="border-2 border-gray-300 rounded-lg text-sm shadow-sm py-1.5 px-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                
+                <p class="text-sm text-gray-600">
+                    Mostrando {{ $productos->firstItem() ?? 0 }} - {{ $productos->lastItem() ?? 0 }} de {{ $productos->total() }}
+                </p>
+            </div>
+        </div>
+
         {{-- Tabla de listado de productos --}}
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
@@ -642,75 +668,156 @@
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
         }
+
+        /* Estilos para checkbox personalizado */
+        .custom-checkbox-container {
+            position: relative;
+        }
+
+        .custom-checkbox-container input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .custom-checkmark {
+            height: 20px;
+            min-width: 20px;
+            background-color: white;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .custom-checkbox-container:hover .custom-checkmark {
+            border-color: #9ca3af;
+        }
+
+        .custom-checkbox-container input:checked ~ .custom-checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .custom-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-checkbox-container input:checked ~ .custom-checkmark:after {
+            display: block;
+        }
     </style>
 
     {{-- Modal de Filtros / Ajustes --}}
-    @if($showFilterModal)
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-            <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                {{-- Header --}}
-                <div class="flex items-center justify-between p-4 border-b">
-                    <h3 class="text-lg font-semibold text-gray-900">Filtros / Ajustes</h3>
-                    <button wire:click="closeFilterModal" class="text-gray-400 hover:text-gray-500">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
+    <div x-data="{
+            show: @entangle('showFilterModal').live,
+            animatingOut: false
+         }"
+         x-show="show || animatingOut"
+         x-cloak
+         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+         @animationend="if (!show) animatingOut = false"
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+         wire:click.self="closeFilterModal"
+         wire:ignore.self>
+        <div class="relative border w-full max-w-lg shadow-2xl rounded-xl bg-white max-h-[85vh] flex flex-col overflow-hidden"
+             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+             @click.stop>
+            
+            {{-- Header (Fijo) --}}
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 shrink-0">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    Filtros y Ajustes
+                </h3>
+                <button wire:click="closeFilterModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Body (Scrollable) --}}
+            <div class="p-5 overflow-y-auto flex-1">
+                {{-- Sección: Ordenar por --}}
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Ordenar por</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        @foreach([
+                            'id' => 'Código',
+                            'descripcion' => 'Descripción'
+                        ] as $field => $label)
+                            <button
+                                wire:click="sortBy('{{ $field }}')"
+                                class="flex items-center justify-between px-3 py-2 rounded-lg border {{ $sortField === $field ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50' }} transition-all text-sm font-medium">
+                                <span>{{ $label }}</span>
+                                @if($sortField === $field)
+                                    <span class="text-xs font-bold">{{ $sortDirection === 'asc' ? '↑ ASC' : '↓ DESC' }}</span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
 
-                {{-- Body --}}
-                <div class="p-4 space-y-4">
-                    {{-- Ordenamiento --}}
+                {{-- Sección: Filtrar por --}}
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Filtrar por</h4>
+                    
+                    {{-- Filtro Tipo de Producto --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por:</label>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input type="radio" wire:model.live="sortField" value="id" class="mr-2">
-                                <span>ID</span>
-                            </label>
-                            <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input type="radio" wire:model.live="sortField" value="descripcion" class="mr-2">
-                                <span>Descripción</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {{-- Dirección --}}
-                    @if($sortField)
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Dirección:</label>
-                            <div class="flex gap-2">
-                                <label class="flex-1 flex items-center justify-center cursor-pointer hover:bg-gray-50 p-2 rounded border {{ $sortDirection === 'asc' ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }}">
-                                    <input type="radio" wire:model.live="sortDirection" value="asc" class="mr-2">
-                                    <span>Ascendente ↑</span>
-                                </label>
-                                <label class="flex-1 flex items-center justify-center cursor-pointer hover:bg-gray-50 p-2 rounded border {{ $sortDirection === 'desc' ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }}">
-                                    <input type="radio" wire:model.live="sortDirection" value="desc" class="mr-2">
-                                    <span>Descendente ↓</span>
-                                </label>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Mostrar inactivos --}}
-                    <div class="border-t pt-4">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="checkbox" wire:model.live="showInactive" class="w-4 h-4 text-blue-600 rounded">
-                            <span class="ml-2 text-sm font-medium text-gray-700">Mostrar productos desactivados</span>
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Producto</label>
+                        <select wire:model.live="filterTipo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="">Todos los productos</option>
+                            <option value="consumible">Solo Consumibles</option>
+                            <option value="no_consumible">Solo No Consumibles</option>
+                        </select>
                     </div>
                 </div>
 
-                {{-- Footer --}}
-                <div class="flex items-center justify-between p-4 border-t gap-2">
-                    <button wire:click="clearFilters" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                        Limpiar filtros
-                    </button>
-                    <button wire:click="closeFilterModal" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                        Cerrar
-                    </button>
+                {{-- Sección: Opciones de Visualización --}}
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Visualización</h4>
+                    
+                    <label class="custom-checkbox-container gap-3 cursor-pointer select-none p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full flex items-center">
+                        <input type="checkbox" wire:model.live="showInactive">
+                        <div class="custom-checkmark"></div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-800">Mostrar productos desactivados</span>
+                            <span class="text-xs text-gray-500">Incluir productos que han sido dados de baja</span>
+                        </div>
+                    </label>
                 </div>
             </div>
+
+            {{-- Footer (Fijo) --}}
+            <div class="flex justify-between items-center p-5 border-t border-gray-100 bg-gray-50 shrink-0">
+                <button
+                    type="button"
+                    wire:click="clearFilters"
+                    class="text-sm text-red-600 hover:text-red-800 font-medium hover:underline">
+                    Limpiar filtros
+                </button>
+                
+                <button
+                    type="button"
+                    wire:click="closeFilterModal"
+                    class="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Listo
+                </button>
+            </div>
         </div>
-    @endif
+    </div>
 </div>
