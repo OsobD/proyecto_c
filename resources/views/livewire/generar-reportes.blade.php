@@ -267,7 +267,7 @@
             @if($tabActivo === 'inventario')
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Inventario</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Reporte</label>
                             <div class="relative">
@@ -334,7 +334,7 @@
                                                     class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
                                                     Todos los productos
                                                 </li>
-                                                @foreach (array_slice($this->productoResults, 0, 10) as $producto)
+                                                @foreach ($this->productoResults as $producto)
                                                     <li wire:click.prevent="selectProductoFiltro({{ $producto['id'] }})"
                                                         @click="open = false"
                                                         class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
@@ -379,46 +379,6 @@
                                                         @click="open = false"
                                                         class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
                                                         {{ $bodega['nombre'] }}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
-                            <div class="relative">
-                                @if($selectedUsuarioFiltro)
-                                    <div wire:click="clearUsuarioFiltro"
-                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
-                                        <span class="font-medium text-gray-800">{{ $selectedUsuarioFiltro['nombre'] }}</span>
-                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
-                                    </div>
-                                @else
-                                    <div class="relative" x-data="{ open: @entangle('showUsuarioDropdown').live }" @click.outside="open = false">
-                                        <input
-                                            type="text"
-                                            wire:model.live.debounce.300ms="searchUsuarioFiltro"
-                                            @click="open = true"
-                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
-                                            placeholder="Buscar usuario...">
-                                        <div x-show="open"
-                                             x-transition
-                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
-                                            <ul>
-                                                <li wire:click.prevent="clearUsuarioFiltro"
-                                                    @click="open = false"
-                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
-                                                    Todos los usuarios
-                                                </li>
-                                                @foreach ($this->usuarioResults as $usuario)
-                                                    <li wire:click.prevent="selectUsuarioFiltro({{ $usuario['id'] }})"
-                                                        @click="open = false"
-                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
-                                                        {{ $usuario['nombre'] }}
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -570,7 +530,7 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800">Resultado del Reporte</h2>
-            @if(!empty($datosKardex))
+            @if(!empty($datosKardex) || !empty($datosReporte))
                 <div class="flex space-x-2">
                     <button
                         wire:click="imprimir"
@@ -667,6 +627,52 @@
                         <tr>
                             <td colspan="13" class="py-3 px-3 text-right text-sm">
                                 Total de movimientos: {{ count($datosKardex) }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        @elseif(!empty($datosReporte))
+            {{-- Tabla genérica para otros reportes --}}
+            <div class="overflow-x-auto">
+                @if(!empty($tituloReporte))
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ $tituloReporte }}</h3>
+                @endif
+                <table class="min-w-full bg-white text-xs">
+                    <thead class="bg-blue-600 text-white uppercase text-xs leading-normal sticky top-0">
+                        <tr>
+                            @if(count($datosReporte) > 0)
+                                @foreach(array_keys($datosReporte[0]) as $columna)
+                                    <th class="py-2 px-3 text-left">{{ ucfirst(str_replace('_', ' ', $columna)) }}</th>
+                                @endforeach
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-xs">
+                        @foreach($datosReporte as $index => $fila)
+                            <tr class="border-b border-gray-200 hover:bg-gray-100 {{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
+                                @foreach($fila as $campo => $valor)
+                                    <td class="py-2 px-3 text-left">
+                                        @if(is_numeric($valor) && !is_string($campo))
+                                            {{ number_format($valor, 2) }}
+                                        @elseif(in_array($campo, ['fecha']))
+                                            {{ \Carbon\Carbon::parse($valor)->format('d/m/Y') }}
+                                        @elseif(in_array($campo, ['total', 'subtotal', 'costo_total', 'costo_promedio', 'costo_unitario', 'valor_total', 'valor_unitario', 'precio_factura', 'total_con_iva']))
+                                            Q {{ number_format($valor, 2) }}
+                                        @elseif(in_array($campo, ['cantidad', 'cantidad_total', 'cantidad_actual', 'stock_minimo', 'diferencia']))
+                                            {{ number_format($valor, 0) }}
+                                        @else
+                                            {{ $valor }}
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-gray-100 font-bold">
+                        <tr>
+                            <td colspan="{{ count(array_keys($datosReporte[0] ?? [])) }}" class="py-3 px-3 text-right text-sm">
+                                Total de registros: {{ count($datosReporte) }}
                             </td>
                         </tr>
                     </tfoot>
