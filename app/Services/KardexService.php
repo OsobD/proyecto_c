@@ -215,6 +215,13 @@ class KardexService
         }
 
         $salidas = $query->get();
+
+        // Log temporal para debug
+        \Log::info('KardexService - Salidas encontradas: ' . $salidas->count());
+        if ($salidas->count() > 0) {
+            \Log::info('Primera salida: ID=' . $salidas->first()->id . ', Fecha=' . $salidas->first()->fecha . ', Detalles=' . $salidas->first()->detalles->count());
+        }
+
         $movimientos = collect();
 
         foreach ($salidas as $salida) {

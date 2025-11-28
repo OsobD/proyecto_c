@@ -159,7 +159,7 @@
             @if($tabActivo === 'inventario')
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Inventario</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label for="tipo_reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
                             <select
@@ -173,20 +173,18 @@
                             </select>
                         </div>
 
-                        @if($tipoReporte === 'kardex')
-                            <div>
-                                <label for="producto" class="block text-sm font-medium text-gray-700 mb-1">Producto</label>
-                                <select
-                                    id="producto"
-                                    wire:model="productoSeleccionado"
-                                    class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                    <option value="">Todos los productos</option>
-                                    @foreach ($productos as $producto)
-                                        <option value="{{ $producto['id'] }}">{{ $producto['nombre'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
+                        <div>
+                            <label for="producto" class="block text-sm font-medium text-gray-700 mb-1">Producto (Opcional)</label>
+                            <select
+                                id="producto"
+                                wire:model="productoSeleccionado"
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                                <option value="">Todos los productos</option>
+                                @foreach ($productos as $producto)
+                                    <option value="{{ $producto['id'] }}">{{ $producto['nombre'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
                         <div>
                             <label for="bodega" class="block text-sm font-medium text-gray-700 mb-1">Bodega</label>
@@ -201,60 +199,36 @@
                             </select>
                         </div>
 
-                        @if($tipoReporte === 'kardex')
-                            <div>
-                                <label for="usuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                                <select
-                                    id="usuario"
-                                    wire:model="usuarioSeleccionado"
-                                    class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                    <option value="">Todos</option>
-                                    @foreach ($usuarios as $usuario)
-                                        <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        <div>
+                            <label for="usuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                            <select
+                                id="usuario"
+                                wire:model="usuarioSeleccionado"
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                                <option value="">Todos</option>
+                                @foreach ($usuarios as $usuario)
+                                    <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                            <div>
-                                <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
-                                <input
-                                    type="date"
-                                    id="fecha_inicio"
-                                    wire:model="fechaInicio"
-                                    class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                            </div>
+                        <div>
+                            <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                            <input
+                                type="date"
+                                id="fecha_inicio"
+                                wire:model="fechaInicio"
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                        </div>
 
-                            <div>
-                                <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
-                                <input
-                                    type="date"
-                                    id="fecha_fin"
-                                    wire:model="fechaFin"
-                                    class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                            </div>
-                        @else
-                            <div>
-                                <label for="usuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                                <select
-                                    id="usuario"
-                                    wire:model="usuarioSeleccionado"
-                                    class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                    <option value="">Todos</option>
-                                    @foreach ($usuarios as $usuario)
-                                        <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Corte</label>
-                                <input
-                                    type="date"
-                                    id="fecha_fin"
-                                    wire:model="fechaFin"
-                                    class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                            </div>
-                        @endif
+                        <div>
+                            <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+                            <input
+                                type="date"
+                                id="fecha_fin"
+                                wire:model="fechaFin"
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                        </div>
                     </div>
                 </div>
             @endif
