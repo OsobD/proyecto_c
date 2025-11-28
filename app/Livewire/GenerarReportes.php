@@ -131,8 +131,7 @@ class GenerarReportes extends Component
         ];
 
         $this->reportesTraslados = [
-            ['id' => 'traslados_bodega', 'nombre' => 'Traslados por Bodega'],
-            ['id' => 'traslados_periodo', 'nombre' => 'Traslados por Período'],
+            ['id' => 'traslados_periodo', 'nombre' => 'Reporte de Traslados'],
             ['id' => 'requisiciones_area', 'nombre' => 'Requisiciones por Área'],
             ['id' => 'devoluciones', 'nombre' => 'Reporte de Devoluciones'],
         ];
@@ -278,9 +277,6 @@ class GenerarReportes extends Component
                 break;
 
             // Reportes de Traslados
-            case 'traslados_bodega':
-                $this->generarTrasladosPorBodega();
-                break;
             case 'traslados_periodo':
                 $this->generarTrasladosPorPeriodo();
                 break;
@@ -747,7 +743,7 @@ class GenerarReportes extends Component
 
     // ==================== REPORTES DE TRASLADOS ====================
 
-    private function generarTrasladosPorBodega()
+    private function generarTrasladosPorPeriodo()
     {
         try {
             $query = Traslado::with(['bodegaOrigen', 'bodegaDestino']);
@@ -758,6 +754,7 @@ class GenerarReportes extends Component
                       ->whereDate('fecha', '<=', $this->fechaFin);
             }
 
+            // Filtrar por bodega si está seleccionada (origen o destino)
             if ($this->bodegaSeleccionada) {
                 $query->where(function ($q) {
                     $q->where('id_bodega_origen', $this->bodegaSeleccionada)
@@ -765,7 +762,7 @@ class GenerarReportes extends Component
                 });
             }
 
-            $traslados = $query->get();
+            $traslados = $query->orderBy('fecha', 'desc')->get();
 
             if ($traslados->isEmpty()) {
                 session()->flash('error', 'No se encontraron traslados con los filtros seleccionados.');
@@ -783,42 +780,7 @@ class GenerarReportes extends Component
                 ];
             })->toArray();
 
-            $this->tituloReporte = 'Traslados por Bodega';
-            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' traslados.');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
-        }
-    }
-
-    private function generarTrasladosPorPeriodo()
-    {
-        try {
-            $query = Traslado::with(['bodegaOrigen', 'bodegaDestino']);
-
-            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
-                $query->whereDate('fecha', '>=', $this->fechaInicio)
-                      ->whereDate('fecha', '<=', $this->fechaFin);
-            }
-
-            $traslados = $query->orderBy('fecha', 'desc')->get();
-
-            if ($traslados->isEmpty()) {
-                session()->flash('error', 'No se encontraron traslados en el período seleccionado.');
-                return;
-            }
-
-            $this->datosReporte = $traslados->map(function ($traslado) {
-                return [
-                    'fecha' => $traslado->fecha,
-                    'no_traslado' => $traslado->correlativo ?? ($traslado->no_requisicion ?? 'N/A'),
-                    'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
-                    'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
-                    'estado' => $traslado->estado ?? 'N/A',
-                    'total' => $traslado->total,
-                ];
-            })->toArray();
-
-            $this->tituloReporte = 'Traslados por Período';
+            $this->tituloReporte = 'Reporte de Traslados';
             session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' traslados.');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
@@ -915,21 +877,24 @@ class GenerarReportes extends Component
     private function generarInventarioPorBodega()
     {
         try {
-            $query = DB::table('inventario as i')
-                ->join('productos as p', 'i.id_producto', '=', 'p.id')
-                ->join('bodegas as b', 'i.id_bodega', '=', 'b.id')
-                ->leftJoin('categorias as c', 'p.id_categoria', '=', 'c.id')
+            $query = DB::table('lote_bodega as lb')
+                ->join('lote as l', 'lb.id_lote', '=', 'l.id')
+                ->join('producto as p', 'l.id_producto', '=', 'p.id')
+                ->join('bodega as b', 'lb.id_bodega', '=', 'b.id')
+                ->leftJoin('categoria as c', 'p.id_categoria', '=', 'c.id')
                 ->select(
                     'b.nombre as bodega',
                     'p.descripcion as producto',
                     'c.nombre as categoria',
-                    'i.cantidad',
-                    'i.costo_promedio'
+                    DB::raw('SUM(lb.cantidad) as cantidad'),
+                    DB::raw('AVG(l.precio_ingreso) as costo_promedio')
                 )
-                ->where('i.cantidad', '>', 0);
+                ->where('lb.cantidad', '>', 0)
+                ->where('l.estado', true)
+                ->groupBy('b.id', 'b.nombre', 'p.id', 'p.descripcion', 'c.id', 'c.nombre');
 
             if ($this->bodegaSeleccionada) {
-                $query->where('i.id_bodega', $this->bodegaSeleccionada);
+                $query->where('lb.id_bodega', $this->bodegaSeleccionada);
             }
 
             $inventario = $query->get();
@@ -960,20 +925,23 @@ class GenerarReportes extends Component
     private function generarTarjetaResponsabilidad()
     {
         try {
-            $query = DB::table('inventario as i')
-                ->join('productos as p', 'i.id_producto', '=', 'p.id')
-                ->join('bodegas as b', 'i.id_bodega', '=', 'b.id')
+            $query = DB::table('lote_bodega as lb')
+                ->join('lote as l', 'lb.id_lote', '=', 'l.id')
+                ->join('producto as p', 'l.id_producto', '=', 'p.id')
+                ->join('bodega as b', 'lb.id_bodega', '=', 'b.id')
                 ->select(
                     'b.nombre as bodega',
                     'b.responsable',
                     'p.descripcion as producto',
-                    'i.cantidad',
-                    'i.costo_promedio'
+                    DB::raw('SUM(lb.cantidad) as cantidad'),
+                    DB::raw('AVG(l.precio_ingreso) as costo_promedio')
                 )
-                ->where('i.cantidad', '>', 0);
+                ->where('lb.cantidad', '>', 0)
+                ->where('l.estado', true)
+                ->groupBy('b.id', 'b.nombre', 'b.responsable', 'p.id', 'p.descripcion');
 
             if ($this->bodegaSeleccionada) {
-                $query->where('i.id_bodega', $this->bodegaSeleccionada);
+                $query->where('lb.id_bodega', $this->bodegaSeleccionada);
             }
 
             $inventario = $query->get();
@@ -1004,21 +972,23 @@ class GenerarReportes extends Component
     private function generarStockMinimo()
     {
         try {
-            $productos = DB::table('inventario as i')
-                ->join('productos as p', 'i.id_producto', '=', 'p.id')
-                ->join('bodegas as b', 'i.id_bodega', '=', 'b.id')
+            $productos = DB::table('lote_bodega as lb')
+                ->join('lote as l', 'lb.id_lote', '=', 'l.id')
+                ->join('producto as p', 'l.id_producto', '=', 'p.id')
+                ->join('bodega as b', 'lb.id_bodega', '=', 'b.id')
                 ->select(
                     'p.descripcion as producto',
                     'b.nombre as bodega',
-                    'i.cantidad',
-                    'p.stock_minimo',
-                    'i.costo_promedio'
+                    DB::raw('SUM(lb.cantidad) as cantidad'),
+                    'p.stock_minimo'
                 )
-                ->whereRaw('i.cantidad <= p.stock_minimo')
-                ->where('p.activo', true);
+                ->where('l.estado', true)
+                ->where('p.activo', true)
+                ->groupBy('b.id', 'b.nombre', 'p.id', 'p.descripcion', 'p.stock_minimo')
+                ->havingRaw('SUM(lb.cantidad) <= p.stock_minimo');
 
             if ($this->bodegaSeleccionada) {
-                $productos->where('i.id_bodega', $this->bodegaSeleccionada);
+                $productos->where('lb.id_bodega', $this->bodegaSeleccionada);
             }
 
             $resultado = $productos->get();
