@@ -108,6 +108,7 @@ class KardexService
                     'cantidad_entrada' => $detalle->cantidad,
                     'cantidad_salida' => 0,
                     'costo_unitario' => $detalle->precio_ingreso,
+                    'lote_id' => null, // Las compras crean lotes, no tienen lote previo
                     'usuario' => $compra->usuario->name ?? 'N/A',
                     'observaciones' => $compra->no_serie ? "Serie: {$compra->no_serie}" : null,
                 ]);
@@ -171,6 +172,7 @@ class KardexService
                     'cantidad_entrada' => $detalle->cantidad,
                     'cantidad_salida' => 0,
                     'costo_unitario' => $detalle->precio_ingreso ?? 0,
+                    'lote_id' => null, // Las entradas crean lotes
                     'usuario' => $entrada->usuario->name ?? 'N/A',
                     'observaciones' => null,
                 ]);
@@ -238,7 +240,7 @@ class KardexService
                     'producto_id' => $detalle->id_producto,
                     'producto' => $detalle->producto->descripcion ?? 'N/A',
                     'categoria' => $detalle->producto->categoria->nombre ?? 'Sin categoría',
-                    'descripcion' => $salida->tipoSalida->nombre ?? 'Requisición',
+                    'descripcion' => 'Requisición',
                     'documento' => 'Requisición No. ' . $salida->id,
                     'proveedor' => $salida->persona->nombre ?? 'N/A',
                     'bodega_id' => $salida->id_bodega,
@@ -246,6 +248,7 @@ class KardexService
                     'cantidad_entrada' => 0,
                     'cantidad_salida' => $detalle->cantidad,
                     'costo_unitario' => $detalle->lote->precio_ingreso ?? 0,
+                    'lote_id' => $detalle->id_lote,
                     'usuario' => $salida->usuario->name ?? 'N/A',
                     'observaciones' => $salida->descripcion,
                 ]);
@@ -322,6 +325,7 @@ class KardexService
                         'cantidad_entrada' => 0,
                         'cantidad_salida' => $detalle->cantidad,
                         'costo_unitario' => $detalle->lote->precio_ingreso ?? 0,
+                        'lote_id' => $detalle->id_lote,
                         'usuario' => $traslado->usuario->name ?? 'N/A',
                         'observaciones' => $traslado->descripcion,
                     ]);
@@ -345,6 +349,7 @@ class KardexService
                         'cantidad_entrada' => $detalle->cantidad,
                         'cantidad_salida' => 0,
                         'costo_unitario' => $detalle->lote->precio_ingreso ?? 0,
+                        'lote_id' => $detalle->id_lote,
                         'usuario' => $traslado->usuario->name ?? 'N/A',
                         'observaciones' => $traslado->descripcion,
                     ]);
@@ -410,6 +415,7 @@ class KardexService
                     'cantidad_entrada' => $detalle->cantidad,
                     'cantidad_salida' => 0,
                     'costo_unitario' => $detalle->precio ?? $detalle->lote->precio_ingreso ?? 0,
+                    'lote_id' => $detalle->id_lote,
                     'usuario' => $devolucion->usuario->name ?? 'N/A',
                     'observaciones' => 'Estado: ' . ($detalle->estado ?? 'N/A'),
                 ]);

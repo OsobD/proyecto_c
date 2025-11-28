@@ -327,6 +327,7 @@
                             <th class="py-2 px-3 text-left">Producto</th>
                             <th class="py-2 px-3 text-left">Descripción</th>
                             <th class="py-2 px-3 text-left">Documento</th>
+                            <th class="py-2 px-3 text-center">Lote</th>
                             <th class="py-2 px-3 text-left">Bodega</th>
                             <th class="py-2 px-3 text-right">Entrada</th>
                             <th class="py-2 px-3 text-right">Salida</th>
@@ -362,6 +363,15 @@
                                     </span>
                                 </td>
                                 <td class="py-2 px-3 text-left">{{ $movimiento['documento'] }}</td>
+                                <td class="py-2 px-3 text-center">
+                                    @if($movimiento['lote_id'])
+                                        <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-mono">
+                                            #{{ $movimiento['lote_id'] }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    @endif
+                                </td>
                                 <td class="py-2 px-3 text-left">{{ $movimiento['bodega'] }}</td>
                                 <td class="py-2 px-3 text-right {{ $movimiento['cantidad_entrada'] > 0 ? 'text-green-600 font-semibold' : '' }}">
                                     {{ $movimiento['cantidad_entrada'] > 0 ? number_format($movimiento['cantidad_entrada'], 0) : '-' }}
@@ -387,7 +397,7 @@
                     </tbody>
                     <tfoot class="bg-gray-100 font-bold">
                         <tr>
-                            <td colspan="13" class="py-3 px-3 text-right text-sm">
+                            <td colspan="14" class="py-3 px-3 text-right text-sm">
                                 Total de movimientos: {{ count($datosKardex) }}
                             </td>
                         </tr>
