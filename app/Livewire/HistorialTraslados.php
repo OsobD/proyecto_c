@@ -57,6 +57,12 @@ class HistorialTraslados extends Component
     /** @var int Items por página */
     public $perPage = 15;
 
+    /** @var string Campo por el cual ordenar */
+    public $sortField = 'fecha';
+
+    /** @var string Dirección del ordenamiento (asc/desc) */
+    public $sortDirection = 'desc';
+
     /** @var bool Controla visibilidad del modal de detalle */
     public $showModalVer = false;
 
@@ -240,6 +246,26 @@ class HistorialTraslados extends Component
         $this->selectedEstadoFiltro = null;
         $this->searchTipoFiltro = '';
         $this->searchEstadoFiltro = '';
+        $this->resetPage();
+    }
+
+    /**
+     * Ordena por campo específico
+     *
+     * @param string $field
+     * @return void
+     */
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            // Si es el mismo campo, cambiar dirección
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            // Si es un campo diferente, establecerlo y usar ascendente por defecto
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+
         $this->resetPage();
     }
 
@@ -479,8 +505,12 @@ class HistorialTraslados extends Component
             });
         }
 
-        // Ordenar por fecha descendente
-        $movimientos = $movimientos->sortByDesc('fecha_sort')->values();
+        // Ordenar según configuración del usuario
+        if ($this->sortDirection === 'asc') {
+            $movimientos = $movimientos->sortBy($this->sortField)->values();
+        } else {
+            $movimientos = $movimientos->sortByDesc($this->sortField)->values();
+        }
 
         // NUEVO: Agrupar requisiciones por correlativo
         $movimientos = $this->agruparRequisiciones($movimientos);

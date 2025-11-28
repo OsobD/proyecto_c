@@ -246,6 +246,7 @@
                                             type="number"
                                             wire:model.blur="productosSeleccionados.{{ $loop->index }}.cantidad"
                                             min="1"
+                                            max="{{ $producto['cantidad_disponible'] ?? 999999 }}"
                                             placeholder="0"
                                             class="w-24 text-center border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold {{ $producto['cantidad'] > $producto['cantidad_disponible'] ? 'border-red-500' : '' }}">
                                     </td>

@@ -221,17 +221,22 @@ class FormularioTraslado extends Component
         $query = Persona::where('estado', true);
 
         if (!empty($this->searchPersona)) {
+            // Si hay búsqueda, filtrar por nombre
             $query->where(function ($q) {
                 $q->where('nombres', 'like', '%' . $this->searchPersona . '%')
                     ->orWhere('apellidos', 'like', '%' . $this->searchPersona . '%')
                     ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $this->searchPersona . '%']);
             });
+        } else {
+            // Si no hay búsqueda, limitar a 5 resultados
+            $query->limit(5);
         }
 
         return $query->get()->map(function ($persona) {
             return [
                 'id' => $persona->id,
                 'nombre_completo' => $persona->nombres . ' ' . $persona->apellidos,
+                'dpi' => $persona->dpi ?? 'N/A',
             ];
         })->toArray();
     }
@@ -329,7 +334,7 @@ class FormularioTraslado extends Component
             });
         }
 
-        return $query->get()
+        $results = $query->get()
             ->filter(function ($producto) {
                 return $producto->lotes->count() > 0; // Solo productos con stock
             })
@@ -348,8 +353,14 @@ class FormularioTraslado extends Component
                     'lotes' => $producto->lotes->toArray()
                 ];
             })
-            ->values()
-            ->toArray();
+            ->values();
+
+        // Limitar a 5 si no hay búsqueda
+        if (empty($search)) {
+            $results = $results->take(5);
+        }
+
+        return $results->toArray();
     }
 
     /**
@@ -368,7 +379,7 @@ class FormularioTraslado extends Component
                 'descripcion' => $producto['descripcion'],
                 'es_consumible' => (bool) ($producto['es_consumible'] ?? false),
                 'precio' => (float) $producto['precio'],
-                'cantidad' => 1,
+                'cantidad' => null,
                 'cantidad_disponible' => (int) $producto['cantidad_disponible'],
                 'lotes' => $producto['lotes']
             ];
@@ -450,6 +461,14 @@ class FormularioTraslado extends Component
         if (empty($this->productosSeleccionados)) {
             session()->flash('error', 'Debe agregar al menos un producto al traslado.');
             return;
+        }
+
+        // Validar que todos los productos tengan cantidad > 0
+        foreach ($this->productosSeleccionados as $producto) {
+            if (!isset($producto['cantidad']) || $producto['cantidad'] <= 0) {
+                session()->flash('error', "El producto '{$producto['descripcion']}' debe tener una cantidad mayor a 0.");
+                return;
+            }
         }
 
         // Validar que ningún producto exceda el stock disponible

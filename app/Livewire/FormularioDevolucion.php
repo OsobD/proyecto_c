@@ -389,7 +389,7 @@ class FormularioDevolucion extends Component
 
             // Obtener persona origen (quien devuelve)
             $personaId = null;
-            if ($this->selectedOrigen && $this->selectedOrigen['tipo'] === 'Persona') {
+            if ($this->selectedOrigen && str_starts_with($this->selectedOrigen['id'], 'P')) {
                 $personaId = (int) str_replace('P', '', $this->selectedOrigen['id']);
             }
 
@@ -436,7 +436,7 @@ class FormularioDevolucion extends Component
             DB::commit();
 
             session()->flash('success', 'Devolución registrada exitosamente');
-            return redirect()->route('devoluciones');
+            return redirect()->route('traslados');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -606,10 +606,17 @@ class FormularioDevolucion extends Component
             return;
         }
 
-        // Validar que todos los productos tengan cantidad > 0
+        // Validar que todos los productos tengan cantidad > 0 y no excedan lo disponible
         foreach ($this->productosSeleccionados as $producto) {
             if (!isset($producto['cantidad']) || $producto['cantidad'] <= 0) {
                 session()->flash('error', "El producto '{$producto['descripcion']}' debe tener una cantidad mayor a 0.");
+                return;
+            }
+            
+            // Validar que no exceda lo disponible
+            $cantidadDisponible = $producto['cantidad_disponible'] ?? 0;
+            if ($producto['cantidad'] > $cantidadDisponible) {
+                session()->flash('error', "La cantidad del producto '{$producto['descripcion']}' excede el stock disponible.");
                 return;
             }
         }
