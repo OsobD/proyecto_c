@@ -31,6 +31,11 @@ class Login extends Component
         if (Auth::attempt(['nombre_usuario' => $this->nombre_usuario, 'password' => $this->password], $this->remember)) {
             request()->session()->regenerate();
 
+            // Verificar si el usuario debe cambiar su contraseña
+            if (Auth::user()->debe_cambiar_contrasena) {
+                return redirect()->route('cambiar-contrasena');
+            }
+
             return redirect()->intended('/inicio');
         }
 

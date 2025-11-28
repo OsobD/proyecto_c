@@ -15,8 +15,5 @@ class Puesto extends Model
         'nombre',
     ];
 
-    public function usuarios()
-    {
-        return $this->hasMany(Usuario::class, 'id_puesto');
-    }
+
 }
