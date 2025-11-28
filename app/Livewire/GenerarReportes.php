@@ -594,8 +594,12 @@ class GenerarReportes extends Component
     private function generarComprasPorProveedor()
     {
         try {
-            $query = Compra::with(['proveedor', 'detalles.producto.categoria'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+            $query = Compra::with(['proveedor', 'detalles.producto.categoria']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('fecha', '>=', $this->fechaInicio)
+                      ->whereDate('fecha', '<=', $this->fechaFin);
+            }
 
             if ($this->proveedorSeleccionado) {
                 $query->where('id_proveedor', $this->proveedorSeleccionado);
@@ -613,7 +617,8 @@ class GenerarReportes extends Component
                     'fecha' => $compra->fecha,
                     'no_factura' => $compra->no_factura ?? 'N/A',
                     'proveedor' => $compra->proveedor->nombre ?? 'N/A',
-                    'total' => $compra->total,
+                    'subtotal' => $compra->total,
+                    'total_con_iva' => $compra->precio_factura,
                     'estado' => $compra->activo ? 'Activa' : 'Inactiva',
                 ];
             })->toArray();
@@ -628,11 +633,14 @@ class GenerarReportes extends Component
     private function generarComprasPorPeriodo()
     {
         try {
-            $compras = Compra::with(['proveedor'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->where('activo', true)
-                ->orderBy('fecha', 'desc')
-                ->get();
+            $query = Compra::with(['proveedor'])->where('activo', true);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('fecha', '>=', $this->fechaInicio)
+                      ->whereDate('fecha', '<=', $this->fechaFin);
+            }
+
+            $compras = $query->orderBy('fecha', 'desc')->get();
 
             if ($compras->isEmpty()) {
                 session()->flash('error', 'No se encontraron compras en el período seleccionado.');
@@ -644,8 +652,8 @@ class GenerarReportes extends Component
                     'fecha' => $compra->fecha,
                     'no_factura' => $compra->no_factura ?? 'N/A',
                     'proveedor' => $compra->proveedor->nombre ?? 'N/A',
-                    'precio_factura' => $compra->precio_factura,
-                    'total' => $compra->total,
+                    'subtotal' => $compra->total,
+                    'total_con_iva' => $compra->precio_factura,
                 ];
             })->toArray();
 
@@ -659,13 +667,16 @@ class GenerarReportes extends Component
     private function generarAnalisisCostos()
     {
         try {
-            $compras = DetalleCompra::with(['compra.proveedor', 'producto'])
+            $query = DetalleCompra::with(['compra.proveedor', 'producto'])
                 ->whereHas('compra', function ($query) {
-                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                          ->where('activo', true);
-                })
-                ->get()
-                ->groupBy('id_producto');
+                    $query->where('activo', true);
+                    if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                        $query->whereDate('fecha', '>=', $this->fechaInicio)
+                              ->whereDate('fecha', '<=', $this->fechaFin);
+                    }
+                });
+
+            $compras = $query->get()->groupBy('id_producto');
 
             if ($compras->isEmpty()) {
                 session()->flash('error', 'No se encontraron datos para análisis de costos.');
@@ -698,13 +709,16 @@ class GenerarReportes extends Component
     private function generarComprasPorCategoria()
     {
         try {
-            $compras = DetalleCompra::with(['compra', 'producto.categoria'])
+            $query = DetalleCompra::with(['compra', 'producto.categoria'])
                 ->whereHas('compra', function ($query) {
-                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                          ->where('activo', true);
-                })
-                ->get()
-                ->groupBy('producto.categoria.nombre');
+                    $query->where('activo', true);
+                    if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                        $query->whereDate('fecha', '>=', $this->fechaInicio)
+                              ->whereDate('fecha', '<=', $this->fechaFin);
+                    }
+                });
+
+            $compras = $query->get()->groupBy('producto.categoria.nombre');
 
             if ($compras->isEmpty()) {
                 session()->flash('error', 'No se encontraron compras por categoría.');
@@ -736,9 +750,13 @@ class GenerarReportes extends Component
     private function generarTrasladosPorBodega()
     {
         try {
-            $query = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->where('activo', true);
+            $query = Traslado::with(['bodegaOrigen', 'bodegaDestino']);
+
+            // Filtrar por fechas si están definidas
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('fecha', '>=', $this->fechaInicio)
+                      ->whereDate('fecha', '<=', $this->fechaFin);
+            }
 
             if ($this->bodegaSeleccionada) {
                 $query->where(function ($q) {
@@ -775,11 +793,14 @@ class GenerarReportes extends Component
     private function generarTrasladosPorPeriodo()
     {
         try {
-            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->where('activo', true)
-                ->orderBy('fecha', 'desc')
-                ->get();
+            $query = Traslado::with(['bodegaOrigen', 'bodegaDestino']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('fecha', '>=', $this->fechaInicio)
+                      ->whereDate('fecha', '<=', $this->fechaFin);
+            }
+
+            $traslados = $query->orderBy('fecha', 'desc')->get();
 
             if ($traslados->isEmpty()) {
                 session()->flash('error', 'No se encontraron traslados en el período seleccionado.');
@@ -807,11 +828,14 @@ class GenerarReportes extends Component
     private function generarRequisicionesPorArea()
     {
         try {
-            $requisiciones = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->where('activo', true)
-                ->orderBy('fecha', 'desc')
-                ->get();
+            $query = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('fecha', '>=', $this->fechaInicio)
+                      ->whereDate('fecha', '<=', $this->fechaFin);
+            }
+
+            $requisiciones = $query->orderBy('fecha', 'desc')->get();
 
             if ($requisiciones->isEmpty()) {
                 session()->flash('error', 'No se encontraron requisiciones en el período seleccionado.');
@@ -839,10 +863,14 @@ class GenerarReportes extends Component
     private function generarDevoluciones()
     {
         try {
-            $devoluciones = Devolucion::with(['bodega', 'persona', 'traslado'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('fecha', 'desc')
-                ->get();
+            $query = Devolucion::with(['bodega', 'persona', 'traslado']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('fecha', '>=', $this->fechaInicio)
+                      ->whereDate('fecha', '<=', $this->fechaFin);
+            }
+
+            $devoluciones = $query->orderBy('fecha', 'desc')->get();
 
             if ($devoluciones->isEmpty()) {
                 session()->flash('error', 'No se encontraron devoluciones en el período seleccionado.');
@@ -1006,8 +1034,12 @@ class GenerarReportes extends Component
     private function generarActividadPorUsuario()
     {
         try {
-            $query = Bitacora::with(['usuario'])
-                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
+            $query = Bitacora::with(['usuario']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('created_at', '>=', $this->fechaInicio)
+                      ->whereDate('created_at', '<=', $this->fechaFin);
+            }
 
             if ($this->usuarioSeleccionado) {
                 $query->where('id_usuario', $this->usuarioSeleccionado);
@@ -1040,10 +1072,14 @@ class GenerarReportes extends Component
     private function generarActividadPorPeriodo()
     {
         try {
-            $actividades = Bitacora::with(['usuario'])
-                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Bitacora::with(['usuario']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('created_at', '>=', $this->fechaInicio)
+                      ->whereDate('created_at', '<=', $this->fechaFin);
+            }
+
+            $actividades = $query->orderBy('created_at', 'desc')->get();
 
             if ($actividades->isEmpty()) {
                 session()->flash('error', 'No se encontraron actividades en el período seleccionado.');
@@ -1069,11 +1105,15 @@ class GenerarReportes extends Component
     private function generarCambiosInventario()
     {
         try {
-            $cambios = Bitacora::with(['usuario'])
-                ->where('modelo', 'App\Models\Inventario')
-                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Bitacora::with(['usuario'])
+                ->where('modelo', 'App\Models\Inventario');
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('created_at', '>=', $this->fechaInicio)
+                      ->whereDate('created_at', '<=', $this->fechaFin);
+            }
+
+            $cambios = $query->orderBy('created_at', 'desc')->get();
 
             if ($cambios->isEmpty()) {
                 session()->flash('error', 'No se encontraron cambios en inventario en el período seleccionado.');
@@ -1099,10 +1139,14 @@ class GenerarReportes extends Component
     private function generarLogSistema()
     {
         try {
-            $logs = Bitacora::with(['usuario'])
-                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Bitacora::with(['usuario']);
+
+            if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
+                $query->whereDate('created_at', '>=', $this->fechaInicio)
+                      ->whereDate('created_at', '<=', $this->fechaFin);
+            }
+
+            $logs = $query->orderBy('created_at', 'desc')->get();
 
             if ($logs->isEmpty()) {
                 session()->flash('error', 'No se encontraron logs del sistema en el período seleccionado.');
