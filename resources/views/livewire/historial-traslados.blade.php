@@ -26,7 +26,7 @@
     @endif
 
     {{-- Filtros --}}
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
         <h2 class="text-lg font-semibold text-gray-800 mb-6">Filtros de Búsqueda</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -35,33 +35,90 @@
                     type="text"
                     id="search"
                     wire:model.live.debounce.300ms="search"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
                     placeholder="Correlativo, origen, destino...">
             </div>
 
+            {{-- Filtro de Tipo con búsqueda --}}
             <div>
-                <label for="tipo" class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-                <select
-                    id="tipo"
-                    wire:model.live="tipoFiltro"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos</option>
-                    <option value="Requisición">Requisición</option>
-                    <option value="Traslado">Traslado</option>
-                    <option value="Devolución">Devolución</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                <div class="relative">
+                    @if($selectedTipoFiltro)
+                        <div wire:click="clearTipoFiltro"
+                             class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                            <span class="font-medium text-gray-800">{{ $selectedTipoFiltro['nombre'] }}</span>
+                            <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                        </div>
+                    @else
+                        <div class="relative" x-data="{ open: @entangle('showTipoDropdown').live }" @click.outside="open = false">
+                            <input
+                                type="text"
+                                wire:model.live.debounce.300ms="searchTipoFiltro"
+                                @click="open = true"
+                                class="block w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                                placeholder="Buscar tipo...">
+                            <div x-show="open"
+                                 x-transition
+                                 class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                <ul>
+                                    <li wire:click.prevent="clearTipoFiltro"
+                                        @click="open = false"
+                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                        Todos los tipos
+                                    </li>
+                                    @foreach ($this->tipoResults as $tipo)
+                                        <li wire:click.prevent="selectTipoFiltro('{{ $tipo['id'] }}')"
+                                            @click="open = false"
+                                            class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                            {{ $tipo['nombre'] }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
+            {{-- Filtro de Estado con búsqueda --}}
             <div>
-                <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                <select
-                    id="estado"
-                    wire:model.live="estadoFiltro"
-                    class="block w-full py-3 px-4 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos</option>
-                    <option value="Completado">Completado</option>
-                    <option value="Pendiente">Pendiente</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <div class="relative">
+                    @if($selectedEstadoFiltro)
+                        <div wire:click="clearEstadoFiltro"
+                             class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                            <span class="font-medium text-gray-800">{{ $selectedEstadoFiltro['nombre'] }}</span>
+                            <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                        </div>
+                    @else
+                        <div class="relative" x-data="{ open: @entangle('showEstadoDropdown').live }" @click.outside="open = false">
+                            <input
+                                type="text"
+                                wire:model.live.debounce.300ms="searchEstadoFiltro"
+                                @click="open = true"
+                                class="block w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+                                placeholder="Buscar estado...">
+                            <div x-show="open"
+                                 x-transition
+                                 class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                <ul>
+                                    <li wire:click.prevent="clearEstadoFiltro"
+                                        @click="open = false"
+                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                        Todos los estados
+                                    </li>
+                                    @foreach ($this->estadoResults as $estado)
+                                        <li wire:click.prevent="selectEstadoFiltro('{{ $estado['id'] }}')"
+                                            @click="open = false"
+                                            class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                            {{ $estado['nombre'] }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             {{-- Fecha Inicio con Flatpickr --}}

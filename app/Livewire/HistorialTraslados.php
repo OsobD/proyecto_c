@@ -30,11 +30,29 @@ class HistorialTraslados extends Component
     /** @var string Fecha fin para filtro de rango */
     public $fechaFin = '';
 
-    /** @var string Filtro por tipo (Requisición, Traslado, Devolución) */
+    /** @var string Filtro por tipo (Requisición, Traslado, Devolución) - DEPRECADO, usar selectedTipoFiltro */
     public $tipoFiltro = '';
 
-    /** @var string Filtro por estado */
+    /** @var string Filtro por estado - DEPRECADO, usar selectedEstadoFiltro */
     public $estadoFiltro = '';
+
+    /** @var string Búsqueda para filtro de tipo */
+    public $searchTipoFiltro = '';
+
+    /** @var bool Controla visibilidad del dropdown de tipo */
+    public $showTipoDropdown = false;
+
+    /** @var array|null Tipo seleccionado (contiene id y nombre) */
+    public $selectedTipoFiltro = null;
+
+    /** @var string Búsqueda para filtro de estado */
+    public $searchEstadoFiltro = '';
+
+    /** @var bool Controla visibilidad del dropdown de estado */
+    public $showEstadoDropdown = false;
+
+    /** @var array|null Estado seleccionado (contiene id y nombre) */
+    public $selectedEstadoFiltro = null;
 
     /** @var int Items por página */
     public $perPage = 15;
@@ -98,6 +116,115 @@ class HistorialTraslados extends Component
     }
 
     /**
+     * Obtiene la lista de tipos disponibles para el filtro
+     *
+     * @return array
+     */
+    public function getTipoResultsProperty()
+    {
+        $tipos = [
+            ['id' => 'Requisición', 'nombre' => 'Requisición'],
+            ['id' => 'Traslado', 'nombre' => 'Traslado'],
+            ['id' => 'Devolución', 'nombre' => 'Devolución'],
+        ];
+
+        if (empty($this->searchTipoFiltro)) {
+            return $tipos;
+        }
+
+        return collect($tipos)
+            ->filter(fn($tipo) => stripos($tipo['nombre'], $this->searchTipoFiltro) !== false)
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Obtiene la lista de estados disponibles para el filtro
+     *
+     * @return array
+     */
+    public function getEstadoResultsProperty()
+    {
+        $estados = [
+            ['id' => 'Completado', 'nombre' => 'Completado'],
+            ['id' => 'Pendiente', 'nombre' => 'Pendiente'],
+        ];
+
+        if (empty($this->searchEstadoFiltro)) {
+            return $estados;
+        }
+
+        return collect($estados)
+            ->filter(fn($estado) => stripos($estado['nombre'], $this->searchEstadoFiltro) !== false)
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Selecciona un tipo en el filtro
+     *
+     * @param string $tipoId
+     * @return void
+     */
+    public function selectTipoFiltro($tipoId)
+    {
+        $tipo = collect($this->tipoResults)->firstWhere('id', $tipoId);
+        if ($tipo) {
+            $this->selectedTipoFiltro = $tipo;
+            $this->tipoFiltro = $tipoId; // Mantener compatibilidad
+            $this->searchTipoFiltro = '';
+            $this->showTipoDropdown = false;
+            $this->resetPage();
+        }
+    }
+
+    /**
+     * Limpia el filtro de tipo
+     *
+     * @return void
+     */
+    public function clearTipoFiltro()
+    {
+        $this->selectedTipoFiltro = null;
+        $this->tipoFiltro = '';
+        $this->searchTipoFiltro = '';
+        $this->showTipoDropdown = false;
+        $this->resetPage();
+    }
+
+    /**
+     * Selecciona un estado en el filtro
+     *
+     * @param string $estadoId
+     * @return void
+     */
+    public function selectEstadoFiltro($estadoId)
+    {
+        $estado = collect($this->estadoResults)->firstWhere('id', $estadoId);
+        if ($estado) {
+            $this->selectedEstadoFiltro = $estado;
+            $this->estadoFiltro = $estadoId; // Mantener compatibilidad
+            $this->searchEstadoFiltro = '';
+            $this->showEstadoDropdown = false;
+            $this->resetPage();
+        }
+    }
+
+    /**
+     * Limpia el filtro de estado
+     *
+     * @return void
+     */
+    public function clearEstadoFiltro()
+    {
+        $this->selectedEstadoFiltro = null;
+        $this->estadoFiltro = '';
+        $this->searchEstadoFiltro = '';
+        $this->showEstadoDropdown = false;
+        $this->resetPage();
+    }
+
+    /**
      * Limpia todos los filtros
      *
      * @return void
@@ -109,6 +236,10 @@ class HistorialTraslados extends Component
         $this->fechaFin = '';
         $this->tipoFiltro = '';
         $this->estadoFiltro = '';
+        $this->selectedTipoFiltro = null;
+        $this->selectedEstadoFiltro = null;
+        $this->searchTipoFiltro = '';
+        $this->searchEstadoFiltro = '';
         $this->resetPage();
     }
 

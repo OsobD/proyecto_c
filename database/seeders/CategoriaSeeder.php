@@ -41,10 +41,6 @@ class CategoriaSeeder extends Seeder
                 'activo' => true,
             ],
             [
-                'nombre' => 'Consumibles',
-                'activo' => true,
-            ],
-            [
                 'nombre' => 'Herramientas',
                 'activo' => true,
             ],
