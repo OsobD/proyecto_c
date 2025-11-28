@@ -8,6 +8,12 @@ use App\Models\Usuario;
 use App\Models\Proveedor;
 use App\Models\Bodega;
 use App\Models\Producto;
+use App\Models\Compra;
+use App\Models\Traslado;
+use App\Models\Bitacora;
+use App\Models\DetalleCompra;
+use App\Models\DetalleTraslado;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Componente GenerarReportes
@@ -104,6 +110,12 @@ class GenerarReportes extends Component
     // Datos del reporte generado
     /** @var array Datos del reporte Kardex */
     public $datosKardex = [];
+
+    /** @var array Datos del reporte actual */
+    public $datosReporte = [];
+
+    /** @var string Título del reporte actual */
+    public $tituloReporte = '';
 
     public function mount()
     {
@@ -202,8 +214,39 @@ class GenerarReportes extends Component
     public function cambiarTab($tab)
     {
         $this->tabActivo = $tab;
+
+        // Limpiar todos los filtros al cambiar de tab
         $this->tipoReporte = '';
         $this->datosKardex = [];
+        $this->datosReporte = [];
+        $this->tituloReporte = '';
+
+        // Limpiar filtros seleccionados
+        $this->selectedTipoReporteFiltro = null;
+        $this->selectedProveedorFiltro = null;
+        $this->selectedBodegaFiltro = null;
+        $this->selectedProductoFiltro = null;
+        $this->selectedUsuarioFiltro = null;
+
+        // Limpiar búsquedas
+        $this->searchTipoReporteFiltro = '';
+        $this->searchProveedorFiltro = '';
+        $this->searchBodegaFiltro = '';
+        $this->searchProductoFiltro = '';
+        $this->searchUsuarioFiltro = '';
+
+        // Limpiar selecciones
+        $this->proveedorSeleccionado = '';
+        $this->bodegaSeleccionada = '';
+        $this->productoSeleccionado = '';
+        $this->usuarioSeleccionado = '';
+
+        // Cerrar dropdowns
+        $this->showTipoReporteDropdown = false;
+        $this->showProveedorDropdown = false;
+        $this->showBodegaDropdown = false;
+        $this->showProductoDropdown = false;
+        $this->showUsuarioDropdown = false;
     }
 
     public function generarReporte()
@@ -213,13 +256,70 @@ class GenerarReportes extends Component
             return;
         }
 
+        // Limpiar datos previos
+        $this->datosReporte = [];
+        $this->datosKardex = [];
+
         // Generar reporte según el tipo
         switch ($this->tipoReporte) {
+            // Reportes de Compras
+            case 'compras_proveedor':
+                $this->generarComprasPorProveedor();
+                break;
+            case 'compras_periodo':
+                $this->generarComprasPorPeriodo();
+                break;
+            case 'analisis_costos':
+                $this->generarAnalisisCostos();
+                break;
+            case 'compras_categoria':
+                $this->generarComprasPorCategoria();
+                break;
+
+            // Reportes de Traslados
+            case 'traslados_bodega':
+                $this->generarTrasladosPorBodega();
+                break;
+            case 'traslados_periodo':
+                $this->generarTrasladosPorPeriodo();
+                break;
+            case 'requisiciones_area':
+                $this->generarRequisicionesPorArea();
+                break;
+            case 'devoluciones':
+                $this->generarDevoluciones();
+                break;
+
+            // Reportes de Inventario
             case 'kardex':
                 $this->generarKardex();
                 break;
+            case 'inventario_bodega':
+                $this->generarInventarioPorBodega();
+                break;
+            case 'tarjeta_responsabilidad':
+                $this->generarTarjetaResponsabilidad();
+                break;
+            case 'stock_minimo':
+                $this->generarStockMinimo();
+                break;
+
+            // Reportes de Bitácora
+            case 'actividad_usuario':
+                $this->generarActividadPorUsuario();
+                break;
+            case 'actividad_periodo':
+                $this->generarActividadPorPeriodo();
+                break;
+            case 'cambios_inventario':
+                $this->generarCambiosInventario();
+                break;
+            case 'log_sistema':
+                $this->generarLogSistema();
+                break;
+
             default:
-                session()->flash('message', 'Generando reporte: ' . $this->tipoReporte . ' (En desarrollo)');
+                session()->flash('error', 'Tipo de reporte no implementado.');
                 break;
         }
     }
@@ -486,6 +586,535 @@ class GenerarReportes extends Component
     public function updatedSearchTipoReporteFiltro()
     {
         $this->showTipoReporteDropdown = true;
+    }
+
+    // ==================== REPORTES DE COMPRAS ====================
+
+    private function generarComprasPorProveedor()
+    {
+        try {
+            $query = Compra::with(['proveedor', 'detalles.producto.categoria'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+
+            if ($this->proveedorSeleccionado) {
+                $query->where('id_proveedor', $this->proveedorSeleccionado);
+            }
+
+            $compras = $query->get();
+
+            if ($compras->isEmpty()) {
+                session()->flash('error', 'No se encontraron compras con los filtros seleccionados.');
+                return;
+            }
+
+            $this->datosReporte = $compras->map(function ($compra) {
+                return [
+                    'fecha' => $compra->fecha,
+                    'numero_factura' => $compra->numero_factura,
+                    'proveedor' => $compra->proveedor->nombre ?? 'N/A',
+                    'total' => $compra->total,
+                    'estado' => $compra->estado ? 'Activa' : 'Inactiva',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Compras por Proveedor';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' compras.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarComprasPorPeriodo()
+    {
+        try {
+            $compras = Compra::with(['proveedor'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($compras->isEmpty()) {
+                session()->flash('error', 'No se encontraron compras en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $compras->map(function ($compra) {
+                return [
+                    'fecha' => $compra->fecha,
+                    'numero_factura' => $compra->numero_factura,
+                    'proveedor' => $compra->proveedor->nombre ?? 'N/A',
+                    'subtotal' => $compra->subtotal,
+                    'total' => $compra->total,
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Compras por Período';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' compras.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarAnalisisCostos()
+    {
+        try {
+            $compras = DetalleCompra::with(['compra.proveedor', 'producto'])
+                ->whereHas('compra', function ($query) {
+                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+                })
+                ->get()
+                ->groupBy('id_producto');
+
+            if ($compras->isEmpty()) {
+                session()->flash('error', 'No se encontraron datos para análisis de costos.');
+                return;
+            }
+
+            $this->datosReporte = $compras->map(function ($detalles, $productoId) {
+                $producto = $detalles->first()->producto;
+                $totalCantidad = $detalles->sum('cantidad');
+                $totalCosto = $detalles->sum(function ($detalle) {
+                    return $detalle->cantidad * $detalle->precio_unitario;
+                });
+                $costoPromedio = $totalCantidad > 0 ? $totalCosto / $totalCantidad : 0;
+
+                return [
+                    'producto' => $producto->descripcion ?? 'N/A',
+                    'cantidad_total' => $totalCantidad,
+                    'costo_total' => $totalCosto,
+                    'costo_promedio' => $costoPromedio,
+                ];
+            })->values()->toArray();
+
+            $this->tituloReporte = 'Análisis de Costos';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' productos.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarComprasPorCategoria()
+    {
+        try {
+            $compras = DetalleCompra::with(['compra', 'producto.categoria'])
+                ->whereHas('compra', function ($query) {
+                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+                })
+                ->get()
+                ->groupBy('producto.categoria.nombre');
+
+            if ($compras->isEmpty()) {
+                session()->flash('error', 'No se encontraron compras por categoría.');
+                return;
+            }
+
+            $this->datosReporte = $compras->map(function ($detalles, $categoria) {
+                $totalCantidad = $detalles->sum('cantidad');
+                $totalCosto = $detalles->sum(function ($detalle) {
+                    return $detalle->cantidad * $detalle->precio_unitario;
+                });
+
+                return [
+                    'categoria' => $categoria ?: 'Sin categoría',
+                    'cantidad_total' => $totalCantidad,
+                    'costo_total' => $totalCosto,
+                ];
+            })->values()->toArray();
+
+            $this->tituloReporte = 'Compras por Categoría';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' categorías.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    // ==================== REPORTES DE TRASLADOS ====================
+
+    private function generarTrasladosPorBodega()
+    {
+        try {
+            $query = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+
+            if ($this->bodegaSeleccionada) {
+                $query->where(function ($q) {
+                    $q->where('id_bodega_origen', $this->bodegaSeleccionada)
+                      ->orWhere('id_bodega_destino', $this->bodegaSeleccionada);
+                });
+            }
+
+            $traslados = $query->get();
+
+            if ($traslados->isEmpty()) {
+                session()->flash('error', 'No se encontraron traslados con los filtros seleccionados.');
+                return;
+            }
+
+            $this->datosReporte = $traslados->map(function ($traslado) {
+                return [
+                    'fecha' => $traslado->fecha,
+                    'numero' => $traslado->numero_traslado ?? 'N/A',
+                    'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
+                    'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
+                    'estado' => $traslado->estado ?? 'N/A',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Traslados por Bodega';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' traslados.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarTrasladosPorPeriodo()
+    {
+        try {
+            $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($traslados->isEmpty()) {
+                session()->flash('error', 'No se encontraron traslados en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $traslados->map(function ($traslado) {
+                return [
+                    'fecha' => $traslado->fecha,
+                    'numero' => $traslado->numero_traslado ?? 'N/A',
+                    'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
+                    'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
+                    'tipo' => $traslado->tipo ?? 'N/A',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Traslados por Período';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' traslados.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarRequisicionesPorArea()
+    {
+        try {
+            $requisiciones = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
+                ->where('tipo', 'requisicion')
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($requisiciones->isEmpty()) {
+                session()->flash('error', 'No se encontraron requisiciones en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $requisiciones->map(function ($requisicion) {
+                return [
+                    'fecha' => $requisicion->fecha,
+                    'numero' => $requisicion->numero_traslado ?? 'N/A',
+                    'area_solicitante' => $requisicion->bodegaDestino->nombre ?? 'N/A',
+                    'estado' => $requisicion->estado ?? 'N/A',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Requisiciones por Área';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' requisiciones.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarDevoluciones()
+    {
+        try {
+            $devoluciones = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
+                ->where('tipo', 'devolucion')
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($devoluciones->isEmpty()) {
+                session()->flash('error', 'No se encontraron devoluciones en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $devoluciones->map(function ($devolucion) {
+                return [
+                    'fecha' => $devolucion->fecha,
+                    'numero' => $devolucion->numero_traslado ?? 'N/A',
+                    'bodega_origen' => $devolucion->bodegaOrigen->nombre ?? 'N/A',
+                    'bodega_destino' => $devolucion->bodegaDestino->nombre ?? 'N/A',
+                    'estado' => $devolucion->estado ?? 'N/A',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Reporte de Devoluciones';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' devoluciones.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    // ==================== REPORTES DE INVENTARIO ====================
+
+    private function generarInventarioPorBodega()
+    {
+        try {
+            $query = DB::table('inventario as i')
+                ->join('productos as p', 'i.id_producto', '=', 'p.id')
+                ->join('bodegas as b', 'i.id_bodega', '=', 'b.id')
+                ->leftJoin('categorias as c', 'p.id_categoria', '=', 'c.id')
+                ->select(
+                    'b.nombre as bodega',
+                    'p.descripcion as producto',
+                    'c.nombre as categoria',
+                    'i.cantidad',
+                    'i.costo_promedio'
+                )
+                ->where('i.cantidad', '>', 0);
+
+            if ($this->bodegaSeleccionada) {
+                $query->where('i.id_bodega', $this->bodegaSeleccionada);
+            }
+
+            $inventario = $query->get();
+
+            if ($inventario->isEmpty()) {
+                session()->flash('error', 'No se encontró inventario con los filtros seleccionados.');
+                return;
+            }
+
+            $this->datosReporte = $inventario->map(function ($item) {
+                return [
+                    'bodega' => $item->bodega,
+                    'producto' => $item->producto,
+                    'categoria' => $item->categoria ?? 'Sin categoría',
+                    'cantidad' => $item->cantidad,
+                    'costo_promedio' => $item->costo_promedio,
+                    'valor_total' => $item->cantidad * $item->costo_promedio,
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Inventario por Bodega';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' productos.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarTarjetaResponsabilidad()
+    {
+        try {
+            $query = DB::table('inventario as i')
+                ->join('productos as p', 'i.id_producto', '=', 'p.id')
+                ->join('bodegas as b', 'i.id_bodega', '=', 'b.id')
+                ->select(
+                    'b.nombre as bodega',
+                    'b.responsable',
+                    'p.descripcion as producto',
+                    'i.cantidad',
+                    'i.costo_promedio'
+                )
+                ->where('i.cantidad', '>', 0);
+
+            if ($this->bodegaSeleccionada) {
+                $query->where('i.id_bodega', $this->bodegaSeleccionada);
+            }
+
+            $inventario = $query->get();
+
+            if ($inventario->isEmpty()) {
+                session()->flash('error', 'No se encontró inventario con los filtros seleccionados.');
+                return;
+            }
+
+            $this->datosReporte = $inventario->map(function ($item) {
+                return [
+                    'bodega' => $item->bodega,
+                    'responsable' => $item->responsable ?? 'N/A',
+                    'producto' => $item->producto,
+                    'cantidad' => $item->cantidad,
+                    'valor_unitario' => $item->costo_promedio,
+                    'valor_total' => $item->cantidad * $item->costo_promedio,
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Tarjeta de Responsabilidad';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' productos.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarStockMinimo()
+    {
+        try {
+            $productos = DB::table('inventario as i')
+                ->join('productos as p', 'i.id_producto', '=', 'p.id')
+                ->join('bodegas as b', 'i.id_bodega', '=', 'b.id')
+                ->select(
+                    'p.descripcion as producto',
+                    'b.nombre as bodega',
+                    'i.cantidad',
+                    'p.stock_minimo',
+                    'i.costo_promedio'
+                )
+                ->whereRaw('i.cantidad <= p.stock_minimo')
+                ->where('p.activo', true);
+
+            if ($this->bodegaSeleccionada) {
+                $productos->where('i.id_bodega', $this->bodegaSeleccionada);
+            }
+
+            $resultado = $productos->get();
+
+            if ($resultado->isEmpty()) {
+                session()->flash('error', 'No se encontraron productos con stock mínimo.');
+                return;
+            }
+
+            $this->datosReporte = $resultado->map(function ($item) {
+                return [
+                    'producto' => $item->producto,
+                    'bodega' => $item->bodega,
+                    'cantidad_actual' => $item->cantidad,
+                    'stock_minimo' => $item->stock_minimo,
+                    'diferencia' => $item->stock_minimo - $item->cantidad,
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Productos con Stock Mínimo';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' productos.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    // ==================== REPORTES DE BITÁCORA ====================
+
+    private function generarActividadPorUsuario()
+    {
+        try {
+            $query = Bitacora::with(['usuario'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+
+            if ($this->usuarioSeleccionado) {
+                $query->where('id_usuario', $this->usuarioSeleccionado);
+            }
+
+            $actividades = $query->orderBy('fecha', 'desc')->get();
+
+            if ($actividades->isEmpty()) {
+                session()->flash('error', 'No se encontraron actividades con los filtros seleccionados.');
+                return;
+            }
+
+            $this->datosReporte = $actividades->map(function ($actividad) {
+                return [
+                    'fecha' => $actividad->fecha,
+                    'usuario' => $actividad->usuario->nombre_usuario ?? 'N/A',
+                    'accion' => $actividad->accion,
+                    'modulo' => $actividad->modulo ?? 'N/A',
+                    'descripcion' => $actividad->descripcion ?? '',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Actividad por Usuario';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' actividades.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarActividadPorPeriodo()
+    {
+        try {
+            $actividades = Bitacora::with(['usuario'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($actividades->isEmpty()) {
+                session()->flash('error', 'No se encontraron actividades en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $actividades->map(function ($actividad) {
+                return [
+                    'fecha' => $actividad->fecha,
+                    'usuario' => $actividad->usuario->nombre_usuario ?? 'N/A',
+                    'accion' => $actividad->accion,
+                    'modulo' => $actividad->modulo ?? 'N/A',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Actividad por Período';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' actividades.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarCambiosInventario()
+    {
+        try {
+            $cambios = Bitacora::with(['usuario'])
+                ->where('modulo', 'inventario')
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($cambios->isEmpty()) {
+                session()->flash('error', 'No se encontraron cambios en inventario en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $cambios->map(function ($cambio) {
+                return [
+                    'fecha' => $cambio->fecha,
+                    'usuario' => $cambio->usuario->nombre_usuario ?? 'N/A',
+                    'accion' => $cambio->accion,
+                    'descripcion' => $cambio->descripcion ?? '',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Cambios en Inventario';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' cambios.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
+    }
+
+    private function generarLogSistema()
+    {
+        try {
+            $logs = Bitacora::with(['usuario'])
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            if ($logs->isEmpty()) {
+                session()->flash('error', 'No se encontraron logs del sistema en el período seleccionado.');
+                return;
+            }
+
+            $this->datosReporte = $logs->map(function ($log) {
+                return [
+                    'fecha' => $log->fecha,
+                    'usuario' => $log->usuario->nombre_usuario ?? 'Sistema',
+                    'modulo' => $log->modulo ?? 'N/A',
+                    'accion' => $log->accion,
+                    'ip' => $log->ip_address ?? 'N/A',
+                ];
+            })->toArray();
+
+            $this->tituloReporte = 'Log del Sistema';
+            session()->flash('message', 'Reporte generado exitosamente. Total: ' . count($this->datosReporte) . ' registros.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el reporte: ' . $e->getMessage());
+        }
     }
 
     public function render()
