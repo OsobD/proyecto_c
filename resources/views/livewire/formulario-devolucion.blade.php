@@ -63,11 +63,17 @@
                                         @forelse ($this->origenResults as $result)
                                             <li wire:click.prevent="selectOrigen('{{ $result['id'] }}', '{{ $result['nombre'] }}', '{{ $result['tipo'] }}', {{ json_encode($result['tarjetas'] ?? []) }})"
                                                 class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                                {{ $result['nombre'] }}
+                                                <div class="font-medium">{{ $result['nombre'] }}</div>
+                                                <div class="text-xs text-gray-500">{{ $result['tipo'] }}</div>
                                             </li>
                                         @empty
                                             <li class="px-3 py-2 text-gray-500 text-center">No hay resultados</li>
                                         @endforelse
+                                        @if(empty($searchOrigen) && count($this->origenResults) > 0)
+                                            <li class="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-200 text-center italic">
+                                                Mostrando {{ count($this->origenResults) }} resultados. Escribe para buscar más...
+                                            </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </div>
@@ -170,9 +176,14 @@
                             @forelse ($this->productoResults as $producto)
                                 <li wire:click.prevent="selectProducto('{{ $producto['id'] }}')"
                                     class="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                                    <div class="flex items-center">
-                                        <span class="font-mono text-gray-500 mr-2">#{{ $producto['id'] }}</span>
-                                        <span>{{ $producto['descripcion'] }}</span>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="font-mono text-gray-500 mr-2">#{{ $producto['id'] }}</span>
+                                            <span>{{ $producto['descripcion'] }}</span>
+                                        </div>
+                                        @if(isset($producto['cantidad_disponible']))
+                                            <span class="text-sm text-gray-600">Disponible: {{ $producto['cantidad_disponible'] }}</span>
+                                        @endif
                                     </div>
                                 </li>
                             @empty
@@ -180,10 +191,19 @@
                                     @if(!$selectedOrigen)
                                         Seleccione primero el origen
                                     @else
-                                        No hay productos disponibles
+                                        @if(empty($searchProducto))
+                                            Escribe para buscar productos...
+                                        @else
+                                            No hay productos disponibles
+                                        @endif
                                     @endif
                                 </li>
                             @endforelse
+                            @if(empty($searchProducto) && count($this->productoResults) > 0)
+                                <li class="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-200 text-center italic">
+                                    Mostrando {{ count($this->productoResults) }} productos. Escribe para buscar más...
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -201,6 +221,7 @@
                                 <th class="py-3 px-6 text-center">Tipo</th>
                                 <th class="py-3 px-6 text-right">Precio Unit.</th>
                                 <th class="py-3 px-6 text-center">Cantidad</th>
+                                <th class="py-3 px-6 text-center">Disponible</th>
                                 <th class="py-3 px-6 text-right">Total</th>
                                 <th class="py-3 px-6 text-center">Acción</th>
                             </tr>
@@ -212,11 +233,11 @@
                                     <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
                                     <td class="py-3 px-6 text-center">
                                         @if($producto['es_consumible'] ?? false)
-                                            <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            <span class="bg-amber-100 text-amber-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                 Consumible
                                             </span>
                                         @else
-                                            <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            <span class="bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                 No Consumible
                                             </span>
                                         @endif
@@ -225,20 +246,21 @@
                                         Q{{ number_format($producto['precio'], 2) }}
                                     </td>
                                     <td class="py-3 px-6 text-center">
-                                        <div class="flex flex-col items-center">
-                                            <input
-                                                type="number"
-                                                wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
-                                                wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
-                                                min="1"
-                                                max="{{ $producto['cantidad_disponible'] ?? 999 }}"
-                                                class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                            @if(isset($producto['cantidad_disponible']))
-                                                <span class="text-xs text-gray-500 mt-1">
-                                                    Disponibles: {{ $producto['cantidad_disponible'] }}
-                                                </span>
-                                            @endif
-                                        </div>
+                                        <input
+                                            type="number"
+                                            wire:model.blur="productosSeleccionados.{{ $index }}.cantidad"
+                                            min="1"
+                                            placeholder="0"
+                                            class="w-24 text-center border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold">
+                                    </td>
+                                    <td class="py-3 px-6 text-center">
+                                        @if(isset($producto['cantidad_disponible']))
+                                            <span class="text-sm text-gray-600">
+                                                {{ $producto['cantidad_disponible'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-sm text-gray-400">-</span>
+                                        @endif
                                     </td>
                                     <td class="py-3 px-6 text-right font-semibold">
                                         Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
@@ -255,7 +277,7 @@
                             @endforeach
                             @if(count($productosSeleccionados) > 0)
                                 <tr class="bg-gray-100 font-bold">
-                                    <td colspan="5" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
+                                    <td colspan="6" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
                                     <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format($this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
@@ -358,11 +380,11 @@
                                             <td class="py-2 px-4 text-sm">{{ $producto['descripcion'] }}</td>
                                             <td class="py-2 px-4 text-sm text-center">
                                                 @if($producto['es_consumible'] ?? false)
-                                                    <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                                    <span class="bg-amber-100 text-amber-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                         Consumible
                                                     </span>
                                                 @else
-                                                    <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                                    <span class="bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                         No Consumible
                                                     </span>
                                                 @endif
