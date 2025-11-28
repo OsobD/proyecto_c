@@ -348,7 +348,7 @@
                                     <div class="font-medium">{{ $movimiento['producto'] }}</div>
                                     <div class="text-gray-500 text-xs">{{ $movimiento['categoria'] }}</div>
                                 </td>
-                                <td class="py-2 px-3 text-left">
+                                <td class="py-2 px-3 text-left whitespace-nowrap">
                                     <span class="px-2 py-1 rounded text-xs font-semibold
                                         @if(str_contains($movimiento['tipo_movimiento'], 'ENTRADA') || $movimiento['tipo_movimiento'] === 'COMPRA' || $movimiento['tipo_movimiento'] === 'DEVOLUCION')
                                             bg-green-100 text-green-800
@@ -380,14 +380,14 @@
                                 <td class="py-2 px-3 text-right font-bold {{ $movimiento['saldo'] > 0 ? 'text-blue-600' : 'text-gray-400' }}">
                                     {{ number_format($movimiento['saldo'], 0) }}
                                 </td>
-                                <td class="py-2 px-3 text-right">Q {{ number_format($movimiento['costo_unitario'], 2) }}</td>
-                                <td class="py-2 px-3 text-right {{ $movimiento['costo_entrada'] > 0 ? 'text-green-600' : '' }}">
+                                <td class="py-2 px-3 text-right whitespace-nowrap">Q {{ number_format($movimiento['costo_unitario'], 2) }}</td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap {{ $movimiento['costo_entrada'] > 0 ? 'text-green-600' : '' }}">
                                     {{ $movimiento['costo_entrada'] > 0 ? 'Q ' . number_format($movimiento['costo_entrada'], 2) : '-' }}
                                 </td>
-                                <td class="py-2 px-3 text-right {{ $movimiento['costo_salida'] > 0 ? 'text-red-600' : '' }}">
+                                <td class="py-2 px-3 text-right whitespace-nowrap {{ $movimiento['costo_salida'] > 0 ? 'text-red-600' : '' }}">
                                     {{ $movimiento['costo_salida'] > 0 ? 'Q ' . number_format($movimiento['costo_salida'], 2) : '-' }}
                                 </td>
-                                <td class="py-2 px-3 text-right font-bold text-blue-700">
+                                <td class="py-2 px-3 text-right whitespace-nowrap font-bold text-blue-700">
                                     Q {{ number_format($movimiento['costo_inventario'], 2) }}
                                 </td>
                             </tr>
