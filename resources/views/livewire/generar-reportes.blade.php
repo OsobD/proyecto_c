@@ -657,7 +657,7 @@
                                             {{ number_format($valor, 2) }}
                                         @elseif(in_array($campo, ['fecha']))
                                             {{ \Carbon\Carbon::parse($valor)->format('d/m/Y') }}
-                                        @elseif(in_array($campo, ['total', 'subtotal', 'costo_total', 'costo_promedio', 'costo_unitario', 'valor_total', 'valor_unitario']))
+                                        @elseif(in_array($campo, ['total', 'subtotal', 'costo_total', 'costo_promedio', 'costo_unitario', 'valor_total', 'valor_unitario', 'precio_factura']))
                                             Q {{ number_format($valor, 2) }}
                                         @elseif(in_array($campo, ['cantidad', 'cantidad_total', 'cantidad_actual', 'stock_minimo', 'diferencia']))
                                             {{ number_format($valor, 0) }}

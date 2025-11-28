@@ -13,6 +13,7 @@ use App\Models\Traslado;
 use App\Models\Bitacora;
 use App\Models\DetalleCompra;
 use App\Models\DetalleTraslado;
+use App\Models\Devolucion;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -600,7 +601,7 @@ class GenerarReportes extends Component
                 $query->where('id_proveedor', $this->proveedorSeleccionado);
             }
 
-            $compras = $query->get();
+            $compras = $query->where('activo', true)->get();
 
             if ($compras->isEmpty()) {
                 session()->flash('error', 'No se encontraron compras con los filtros seleccionados.');
@@ -610,10 +611,10 @@ class GenerarReportes extends Component
             $this->datosReporte = $compras->map(function ($compra) {
                 return [
                     'fecha' => $compra->fecha,
-                    'numero_factura' => $compra->numero_factura,
+                    'no_factura' => $compra->no_factura ?? 'N/A',
                     'proveedor' => $compra->proveedor->nombre ?? 'N/A',
                     'total' => $compra->total,
-                    'estado' => $compra->estado ? 'Activa' : 'Inactiva',
+                    'estado' => $compra->activo ? 'Activa' : 'Inactiva',
                 ];
             })->toArray();
 
@@ -629,6 +630,7 @@ class GenerarReportes extends Component
         try {
             $compras = Compra::with(['proveedor'])
                 ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->where('activo', true)
                 ->orderBy('fecha', 'desc')
                 ->get();
 
@@ -640,9 +642,9 @@ class GenerarReportes extends Component
             $this->datosReporte = $compras->map(function ($compra) {
                 return [
                     'fecha' => $compra->fecha,
-                    'numero_factura' => $compra->numero_factura,
+                    'no_factura' => $compra->no_factura ?? 'N/A',
                     'proveedor' => $compra->proveedor->nombre ?? 'N/A',
-                    'subtotal' => $compra->subtotal,
+                    'precio_factura' => $compra->precio_factura,
                     'total' => $compra->total,
                 ];
             })->toArray();
@@ -659,7 +661,8 @@ class GenerarReportes extends Component
         try {
             $compras = DetalleCompra::with(['compra.proveedor', 'producto'])
                 ->whereHas('compra', function ($query) {
-                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                          ->where('activo', true);
                 })
                 ->get()
                 ->groupBy('id_producto');
@@ -673,7 +676,7 @@ class GenerarReportes extends Component
                 $producto = $detalles->first()->producto;
                 $totalCantidad = $detalles->sum('cantidad');
                 $totalCosto = $detalles->sum(function ($detalle) {
-                    return $detalle->cantidad * $detalle->precio_unitario;
+                    return $detalle->cantidad * $detalle->precio_ingreso;
                 });
                 $costoPromedio = $totalCantidad > 0 ? $totalCosto / $totalCantidad : 0;
 
@@ -697,7 +700,8 @@ class GenerarReportes extends Component
         try {
             $compras = DetalleCompra::with(['compra', 'producto.categoria'])
                 ->whereHas('compra', function ($query) {
-                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+                    $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                          ->where('activo', true);
                 })
                 ->get()
                 ->groupBy('producto.categoria.nombre');
@@ -710,7 +714,7 @@ class GenerarReportes extends Component
             $this->datosReporte = $compras->map(function ($detalles, $categoria) {
                 $totalCantidad = $detalles->sum('cantidad');
                 $totalCosto = $detalles->sum(function ($detalle) {
-                    return $detalle->cantidad * $detalle->precio_unitario;
+                    return $detalle->cantidad * $detalle->precio_ingreso;
                 });
 
                 return [
@@ -733,7 +737,8 @@ class GenerarReportes extends Component
     {
         try {
             $query = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->where('activo', true);
 
             if ($this->bodegaSeleccionada) {
                 $query->where(function ($q) {
@@ -752,10 +757,11 @@ class GenerarReportes extends Component
             $this->datosReporte = $traslados->map(function ($traslado) {
                 return [
                     'fecha' => $traslado->fecha,
-                    'numero' => $traslado->numero_traslado ?? 'N/A',
+                    'no_requisicion' => $traslado->no_requisicion ?? 'N/A',
                     'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
                     'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
                     'estado' => $traslado->estado ?? 'N/A',
+                    'total' => $traslado->total,
                 ];
             })->toArray();
 
@@ -771,6 +777,7 @@ class GenerarReportes extends Component
         try {
             $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
                 ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->where('activo', true)
                 ->orderBy('fecha', 'desc')
                 ->get();
 
@@ -782,10 +789,11 @@ class GenerarReportes extends Component
             $this->datosReporte = $traslados->map(function ($traslado) {
                 return [
                     'fecha' => $traslado->fecha,
-                    'numero' => $traslado->numero_traslado ?? 'N/A',
+                    'no_requisicion' => $traslado->no_requisicion ?? 'N/A',
                     'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
                     'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
-                    'tipo' => $traslado->tipo ?? 'N/A',
+                    'estado' => $traslado->estado ?? 'N/A',
+                    'total' => $traslado->total,
                 ];
             })->toArray();
 
@@ -799,9 +807,9 @@ class GenerarReportes extends Component
     private function generarRequisicionesPorArea()
     {
         try {
-            $requisiciones = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
-                ->where('tipo', 'requisicion')
+            $requisiciones = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'persona'])
                 ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
+                ->where('activo', true)
                 ->orderBy('fecha', 'desc')
                 ->get();
 
@@ -813,9 +821,11 @@ class GenerarReportes extends Component
             $this->datosReporte = $requisiciones->map(function ($requisicion) {
                 return [
                     'fecha' => $requisicion->fecha,
-                    'numero' => $requisicion->numero_traslado ?? 'N/A',
-                    'area_solicitante' => $requisicion->bodegaDestino->nombre ?? 'N/A',
+                    'no_requisicion' => $requisicion->no_requisicion ?? 'N/A',
+                    'bodega_destino' => $requisicion->bodegaDestino->nombre ?? 'N/A',
+                    'solicitante' => $requisicion->persona->nombre ?? 'N/A',
                     'estado' => $requisicion->estado ?? 'N/A',
+                    'total' => $requisicion->total,
                 ];
             })->toArray();
 
@@ -829,8 +839,7 @@ class GenerarReportes extends Component
     private function generarDevoluciones()
     {
         try {
-            $devoluciones = Traslado::with(['bodegaOrigen', 'bodegaDestino'])
-                ->where('tipo', 'devolucion')
+            $devoluciones = Devolucion::with(['bodega', 'persona', 'traslado'])
                 ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
                 ->orderBy('fecha', 'desc')
                 ->get();
@@ -843,10 +852,10 @@ class GenerarReportes extends Component
             $this->datosReporte = $devoluciones->map(function ($devolucion) {
                 return [
                     'fecha' => $devolucion->fecha,
-                    'numero' => $devolucion->numero_traslado ?? 'N/A',
-                    'bodega_origen' => $devolucion->bodegaOrigen->nombre ?? 'N/A',
-                    'bodega_destino' => $devolucion->bodegaDestino->nombre ?? 'N/A',
-                    'estado' => $devolucion->estado ?? 'N/A',
+                    'no_formulario' => $devolucion->no_formulario ?? 'N/A',
+                    'bodega' => $devolucion->bodega->nombre ?? 'N/A',
+                    'persona' => $devolucion->persona->nombre ?? 'N/A',
+                    'total' => $devolucion->total,
                 ];
             })->toArray();
 
@@ -998,13 +1007,13 @@ class GenerarReportes extends Component
     {
         try {
             $query = Bitacora::with(['usuario'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin]);
+                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
 
             if ($this->usuarioSeleccionado) {
                 $query->where('id_usuario', $this->usuarioSeleccionado);
             }
 
-            $actividades = $query->orderBy('fecha', 'desc')->get();
+            $actividades = $query->orderBy('created_at', 'desc')->get();
 
             if ($actividades->isEmpty()) {
                 session()->flash('error', 'No se encontraron actividades con los filtros seleccionados.');
@@ -1013,10 +1022,10 @@ class GenerarReportes extends Component
 
             $this->datosReporte = $actividades->map(function ($actividad) {
                 return [
-                    'fecha' => $actividad->fecha,
+                    'fecha' => $actividad->created_at,
                     'usuario' => $actividad->usuario->nombre_usuario ?? 'N/A',
                     'accion' => $actividad->accion,
-                    'modulo' => $actividad->modulo ?? 'N/A',
+                    'modelo' => $actividad->modelo ?? 'N/A',
                     'descripcion' => $actividad->descripcion ?? '',
                 ];
             })->toArray();
@@ -1032,8 +1041,8 @@ class GenerarReportes extends Component
     {
         try {
             $actividades = Bitacora::with(['usuario'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('fecha', 'desc')
+                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             if ($actividades->isEmpty()) {
@@ -1043,10 +1052,10 @@ class GenerarReportes extends Component
 
             $this->datosReporte = $actividades->map(function ($actividad) {
                 return [
-                    'fecha' => $actividad->fecha,
+                    'fecha' => $actividad->created_at,
                     'usuario' => $actividad->usuario->nombre_usuario ?? 'N/A',
                     'accion' => $actividad->accion,
-                    'modulo' => $actividad->modulo ?? 'N/A',
+                    'modelo' => $actividad->modelo ?? 'N/A',
                 ];
             })->toArray();
 
@@ -1061,9 +1070,9 @@ class GenerarReportes extends Component
     {
         try {
             $cambios = Bitacora::with(['usuario'])
-                ->where('modulo', 'inventario')
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('fecha', 'desc')
+                ->where('modelo', 'App\Models\Inventario')
+                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             if ($cambios->isEmpty()) {
@@ -1073,7 +1082,7 @@ class GenerarReportes extends Component
 
             $this->datosReporte = $cambios->map(function ($cambio) {
                 return [
-                    'fecha' => $cambio->fecha,
+                    'fecha' => $cambio->created_at,
                     'usuario' => $cambio->usuario->nombre_usuario ?? 'N/A',
                     'accion' => $cambio->accion,
                     'descripcion' => $cambio->descripcion ?? '',
@@ -1091,8 +1100,8 @@ class GenerarReportes extends Component
     {
         try {
             $logs = Bitacora::with(['usuario'])
-                ->whereBetween('fecha', [$this->fechaInicio, $this->fechaFin])
-                ->orderBy('fecha', 'desc')
+                ->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin])
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             if ($logs->isEmpty()) {
@@ -1102,9 +1111,9 @@ class GenerarReportes extends Component
 
             $this->datosReporte = $logs->map(function ($log) {
                 return [
-                    'fecha' => $log->fecha,
+                    'fecha' => $log->created_at,
                     'usuario' => $log->usuario->nombre_usuario ?? 'Sistema',
-                    'modulo' => $log->modulo ?? 'N/A',
+                    'modelo' => $log->modelo ?? 'N/A',
                     'accion' => $log->accion,
                     'ip' => $log->ip_address ?? 'N/A',
                 ];
