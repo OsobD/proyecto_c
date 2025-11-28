@@ -3,6 +3,11 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Services\KardexService;
+use App\Models\Usuario;
+use App\Models\Proveedor;
+use App\Models\Bodega;
+use App\Models\Producto;
 
 /**
  * Componente GenerarReportes
@@ -46,6 +51,9 @@ class GenerarReportes extends Component
     /** @var string|int ID de bodega seleccionada */
     public $bodegaSeleccionada = '';
 
+    /** @var string|int ID de producto seleccionado (para Kardex) */
+    public $productoSeleccionado = '';
+
     // Catálogos para filtros
     /** @var array Lista de usuarios del sistema */
     public $usuarios = [];
@@ -55,6 +63,9 @@ class GenerarReportes extends Component
 
     /** @var array Lista de bodegas disponibles */
     public $bodegas = [];
+
+    /** @var array Lista de productos disponibles */
+    public $productos = [];
 
     // Definiciones de reportes por categoría
     /** @var array Tipos de reportes de compras */
@@ -69,27 +80,14 @@ class GenerarReportes extends Component
     /** @var array Tipos de reportes de bitácora */
     public $reportesBitacora = [];
 
+    // Datos del reporte generado
+    /** @var array Datos del reporte Kardex */
+    public $datosKardex = [];
+
     public function mount()
     {
-        // Datos simulados
-        $this->usuarios = [
-            ['id' => 1, 'nombre' => 'Juan Pérez'],
-            ['id' => 2, 'nombre' => 'María García'],
-            ['id' => 3, 'nombre' => 'Carlos López'],
-            ['id' => 4, 'nombre' => 'David Bautista'],
-        ];
-
-        $this->proveedores = [
-            ['id' => 1, 'nombre' => 'Ferretería El Martillo Feliz'],
-            ['id' => 2, 'nombre' => 'Suministros Industriales S.A.'],
-            ['id' => 3, 'nombre' => 'Distribuidora García'],
-        ];
-
-        $this->bodegas = [
-            ['id' => 1, 'nombre' => 'Bodega Central'],
-            ['id' => 2, 'nombre' => 'Bodega Norte'],
-            ['id' => 3, 'nombre' => 'Bodega Sur'],
-        ];
+        // Cargar datos reales desde la base de datos
+        $this->cargarCatalogos();
 
         $this->reportesCompras = [
             ['id' => 'compras_proveedor', 'nombre' => 'Compras por Proveedor'],
@@ -106,9 +104,9 @@ class GenerarReportes extends Component
         ];
 
         $this->reportesInventario = [
+            ['id' => 'kardex', 'nombre' => 'Kardex de Inventario'],
             ['id' => 'inventario_bodega', 'nombre' => 'Inventario por Bodega'],
             ['id' => 'tarjeta_responsabilidad', 'nombre' => 'Tarjeta de Responsabilidad'],
-            ['id' => 'movimientos_producto', 'nombre' => 'Movimientos de Producto'],
             ['id' => 'stock_minimo', 'nombre' => 'Productos con Stock Mínimo'],
         ];
 
@@ -118,12 +116,73 @@ class GenerarReportes extends Component
             ['id' => 'cambios_inventario', 'nombre' => 'Cambios en Inventario'],
             ['id' => 'log_sistema', 'nombre' => 'Log del Sistema'],
         ];
+
+        // Inicializar fechas por defecto (último mes)
+        $this->fechaFin = date('Y-m-d');
+        $this->fechaInicio = date('Y-m-d', strtotime('-1 month'));
+    }
+
+    /**
+     * Carga los catálogos desde la base de datos
+     */
+    private function cargarCatalogos()
+    {
+        // Cargar usuarios
+        $this->usuarios = Usuario::where('estado', true)
+            ->orderBy('nombre_usuario')
+            ->get()
+            ->map(function ($usuario) {
+                return [
+                    'id' => $usuario->id,
+                    'nombre' => $usuario->nombre_usuario
+                ];
+            })
+            ->toArray();
+
+        // Cargar proveedores
+        $this->proveedores = Proveedor::where('activo', true)
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($proveedor) {
+                return [
+                    'id' => $proveedor->id,
+                    'nombre' => $proveedor->nombre
+                ];
+            })
+            ->toArray();
+
+        // Cargar bodegas
+        $this->bodegas = Bodega::where('activo', true)
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($bodega) {
+                return [
+                    'id' => $bodega->id,
+                    'nombre' => $bodega->nombre
+                ];
+            })
+            ->toArray();
+
+        // Cargar productos
+        $this->productos = Producto::with('categoria')
+            ->where('activo', true)
+            ->orderBy('descripcion')
+            ->get()
+            ->map(function ($producto) {
+                return [
+                    'id' => $producto->id,
+                    'nombre' => $producto->descripcion,
+                    'categoria' => $producto->categoria->nombre ?? 'Sin categoría'
+                ];
+            })
+            ->toArray();
     }
 
     public function cambiarTab($tab)
     {
         $this->tabActivo = $tab;
         $this->tipoReporte = '';
+        $this->datosKardex = [];
     }
 
     public function generarReporte()
@@ -133,7 +192,65 @@ class GenerarReportes extends Component
             return;
         }
 
-        session()->flash('message', 'Generando reporte: ' . $this->tipoReporte);
+        // Generar reporte según el tipo
+        switch ($this->tipoReporte) {
+            case 'kardex':
+                $this->generarKardex();
+                break;
+            default:
+                session()->flash('message', 'Generando reporte: ' . $this->tipoReporte . ' (En desarrollo)');
+                break;
+        }
+    }
+
+    /**
+     * Genera el reporte Kardex de inventario
+     */
+    public function generarKardex()
+    {
+        try {
+            $kardexService = new KardexService();
+
+            // Preparar filtros
+            $filtros = [];
+
+            if (!empty($this->fechaInicio)) {
+                $filtros['fecha_inicio'] = $this->fechaInicio;
+            }
+
+            if (!empty($this->fechaFin)) {
+                $filtros['fecha_fin'] = $this->fechaFin;
+            }
+
+            if (!empty($this->bodegaSeleccionada)) {
+                $filtros['id_bodega'] = $this->bodegaSeleccionada;
+            }
+
+            if (!empty($this->productoSeleccionado)) {
+                $filtros['id_producto'] = $this->productoSeleccionado;
+            }
+
+            if (!empty($this->usuarioSeleccionado)) {
+                $filtros['id_usuario'] = $this->usuarioSeleccionado;
+            }
+
+            // Generar el Kardex
+            $movimientos = $kardexService->generarKardex($filtros);
+
+            if ($movimientos->isEmpty()) {
+                session()->flash('error', 'No se encontraron movimientos con los filtros seleccionados.');
+                $this->datosKardex = [];
+                return;
+            }
+
+            // Guardar datos para mostrar en la vista
+            $this->datosKardex = $movimientos->toArray();
+
+            session()->flash('message', 'Kardex generado exitosamente. Se encontraron ' . count($this->datosKardex) . ' movimientos.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar el Kardex: ' . $e->getMessage());
+            $this->datosKardex = [];
+        }
     }
 
     public function exportarExcel()
