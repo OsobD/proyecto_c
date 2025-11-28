@@ -68,11 +68,11 @@ class KardexService
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
-            $query->where('fecha', '>=', $filtros['fecha_inicio']);
+            $query->whereDate('fecha', '>=', $filtros['fecha_inicio']);
         }
 
         if (isset($filtros['fecha_fin'])) {
-            $query->where('fecha', '<=', $filtros['fecha_fin']);
+            $query->whereDate('fecha', '<=', $filtros['fecha_fin']);
         }
 
         if (isset($filtros['id_bodega']) && $filtros['id_bodega'] !== '') {
@@ -131,11 +131,11 @@ class KardexService
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
-            $query->where('fecha', '>=', $filtros['fecha_inicio']);
+            $query->whereDate('fecha', '>=', $filtros['fecha_inicio']);
         }
 
         if (isset($filtros['fecha_fin'])) {
-            $query->where('fecha', '<=', $filtros['fecha_fin']);
+            $query->whereDate('fecha', '<=', $filtros['fecha_fin']);
         }
 
         if (isset($filtros['id_bodega']) && $filtros['id_bodega'] !== '') {
@@ -199,11 +199,11 @@ class KardexService
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
-            $query->where('fecha', '>=', $filtros['fecha_inicio']);
+            $query->whereDate('fecha', '>=', $filtros['fecha_inicio']);
         }
 
         if (isset($filtros['fecha_fin'])) {
-            $query->where('fecha', '<=', $filtros['fecha_fin']);
+            $query->whereDate('fecha', '<=', $filtros['fecha_fin']);
         }
 
         if (isset($filtros['id_bodega']) && $filtros['id_bodega'] !== '') {
@@ -275,11 +275,11 @@ class KardexService
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
-            $query->where('fecha', '>=', $filtros['fecha_inicio']);
+            $query->whereDate('fecha', '>=', $filtros['fecha_inicio']);
         }
 
         if (isset($filtros['fecha_fin'])) {
-            $query->where('fecha', '<=', $filtros['fecha_fin']);
+            $query->whereDate('fecha', '<=', $filtros['fecha_fin']);
         }
 
         if (isset($filtros['id_usuario']) && $filtros['id_usuario'] !== '') {
@@ -370,11 +370,11 @@ class KardexService
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
-            $query->where('fecha', '>=', $filtros['fecha_inicio']);
+            $query->whereDate('fecha', '>=', $filtros['fecha_inicio']);
         }
 
         if (isset($filtros['fecha_fin'])) {
-            $query->where('fecha', '<=', $filtros['fecha_fin']);
+            $query->whereDate('fecha', '<=', $filtros['fecha_fin']);
         }
 
         if (isset($filtros['id_bodega']) && $filtros['id_bodega'] !== '') {

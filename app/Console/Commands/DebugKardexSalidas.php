@@ -86,22 +86,25 @@ class DebugKardexSalidas extends Command
         $fechaInicio = Carbon::now()->subDays(30)->format('Y-m-d');
         $fechaFin = Carbon::now()->format('Y-m-d');
 
-        $query = Salida::with([
-            'detalles.producto.categoria',
-            'detalles.lote',
-            'bodega',
-            'usuario',
-            'tipoSalida',
-            'persona'
-        ])->where(function($q) {
+        $this->line("   Rango: {$fechaInicio} a {$fechaFin}");
+
+        // Query ANTIGUA (con where)
+        $queryAntigua = Salida::where(function($q) {
             $q->where('activo', true)
               ->orWhereNull('activo');
         })
         ->where('fecha', '>=', $fechaInicio)
         ->where('fecha', '<=', $fechaFin);
+        $this->line("   Con WHERE (antigua): " . $queryAntigua->count());
 
-        $salidasQuery = $query->get();
-        $this->line("   Salidas encontradas con la query del servicio: " . $salidasQuery->count());
+        // Query NUEVA (con whereDate)
+        $queryNueva = Salida::where(function($q) {
+            $q->where('activo', true)
+              ->orWhereNull('activo');
+        })
+        ->whereDate('fecha', '>=', $fechaInicio)
+        ->whereDate('fecha', '<=', $fechaFin);
+        $this->line("   Con WHEREDATE (nueva): " . $queryNueva->count());
 
         return 0;
     }
