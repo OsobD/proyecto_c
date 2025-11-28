@@ -54,6 +54,27 @@ class GenerarReportes extends Component
     /** @var string|int ID de producto seleccionado (para Kardex) */
     public $productoSeleccionado = '';
 
+    // Propiedades de búsqueda para filtros
+    public $searchProveedorFiltro = '';
+    public $searchBodegaFiltro = '';
+    public $searchProductoFiltro = '';
+    public $searchUsuarioFiltro = '';
+    public $searchTipoReporteFiltro = '';
+
+    // Control de visibilidad de dropdowns
+    public $showProveedorDropdown = false;
+    public $showBodegaDropdown = false;
+    public $showProductoDropdown = false;
+    public $showUsuarioDropdown = false;
+    public $showTipoReporteDropdown = false;
+
+    // Filtros seleccionados
+    public $selectedProveedorFiltro = null;
+    public $selectedBodegaFiltro = null;
+    public $selectedProductoFiltro = null;
+    public $selectedUsuarioFiltro = null;
+    public $selectedTipoReporteFiltro = null;
+
     // Catálogos para filtros
     /** @var array Lista de usuarios del sistema */
     public $usuarios = [];
@@ -261,6 +282,210 @@ class GenerarReportes extends Component
     public function imprimir()
     {
         session()->flash('message', 'Preparando impresión...');
+    }
+
+    // Métodos de búsqueda para filtros - Proveedor
+    public function getProveedorResultsProperty()
+    {
+        if (empty($this->searchProveedorFiltro)) {
+            return array_slice($this->proveedores, 0, 10);
+        }
+
+        $filtered = array_filter($this->proveedores, function ($proveedor) {
+            return stripos($proveedor['nombre'], $this->searchProveedorFiltro) !== false;
+        });
+        return array_slice($filtered, 0, 10);
+    }
+
+    public function selectProveedorFiltro($proveedorId)
+    {
+        $proveedor = collect($this->proveedores)->firstWhere('id', $proveedorId);
+        if ($proveedor) {
+            $this->selectedProveedorFiltro = $proveedor;
+            $this->proveedorSeleccionado = $proveedorId;
+            $this->searchProveedorFiltro = '';
+            $this->showProveedorDropdown = false;
+        }
+    }
+
+    public function clearProveedorFiltro()
+    {
+        $this->selectedProveedorFiltro = null;
+        $this->proveedorSeleccionado = '';
+        $this->searchProveedorFiltro = '';
+        $this->showProveedorDropdown = false;
+    }
+
+    public function updatedSearchProveedorFiltro()
+    {
+        $this->showProveedorDropdown = true;
+    }
+
+    // Métodos de búsqueda para filtros - Bodega
+    public function getBodegaResultsProperty()
+    {
+        if (empty($this->searchBodegaFiltro)) {
+            return array_slice($this->bodegas, 0, 10);
+        }
+
+        $filtered = array_filter($this->bodegas, function ($bodega) {
+            return stripos($bodega['nombre'], $this->searchBodegaFiltro) !== false;
+        });
+        return array_slice($filtered, 0, 10);
+    }
+
+    public function selectBodegaFiltro($bodegaId)
+    {
+        $bodega = collect($this->bodegas)->firstWhere('id', $bodegaId);
+        if ($bodega) {
+            $this->selectedBodegaFiltro = $bodega;
+            $this->bodegaSeleccionada = $bodegaId;
+            $this->searchBodegaFiltro = '';
+            $this->showBodegaDropdown = false;
+        }
+    }
+
+    public function clearBodegaFiltro()
+    {
+        $this->selectedBodegaFiltro = null;
+        $this->bodegaSeleccionada = '';
+        $this->searchBodegaFiltro = '';
+        $this->showBodegaDropdown = false;
+    }
+
+    public function updatedSearchBodegaFiltro()
+    {
+        $this->showBodegaDropdown = true;
+    }
+
+    // Métodos de búsqueda para filtros - Producto
+    public function getProductoResultsProperty()
+    {
+        if (empty($this->searchProductoFiltro)) {
+            return array_slice($this->productos, 0, 10);
+        }
+
+        $filtered = array_filter($this->productos, function ($producto) {
+            return stripos($producto['nombre'], $this->searchProductoFiltro) !== false;
+        });
+        return array_slice($filtered, 0, 10);
+    }
+
+    public function selectProductoFiltro($productoId)
+    {
+        $producto = collect($this->productos)->firstWhere('id', $productoId);
+        if ($producto) {
+            $this->selectedProductoFiltro = $producto;
+            $this->productoSeleccionado = $productoId;
+            $this->searchProductoFiltro = '';
+            $this->showProductoDropdown = false;
+        }
+    }
+
+    public function clearProductoFiltro()
+    {
+        $this->selectedProductoFiltro = null;
+        $this->productoSeleccionado = '';
+        $this->searchProductoFiltro = '';
+        $this->showProductoDropdown = false;
+    }
+
+    public function updatedSearchProductoFiltro()
+    {
+        $this->showProductoDropdown = true;
+    }
+
+    // Métodos de búsqueda para filtros - Usuario
+    public function getUsuarioResultsProperty()
+    {
+        if (empty($this->searchUsuarioFiltro)) {
+            return array_slice($this->usuarios, 0, 10);
+        }
+
+        $filtered = array_filter($this->usuarios, function ($usuario) {
+            return stripos($usuario['nombre'], $this->searchUsuarioFiltro) !== false;
+        });
+        return array_slice($filtered, 0, 10);
+    }
+
+    public function selectUsuarioFiltro($usuarioId)
+    {
+        $usuario = collect($this->usuarios)->firstWhere('id', $usuarioId);
+        if ($usuario) {
+            $this->selectedUsuarioFiltro = $usuario;
+            $this->usuarioSeleccionado = $usuarioId;
+            $this->searchUsuarioFiltro = '';
+            $this->showUsuarioDropdown = false;
+        }
+    }
+
+    public function clearUsuarioFiltro()
+    {
+        $this->selectedUsuarioFiltro = null;
+        $this->usuarioSeleccionado = '';
+        $this->searchUsuarioFiltro = '';
+        $this->showUsuarioDropdown = false;
+    }
+
+    public function updatedSearchUsuarioFiltro()
+    {
+        $this->showUsuarioDropdown = true;
+    }
+
+    // Métodos de búsqueda para filtros - Tipo de Reporte
+    public function getTipoReporteResultsProperty()
+    {
+        $reportes = [];
+        
+        // Obtener reportes según tab activo
+        switch ($this->tabActivo) {
+            case 'compras':
+                $reportes = $this->reportesCompras;
+                break;
+            case 'traslados':
+                $reportes = $this->reportesTraslados;
+                break;
+            case 'inventario':
+                $reportes = $this->reportesInventario;
+                break;
+            case 'bitacora':
+                $reportes = $this->reportesBitacora;
+                break;
+        }
+
+        if (empty($this->searchTipoReporteFiltro)) {
+            return array_slice($reportes, 0, 10);
+        }
+
+        $filtered = array_filter($reportes, function ($reporte) {
+            return stripos($reporte['nombre'], $this->searchTipoReporteFiltro) !== false;
+        });
+        return array_slice($filtered, 0, 10);
+    }
+
+    public function selectTipoReporteFiltro($reporteId)
+    {
+        $reportes = $this->tipoReporteResults;
+        $reporte = collect($reportes)->firstWhere('id', $reporteId);
+        if ($reporte) {
+            $this->selectedTipoReporteFiltro = $reporte;
+            $this->tipoReporte = $reporteId;
+            $this->searchTipoReporteFiltro = '';
+            $this->showTipoReporteDropdown = false;
+        }
+    }
+
+    public function clearTipoReporteFiltro()
+    {
+        $this->selectedTipoReporteFiltro = null;
+        $this->tipoReporte = '';
+        $this->searchTipoReporteFiltro = '';
+        $this->showTipoReporteDropdown = false;
+    }
+
+    public function updatedSearchTipoReporteFiltro()
+    {
+        $this->showTipoReporteDropdown = true;
     }
 
     public function render()

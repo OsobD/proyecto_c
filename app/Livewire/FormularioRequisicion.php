@@ -154,11 +154,15 @@ class FormularioRequisicion extends Component
             }]);
 
         if (!empty($this->searchDestino)) {
+            // Si hay búsqueda, filtrar por nombre
             $query->where(function ($q) {
                 $q->where('nombres', 'like', '%' . $this->searchDestino . '%')
                     ->orWhere('apellidos', 'like', '%' . $this->searchDestino . '%')
                     ->orWhereRaw("CONCAT(nombres, ' ', apellidos) like ?", ['%' . $this->searchDestino . '%']);
             });
+        } else {
+            // Si no hay búsqueda, limitar a 5 resultados iniciales
+            $query->limit(5);
         }
 
         return $query->get()->map(function ($persona) {
@@ -168,7 +172,7 @@ class FormularioRequisicion extends Component
             return [
                 'id' => 'P' . $persona->id,
                 'nombre' => $nombreCompleto,
-                'tipo' => $tarjeta ? 'Con Tarjeta' : 'Sin Tarjeta',
+                'tipo' => 'DPI: ' . ($persona->dpi ?? 'N/A'),
                 'persona_id' => $persona->id,
                 'tarjeta_id' => $tarjeta ? $tarjeta->id : null,
                 'tiene_tarjeta' => $tarjeta !== null

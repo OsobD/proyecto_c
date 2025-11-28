@@ -100,6 +100,11 @@
                                                 No se encontraron personas
                                             </li>
                                         @endforelse
+                                        @if(empty($searchDestino) && count($this->destinoResults) > 0)
+                                            <li class="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-200 text-center italic">
+                                                Mostrando {{ count($this->destinoResults) }} resultados. Escribe para buscar entre todas las personas...
+                                            </li>
+                                        @endif
                                     </ul>
                                     {{-- Botón para crear nueva persona --}}
                                     <div class="border-t border-gray-200">
