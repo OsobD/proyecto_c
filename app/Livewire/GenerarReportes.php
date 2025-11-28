@@ -775,7 +775,7 @@ class GenerarReportes extends Component
             $this->datosReporte = $traslados->map(function ($traslado) {
                 return [
                     'fecha' => $traslado->fecha,
-                    'no_requisicion' => $traslado->no_requisicion ?? 'N/A',
+                    'no_traslado' => $traslado->correlativo ?? ($traslado->no_requisicion ?? 'N/A'),
                     'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
                     'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
                     'estado' => $traslado->estado ?? 'N/A',
@@ -810,7 +810,7 @@ class GenerarReportes extends Component
             $this->datosReporte = $traslados->map(function ($traslado) {
                 return [
                     'fecha' => $traslado->fecha,
-                    'no_requisicion' => $traslado->no_requisicion ?? 'N/A',
+                    'no_traslado' => $traslado->correlativo ?? ($traslado->no_requisicion ?? 'N/A'),
                     'bodega_origen' => $traslado->bodegaOrigen->nombre ?? 'N/A',
                     'bodega_destino' => $traslado->bodegaDestino->nombre ?? 'N/A',
                     'estado' => $traslado->estado ?? 'N/A',
@@ -843,11 +843,19 @@ class GenerarReportes extends Component
             }
 
             $this->datosReporte = $requisiciones->map(function ($requisicion) {
+                $solicitante = 'N/A';
+                if ($requisicion->persona) {
+                    $solicitante = trim(($requisicion->persona->nombres ?? '') . ' ' . ($requisicion->persona->apellidos ?? ''));
+                    if (empty($solicitante)) {
+                        $solicitante = 'N/A';
+                    }
+                }
+
                 return [
                     'fecha' => $requisicion->fecha,
-                    'no_requisicion' => $requisicion->no_requisicion ?? 'N/A',
+                    'no_traslado' => $requisicion->correlativo ?? ($requisicion->no_requisicion ?? 'N/A'),
                     'bodega_destino' => $requisicion->bodegaDestino->nombre ?? 'N/A',
-                    'solicitante' => $requisicion->persona->nombre ?? 'N/A',
+                    'solicitante' => $solicitante,
                     'estado' => $requisicion->estado ?? 'N/A',
                     'total' => $requisicion->total,
                 ];
@@ -878,11 +886,19 @@ class GenerarReportes extends Component
             }
 
             $this->datosReporte = $devoluciones->map(function ($devolucion) {
+                $personaNombre = 'N/A';
+                if ($devolucion->persona) {
+                    $personaNombre = trim(($devolucion->persona->nombres ?? '') . ' ' . ($devolucion->persona->apellidos ?? ''));
+                    if (empty($personaNombre)) {
+                        $personaNombre = 'N/A';
+                    }
+                }
+
                 return [
                     'fecha' => $devolucion->fecha,
-                    'no_formulario' => $devolucion->no_formulario ?? 'N/A',
+                    'no_devolucion' => $devolucion->correlativo ?? ($devolucion->no_formulario ?? 'N/A'),
                     'bodega' => $devolucion->bodega->nombre ?? 'N/A',
-                    'persona' => $devolucion->persona->nombre ?? 'N/A',
+                    'persona' => $personaNombre,
                     'total' => $devolucion->total,
                 ];
             })->toArray();
