@@ -54,6 +54,7 @@
             </div>
         </div>
 
+        @if(!$lote->producto->es_consumible)
         <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
                 <div>
@@ -66,6 +67,7 @@
                 </svg>
             </div>
         </div>
+        @endif
 
         <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-lg p-4">
             <div class="flex items-center justify-between">
@@ -224,10 +226,12 @@
                                 <input type="radio" wire:model.live="tipoUbicacion" value="bodega" class="mr-2">
                                 <span>Solo Bodegas</span>
                             </label>
+                            @if(!$lote->producto->es_consumible)
                             <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                                 <input type="radio" wire:model.live="tipoUbicacion" value="tarjeta" class="mr-2">
                                 <span>Solo Tarjetas</span>
                             </label>
+                            @endif
                         </div>
                     </div>
                 </div>

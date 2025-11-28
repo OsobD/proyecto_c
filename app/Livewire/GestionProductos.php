@@ -48,8 +48,11 @@ class GestionProductos extends Component
     public $sortField = 'id';
     public $sortDirection = 'asc';
 
+    // Filtro de tipo
+    public $filterTipo = ''; // '', 'consumible', 'no_consumible'
+
     /** @var int Número de elementos por página en la lista principal */
-    protected $perPage = 30;
+    public $perPage = 10;
 
     /** @var int Página actual de lotes en el modal */
     public $lotesPage = 1;
@@ -141,6 +144,7 @@ class GestionProductos extends Component
     public function clearFilters()
     {
         $this->showInactive = false;
+        $this->filterTipo = '';
         $this->sortField = 'id';
         $this->sortDirection = 'asc';
         $this->resetPage();
@@ -173,6 +177,13 @@ class GestionProductos extends Component
             });
         }
 
+        // Aplicar filtro de tipo
+        if ($this->filterTipo === 'consumible') {
+            $query->where('es_consumible', true);
+        } elseif ($this->filterTipo === 'no_consumible') {
+            $query->where('es_consumible', false);
+        }
+
         // Aplicar ordenamiento
         if ($this->sortField) {
             $query->orderBy($this->sortField, $this->sortDirection);
@@ -180,7 +191,7 @@ class GestionProductos extends Component
             $query->orderBy('descripcion');
         }
 
-        $productos = $query->paginate(10);
+        $productos = $query->paginate($this->perPage);
 
         // Obtener lotes agrupados con resumen de ubicaciones
         // Muestra cada lote una vez con contador de bodegas donde está ubicado
