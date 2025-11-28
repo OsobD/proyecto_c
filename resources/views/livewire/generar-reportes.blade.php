@@ -57,29 +57,83 @@
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Compras</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label for="tipo_reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
-                            <select
-                                id="tipo_reporte"
-                                wire:model="tipoReporte"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Seleccione un tipo</option>
-                                @foreach ($reportesCompras as $reporte)
-                                    <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Reporte</label>
+                            <div class="relative">
+                                @if($selectedTipoReporteFiltro)
+                                    <div wire:click="clearTipoReporteFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedTipoReporteFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showTipoReporteDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchTipoReporteFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar tipo de reporte...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearTipoReporteFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Seleccione un tipo
+                                                </li>
+                                                @foreach ($this->tipoReporteResults as $reporte)
+                                                    <li wire:click.prevent="selectTipoReporteFiltro('{{ $reporte['id'] }}')"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $reporte['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
-                            <label for="proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
-                            <select
-                                id="proveedor"
-                                wire:model="proveedorSeleccionado"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Todos</option>
-                                @foreach ($proveedores as $proveedor)
-                                    <option value="{{ $proveedor['id'] }}">{{ $proveedor['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label for="proveedor" class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
+                            <div class="relative">
+                                @if($selectedProveedorFiltro)
+                                    <div wire:click="clearProveedorFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedProveedorFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showProveedorDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchProveedorFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar proveedor...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearProveedorFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Todos los proveedores
+                                                </li>
+                                                @foreach ($this->proveedorResults as $proveedor)
+                                                    <li wire:click.prevent="selectProveedorFiltro({{ $proveedor['id'] }})"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $proveedor['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
@@ -109,29 +163,83 @@
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Traslados</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label for="tipo_reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
-                            <select
-                                id="tipo_reporte"
-                                wire:model="tipoReporte"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Seleccione un tipo</option>
-                                @foreach ($reportesTraslados as $reporte)
-                                    <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Reporte</label>
+                            <div class="relative">
+                                @if($selectedTipoReporteFiltro)
+                                    <div wire:click="clearTipoReporteFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedTipoReporteFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showTipoReporteDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchTipoReporteFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar tipo de reporte...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearTipoReporteFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Seleccione un tipo
+                                                </li>
+                                                @foreach ($this->tipoReporteResults as $reporte)
+                                                    <li wire:click.prevent="selectTipoReporteFiltro('{{ $reporte['id'] }}')"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $reporte['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
-                            <label for="bodega" class="block text-sm font-medium text-gray-700 mb-1">Bodega</label>
-                            <select
-                                id="bodega"
-                                wire:model="bodegaSeleccionada"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Todas</option>
-                                @foreach ($bodegas as $bodega)
-                                    <option value="{{ $bodega['id'] }}">{{ $bodega['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Bodega</label>
+                            <div class="relative">
+                                @if($selectedBodegaFiltro)
+                                    <div wire:click="clearBodegaFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedBodegaFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchBodegaFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar bodega...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearBodegaFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Todas las bodegas
+                                                </li>
+                                                @foreach ($this->bodegaResults as $bodega)
+                                                    <li wire:click.prevent="selectBodegaFiltro({{ $bodega['id'] }})"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $bodega['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
@@ -161,55 +269,163 @@
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Inventario</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
-                            <label for="tipo_reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
-                            <select
-                                id="tipo_reporte"
-                                wire:model="tipoReporte"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Seleccione un tipo</option>
-                                @foreach ($reportesInventario as $reporte)
-                                    <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Reporte</label>
+                            <div class="relative">
+                                @if($selectedTipoReporteFiltro)
+                                    <div wire:click="clearTipoReporteFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedTipoReporteFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showTipoReporteDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchTipoReporteFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar tipo de reporte...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearTipoReporteFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Seleccione un tipo
+                                                </li>
+                                                @foreach ($this->tipoReporteResults as $reporte)
+                                                    <li wire:click.prevent="selectTipoReporteFiltro('{{ $reporte['id'] }}')"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $reporte['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
-                            <label for="producto" class="block text-sm font-medium text-gray-700 mb-1">Producto (Opcional)</label>
-                            <select
-                                id="producto"
-                                wire:model="productoSeleccionado"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Todos los productos</option>
-                                @foreach ($productos as $producto)
-                                    <option value="{{ $producto['id'] }}">{{ $producto['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label for="producto" class="block text-sm font-medium text-gray-700 mb-2">Producto (Opcional)</label>
+                            <div class="relative">
+                                @if($selectedProductoFiltro)
+                                    <div wire:click="clearProductoFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedProductoFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showProductoDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchProductoFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar producto...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearProductoFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Todos los productos
+                                                </li>
+                                                @foreach (array_slice($this->productoResults, 0, 10) as $producto)
+                                                    <li wire:click.prevent="selectProductoFiltro({{ $producto['id'] }})"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $producto['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
-                            <label for="bodega" class="block text-sm font-medium text-gray-700 mb-1">Bodega</label>
-                            <select
-                                id="bodega"
-                                wire:model="bodegaSeleccionada"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Todas</option>
-                                @foreach ($bodegas as $bodega)
-                                    <option value="{{ $bodega['id'] }}">{{ $bodega['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Bodega</label>
+                            <div class="relative">
+                                @if($selectedBodegaFiltro)
+                                    <div wire:click="clearBodegaFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedBodegaFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchBodegaFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar bodega...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearBodegaFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Todas las bodegas
+                                                </li>
+                                                @foreach ($this->bodegaResults as $bodega)
+                                                    <li wire:click.prevent="selectBodegaFiltro({{ $bodega['id'] }})"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $bodega['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
-                            <label for="usuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                            <select
-                                id="usuario"
-                                wire:model="usuarioSeleccionado"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Todos</option>
-                                @foreach ($usuarios as $usuario)
-                                    <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+                            <div class="relative">
+                                @if($selectedUsuarioFiltro)
+                                    <div wire:click="clearUsuarioFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedUsuarioFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showUsuarioDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchUsuarioFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar usuario...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearUsuarioFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Todos los usuarios
+                                                </li>
+                                                @foreach ($this->usuarioResults as $usuario)
+                                                    <li wire:click.prevent="selectUsuarioFiltro({{ $usuario['id'] }})"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $usuario['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
@@ -239,29 +455,83 @@
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Bitácora</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label for="tipo_reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
-                            <select
-                                id="tipo_reporte"
-                                wire:model="tipoReporte"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Seleccione un tipo</option>
-                                @foreach ($reportesBitacora as $reporte)
-                                    <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Reporte</label>
+                            <div class="relative">
+                                @if($selectedTipoReporteFiltro)
+                                    <div wire:click="clearTipoReporteFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedTipoReporteFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showTipoReporteDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchTipoReporteFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar tipo de reporte...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearTipoReporteFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Seleccione un tipo
+                                                </li>
+                                                @foreach ($this->tipoReporteResults as $reporte)
+                                                    <li wire:click.prevent="selectTipoReporteFiltro('{{ $reporte['id'] }}')"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $reporte['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>
-                            <label for="usuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                            <select
-                                id="usuario"
-                                wire:model="usuarioSeleccionado"
-                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
-                                <option value="">Todos</option>
-                                @foreach ($usuarios as $usuario)
-                                    <option value="{{ $usuario['id'] }}">{{ $usuario['nombre'] }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+                            <div class="relative">
+                                @if($selectedUsuarioFiltro)
+                                    <div wire:click="clearUsuarioFiltro"
+                                         class="flex items-center justify-between w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                                        <span class="font-medium text-gray-800">{{ $selectedUsuarioFiltro['nombre'] }}</span>
+                                        <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
+                                    </div>
+                                @else
+                                    <div class="relative" x-data="{ open: @entangle('showUsuarioDropdown').live }" @click.outside="open = false">
+                                        <input
+                                            type="text"
+                                            wire:model.live.debounce.300ms="searchUsuarioFiltro"
+                                            @click="open = true"
+                                            class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400"
+                                            placeholder="Buscar usuario...">
+                                        <div x-show="open"
+                                             x-transition
+                                             class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                                            <ul>
+                                                <li wire:click.prevent="clearUsuarioFiltro"
+                                                    @click="open = false"
+                                                    class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
+                                                    Todos los usuarios
+                                                </li>
+                                                @foreach ($this->usuarioResults as $usuario)
+                                                    <li wire:click.prevent="selectUsuarioFiltro({{ $usuario['id'] }})"
+                                                        @click="open = false"
+                                                        class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
+                                                        {{ $usuario['nombre'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div>

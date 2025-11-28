@@ -311,15 +311,135 @@
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <tr>
-                        <th class="py-3 px-6 text-left">Tipo</th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('tipo')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Tipo
+                                @if($sortField === 'tipo')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="py-3 px-6 text-left">Productos</th>
-                        <th class="py-3 px-6 text-left">Correlativo</th>
-                        <th class="py-3 px-6 text-left">Origen</th>
-                        <th class="py-3 px-6 text-left">Destino</th>
-                        <th class="py-3 px-6 text-left">Usuario</th>
-                        <th class="py-3 px-6 text-left">Fecha</th>
-                        <th class="py-3 px-6 text-center">Cantidad</th>
-                        <th class="py-3 px-6 text-center">Estado</th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('correlativo')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Correlativo
+                                @if($sortField === 'correlativo')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('origen')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Origen
+                                @if($sortField === 'origen')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('destino')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Destino
+                                @if($sortField === 'destino')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('usuario')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Usuario
+                                @if($sortField === 'usuario')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-left">
+                            <button
+                                wire:click="sortBy('fecha')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors">
+                                Fecha
+                                @if($sortField === 'fecha')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-center">
+                            <button
+                                wire:click="sortBy('productos_count')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors mx-auto">
+                                Cantidad
+                                @if($sortField === 'productos_count')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
+                        <th class="py-3 px-6 text-center">
+                            <button
+                                wire:click="sortBy('estado')"
+                                class="flex items-center gap-2 hover:text-gray-900 font-semibold transition-colors mx-auto">
+                                Estado
+                                @if($sortField === 'estado')
+                                    @if($sortDirection === 'asc')
+                                        <span>↑</span>
+                                    @else
+                                        <span>↓</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">↕</span>
+                                @endif
+                            </button>
+                        </th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
                 </thead>

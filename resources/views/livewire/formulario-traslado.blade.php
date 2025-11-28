@@ -163,7 +163,7 @@
                                             <span class="font-mono text-gray-500 mr-2">#{{ $producto['id'] }}</span>
                                             <span>{{ $producto['descripcion'] }}</span>
                                         </div>
-                                        <span class="text-sm text-gray-500">Stock: {{ $producto['cantidad_disponible'] }}</span>
+                                        <span class="text-sm text-gray-600">Disponible: {{ $producto['cantidad_disponible'] }}</span>
                                     </div>
                                 </li>
                             @empty
@@ -171,10 +171,19 @@
                                     @if(!$this->selectedOrigen)
                                         Seleccione primero una bodega de origen
                                     @else
-                                        No hay productos disponibles
+                                        @if(empty($searchProducto))
+                                            Escribe para buscar productos...
+                                        @else
+                                            No hay productos disponibles
+                                        @endif
                                     @endif
                                 </li>
                             @endforelse
+                            @if(empty($searchProducto) && count($this->productoResults) > 0)
+                                <li class="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-200 text-center italic">
+                                    Mostrando {{ count($this->productoResults) }} productos. Escribe para buscar más...
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -192,6 +201,7 @@
                                 <th class="py-3 px-6 text-center">Tipo</th>
                                 <th class="py-3 px-6 text-right">Precio Unit.</th>
                                 <th class="py-3 px-6 text-center">Cantidad</th>
+                                <th class="py-3 px-6 text-center">Disponible</th>
                                 <th class="py-3 px-6 text-right">Total</th>
                                 <th class="py-3 px-6 text-center">Acción</th>
                             </tr>
@@ -200,17 +210,14 @@
                             @foreach($productosSeleccionados as $index => $producto)
                                 <tr class="border-b border-gray-200 hover:bg-gray-50 {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
                                     <td class="py-3 px-6 text-left font-mono">#{{ $producto['id'] }}</td>
-                                    <td class="py-3 px-6 text-left">
-                                        {{ $producto['descripcion'] }}
-                                        <span class="text-xs text-gray-500">(Disponible: {{ $producto['cantidad_disponible'] }})</span>
-                                    </td>
+                                    <td class="py-3 px-6 text-left">{{ $producto['descripcion'] }}</td>
                                     <td class="py-3 px-6 text-center">
                                         @if($producto['es_consumible'] ?? false)
-                                            <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            <span class="bg-amber-100 text-amber-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                 Consumible
                                             </span>
                                         @else
-                                            <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
+                                            <span class="bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                 No Consumible
                                             </span>
                                         @endif
@@ -219,12 +226,16 @@
                                     <td class="py-3 px-6 text-center">
                                         <input
                                             type="number"
-                                            wire:model.live="productosSeleccionados.{{ $index }}.cantidad"
-                                            wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
+                                            wire:model.blur="productosSeleccionados.{{ $index }}.cantidad"
                                             min="1"
-                                            max="{{ $producto['cantidad_disponible'] }}"
-                                            class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        >
+                                            max="{{ $producto['cantidad_disponible'] ?? 999999 }}"
+                                            placeholder="0"
+                                            class="w-24 text-center border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold {{ $producto['cantidad'] > $producto['cantidad_disponible'] ? 'border-red-500' : '' }}">
+                                    </td>
+                                    <td class="py-3 px-6 text-center">
+                                        <span class="text-sm {{ $producto['cantidad'] > $producto['cantidad_disponible'] ? 'text-red-600 font-bold' : 'text-gray-600' }}">
+                                            {{ $producto['cantidad_disponible'] }}
+                                        </span>
                                     </td>
                                     <td class="py-3 px-6 text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
@@ -239,7 +250,7 @@
                             @endforeach
                             @if(count($productosSeleccionados) > 0)
                                 <tr class="bg-gray-100 font-bold">
-                                    <td colspan="5" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
+                                    <td colspan="6" class="py-4 px-6 text-right text-gray-800 uppercase">Subtotal:</td>
                                     <td class="py-4 px-6 text-right text-lg text-gray-800">Q{{ number_format((float)$this->subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
@@ -274,27 +285,33 @@
         </form>
     </div>
 
-    {{-- Modal de Confirmación --}}
+    {{-- Modal de Confirmación de Traslado --}}
     <div x-data="{
             show: @entangle('showModalConfirmacion').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalConfirmacion">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalConfirmacion">
+        <div class="relative p-6 border w-full max-w-3xl shadow-xl rounded-lg bg-white"
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Confirmar Traslado</h3>
+                <button wire:click="closeModalConfirmacion" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
 
-        <div class="relative p-6 border w-full max-w-4xl shadow-xl rounded-lg bg-white max-h-[90vh] overflow-y-auto"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
-
-                <div class="p-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Confirmar Traslado</h2>
-
-                    <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="space-y-4">
+                {{-- Información del traslado --}}
+                <div class="bg-gray-50 p-4 rounded-md">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-gray-600">Bodega Origen:</p>
                             <p class="font-semibold">{{ $selectedOrigen['nombre'] ?? 'N/A' }}</p>
@@ -304,105 +321,118 @@
                             <p class="font-semibold">{{ $selectedDestino['nombre'] ?? 'N/A' }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Estado:</p>
-                            <p class="font-semibold text-yellow-600">Pendiente</p>
+                            <p class="text-sm text-gray-600">Número de Serie:</p>
+                            <p class="font-semibold">{{ $numeroSerie ?: 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Correlativo:</p>
+                            <p class="font-semibold">{{ $correlativo ?: 'N/A' }}</p>
                         </div>
                     </div>
-
                     @if($observaciones)
-                    <div class="mb-6">
-                        <p class="text-sm text-gray-600">Observaciones:</p>
-                        <p class="font-semibold">{{ $observaciones }}</p>
-                    </div>
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-600">Observaciones:</p>
+                            <p class="font-semibold">{{ $observaciones }}</p>
+                        </div>
                     @endif
+                </div>
 
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Productos</h3>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="py-2 px-4 text-left text-sm">Código</th>
-                                        <th class="py-2 px-4 text-left text-sm">Descripción</th>
-                                        <th class="py-2 px-4 text-center text-sm">Tipo</th>
-                                        <th class="py-2 px-4 text-right text-sm">Cantidad</th>
-                                        <th class="py-2 px-4 text-right text-sm">Precio Unit.</th>
-                                        <th class="py-2 px-4 text-right text-sm">Subtotal</th>
-                                        <th class="py-2 px-4 text-center text-sm">Acción</th>
+                {{-- Resumen de productos --}}
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Productos a Trasladar:</h4>
+                    <div class="overflow-x-auto max-h-64 overflow-y-auto border rounded-md">
+                        <table class="min-w-full bg-white text-sm">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-3 text-left">Código</th>
+                                    <th class="py-2 px-3 text-left">Descripción</th>
+                                    <th class="py-2 px-3 text-center">Tipo</th>
+                                    <th class="py-2 px-3 text-center">Cant.</th>
+                                    <th class="py-2 px-3 text-center">Disponible</th>
+                                    <th class="py-2 px-3 text-right">Precio Unit.</th>
+                                    <th class="py-2 px-3 text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($productosSeleccionados as $producto)
+                                    <tr
+                                        class="border-t {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
+                                        <td class="py-2 px-3 font-mono">#{{ $producto['id'] }}</td>
+                                        <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
+                                        <td class="py-2 px-3 text-center">
+                                            @if($producto['es_consumible'] ?? false)
+                                                <span
+                                                    class="bg-amber-100 text-amber-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
+                                                    Consumible
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
+                                                    No Consumible
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
+                                        <td class="py-2 px-3 text-center text-gray-500">
+                                            {{ $producto['cantidad_disponible'] }}
+                                        </td>
+                                        <td class="py-2 px-3 text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
+                                        <td class="py-2 px-3 text-right font-semibold">
+                                            Q{{ number_format((float) $producto['cantidad'] * (float) $producto['precio'], 2) }}
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($productosSeleccionados as $producto)
-                                        <tr class="border-b {{ ($producto['es_consumible'] ?? false) ? 'bg-amber-50' : 'bg-blue-50' }}">
-                                            <td class="py-2 px-4 text-sm font-mono">#{{ $producto['id'] }}</td>
-                                            <td class="py-2 px-4 text-sm">{{ $producto['descripcion'] }}</td>
-                                            <td class="py-2 px-4 text-sm text-center">
-                                                @if($producto['es_consumible'] ?? false)
-                                                    <span class="bg-amber-200 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
-                                                        Consumible
-                                                    </span>
-                                                @else
-                                                    <span class="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold whitespace-nowrap">
-                                                        No Consumible
-                                                    </span>
-                                                @endif
-                                            </td>
-                                            <td class="py-2 px-4 text-sm text-right">{{ $producto['cantidad'] }}</td>
-                                            <td class="py-2 px-4 text-sm text-right">Q{{ number_format((float)$producto['precio'], 2) }}</td>
-                                            <td class="py-2 px-4 text-sm text-right font-semibold">Q{{ number_format((int)$producto['cantidad'] * (float)$producto['precio'], 2) }}</td>
-                                            <td class="py-2 px-4 text-sm text-center">
-                                                <div class="flex justify-center items-center">
-                                                    <x-action-button
-                                                        type="delete"
-                                                        title="Eliminar producto"
-                                                        wire:click="eliminarProducto('{{ $producto['id'] }}')" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    <tr class="bg-gray-50 font-bold">
-                                        <td colspan="5" class="py-3 px-4 text-right text-gray-800">TOTAL:</td>
-                                        <td class="py-3 px-4 text-right text-lg text-blue-600">Q{{ number_format((float)$this->subtotal, 2) }}</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Leyenda en el modal --}}
-                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                            <p class="text-xs font-semibold text-gray-700 mb-2">Asignación de productos:</p>
-                            <ul class="text-xs text-gray-600 space-y-1">
-                                <li class="flex items-start gap-2">
-                                    <span class="text-blue-600 font-bold">•</span>
-                                    <span><strong>No Consumibles:</strong> Se agregarán a la tarjeta de responsabilidad de {{ $selectedPersona['nombre_completo'] ?? 'la persona seleccionada' }}</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-amber-600 font-bold">•</span>
-                                    <span><strong>Consumibles:</strong> Solo quedará registro de quien los retiró, sin responsabilidad de devolución</span>
-                                </li>
-                            </ul>
-                        </div>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    <div class="flex justify-end gap-4">
-                        <button
-                            type="button"
-                            wire:click="closeModalConfirmacion"
-                            class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold">
-                            Cancelar
-                        </button>
-                        <button
-                            type="button"
-                            wire:click="guardarTraslado"
-                            wire:loading.attr="disabled"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50">
-                            <span wire:loading.remove wire:target="guardarTraslado">Confirmar Traslado</span>
-                            <span wire:loading wire:target="guardarTraslado">Procesando...</span>
-                        </button>
+                {{-- Total y Resumen --}}
+                <div class="bg-blue-50 p-4 rounded-md">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-semibold text-gray-800">Valor Total del Traslado:</span>
+                        <span class="text-2xl font-bold text-blue-600">Q{{ number_format($this->subtotal, 2) }}</span>
                     </div>
+                    @php
+                        $consumibles = collect($productosSeleccionados)->filter(fn($p) => $p['es_consumible'] ?? false)->count();
+                        $noConsumibles = collect($productosSeleccionados)->filter(fn($p) => !($p['es_consumible'] ?? false))->count();
+                    @endphp
+                    <div class="mt-3 pt-3 border-t border-blue-200 text-xs text-gray-600 space-y-1">
+                        @if($noConsumibles > 0)
+                            <p><strong class="text-blue-700">{{ $noConsumibles }} producto(s) no consumible(s)</strong> se
+                                trasladarán entre bodegas</p>
+                        @endif
+                        @if($consumibles > 0)
+                            <p><strong class="text-amber-700">{{ $consumibles }} producto(s) consumible(s)</strong> se
+                                trasladarán entre bodegas</p>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Botones de acción --}}
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" wire:click="closeModalConfirmacion"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button type="button" wire:click="guardarTraslado" wire:loading.attr="disabled"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="guardarTraslado">✓ Confirmar y Registrar</span>
+                        <span wire:loading wire:target="guardarTraslado">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            Guardando...
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>

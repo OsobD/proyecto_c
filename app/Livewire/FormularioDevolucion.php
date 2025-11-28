@@ -120,26 +120,39 @@ class FormularioDevolucion extends Component
     }
 
     public function getOrigenResultsProperty()
-    {
-        $results = [];
-        $search = strtolower(trim($this->searchOrigen));
+{
+    $results = [];
+    $search = strtolower(trim($this->searchOrigen));
 
-        // Mostrar todas las personas con sus tarjetas
-        foreach ($this->empleados as $empleado) {
-            if (empty($search) || str_contains(strtolower($empleado['nombre']), $search)) {
-                $etiqueta = $empleado['tiene_tarjeta'] ? 'Con Tarjeta' : 'Sin Tarjeta';
-                $results[] = [
-                    'id' => 'P' . $empleado['id'],
-                    'nombre' => $empleado['nombre'] . ' (' . $etiqueta . ')',
-                    'tipo' => 'Persona',
-                    'tarjetas' => $empleado['tarjetas'] ?? []
-                ];
-            }
-        }
-
-        return $results;
+    // Filtrar empleados
+    $empleadosFiltrados = collect($this->empleados);
+    
+    if (!empty($search)) {
+        // Si hay búsqueda, filtrar por nombre
+        $empleadosFiltrados = $empleadosFiltrados->filter(function ($empleado) use ($search) {
+            return str_contains(strtolower($empleado['nombre']), $search);
+        });
+    } else {
+        // Si no hay búsqueda, limitar a 5 resultados
+        $empleadosFiltrados = $empleadosFiltrados->take(5);
     }
 
+    // Mapear resultados con DPI
+    foreach ($empleadosFiltrados as $empleado) {
+        // Obtener DPI de la persona
+        $persona = Persona::find($empleado['id']);
+        $dpi = $persona ? ($persona->dpi ?? 'N/A') : 'N/A';
+        
+        $results[] = [
+            'id' => 'P' . $empleado['id'],
+            'nombre' => $empleado['nombre'],
+            'tipo' => 'DPI: ' . $dpi,
+            'tarjetas' => $empleado['tarjetas'] ?? []
+        ];
+    }
+
+    return $results;
+}
     public function getDestinoResultsProperty()
     {
         $results = [];
@@ -251,7 +264,7 @@ class FormularioDevolucion extends Component
                 })
                 ->select('p.id', 'p.descripcion', 'p.es_consumible', DB::raw('AVG(l.precio_ingreso) as precio'), DB::raw('COUNT(*) as cantidad_disponible'))
                 ->groupBy('p.id', 'p.descripcion', 'p.es_consumible')
-                ->limit(20)
+                ->limit(empty($search) ? 5 : 20)
                 ->get()
                 ->map(function ($producto) {
                     return [
@@ -278,7 +291,7 @@ class FormularioDevolucion extends Component
                     });
                 })
                 ->select('id', 'descripcion', 'es_consumible')
-                ->limit(20)
+            ->limit(empty($search) ? 5 : 20)
                 ->get()
                 ->map(function ($producto) {
                     // Calcular precio promedio de lotes activos
@@ -301,24 +314,23 @@ class FormularioDevolucion extends Component
     }
 
     public function selectProducto($productoId)
-    {
-        // Buscar en los resultados filtrados
-        $producto = collect($this->productoResults)->firstWhere('id', $productoId);
+{
+    // Buscar en los resultados filtrados
+    $producto = collect($this->productoResults)->firstWhere('id', $productoId);
 
-        if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
-            $this->productosSeleccionados[] = [
-                'id' => $producto['id'],
-                'descripcion' => $producto['descripcion'],
-                'precio' => $producto['precio'] ?? 0,
-                'cantidad' => 1,
-                'cantidad_disponible' => $producto['cantidad_disponible'] ?? 0,
-                'es_consumible' => $producto['es_consumible'] ?? false
-            ];
-        }
-        $this->searchProducto = '';
-        $this->showProductoDropdown = false;
+    if ($producto && !collect($this->productosSeleccionados)->contains('id', $producto['id'])) {
+        $this->productosSeleccionados[] = [
+            'id' => $producto['id'],
+            'descripcion' => $producto['descripcion'],
+            'precio' => $producto['precio'] ?? 0,
+            'cantidad' => null,
+            'cantidad_disponible' => $producto['cantidad_disponible'] ?? 0,
+            'es_consumible' => $producto['es_consumible'] ?? false
+        ];
     }
-
+    $this->searchProducto = '';
+    $this->showProductoDropdown = false;
+}
     public function eliminarProducto($productoId)
     {
         $this->productosSeleccionados = array_filter($this->productosSeleccionados, function ($item) use ($productoId) {
@@ -377,7 +389,7 @@ class FormularioDevolucion extends Component
 
             // Obtener persona origen (quien devuelve)
             $personaId = null;
-            if ($this->selectedOrigen && $this->selectedOrigen['tipo'] === 'Persona') {
+            if ($this->selectedOrigen && str_starts_with($this->selectedOrigen['id'], 'P')) {
                 $personaId = (int) str_replace('P', '', $this->selectedOrigen['id']);
             }
 
@@ -424,7 +436,7 @@ class FormularioDevolucion extends Component
             DB::commit();
 
             session()->flash('success', 'Devolución registrada exitosamente');
-            return redirect()->route('devoluciones');
+            return redirect()->route('traslados');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -592,6 +604,21 @@ class FormularioDevolucion extends Component
         if (empty($this->productosSeleccionados)) {
             session()->flash('error', 'Debe agregar al menos un producto a la devolución.');
             return;
+        }
+
+        // Validar que todos los productos tengan cantidad > 0 y no excedan lo disponible
+        foreach ($this->productosSeleccionados as $producto) {
+            if (!isset($producto['cantidad']) || $producto['cantidad'] <= 0) {
+                session()->flash('error', "El producto '{$producto['descripcion']}' debe tener una cantidad mayor a 0.");
+                return;
+            }
+            
+            // Validar que no exceda lo disponible
+            $cantidadDisponible = $producto['cantidad_disponible'] ?? 0;
+            if ($producto['cantidad'] > $cantidadDisponible) {
+                session()->flash('error', "La cantidad del producto '{$producto['descripcion']}' excede el stock disponible.");
+                return;
+            }
         }
 
         $this->showModalConfirmacion = true;
