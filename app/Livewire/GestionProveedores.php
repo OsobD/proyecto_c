@@ -180,7 +180,7 @@ class GestionProveedores extends Component
         if ($proveedor) {
             $this->editingId = $id;
             $this->nit = $proveedor->nit;
-            $this->regimenTributarioId = $proveedor->id_regimen_tributario;
+            $this->regimenTributarioId = $proveedor->id_regimen;
             $this->selectedRegimen = $proveedor->regimenTributario->nombre ?? null;
             $this->nombre = $proveedor->nombre;
             $this->showModal = true;
@@ -222,7 +222,7 @@ class GestionProveedores extends Component
             $proveedor = Proveedor::find($this->editingId);
             if ($proveedor) {
                 $proveedor->nit = $this->nit;
-                $proveedor->id_regimen_tributario = $this->regimenTributarioId;
+                $proveedor->id_regimen = $this->regimenTributarioId;
                 $proveedor->nombre = $this->nombre;
                 $proveedor->save();
 
@@ -242,7 +242,7 @@ class GestionProveedores extends Component
             // Crear nuevo proveedor
             $proveedor = Proveedor::create([
                 'nit' => $this->nit,
-                'id_regimen_tributario' => $this->regimenTributarioId,
+                'id_regimen' => $this->regimenTributarioId,
                 'nombre' => $this->nombre,
                 'activo' => true,
             ]);

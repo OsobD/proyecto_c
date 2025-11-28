@@ -18,8 +18,14 @@ Route::post('/logout', function () {
     return redirect('/login');
 })->middleware('auth')->name('logout');
 
-// Rutas protegidas (requieren autenticación)
-Route::middleware('auth')->group(function () {
+// Ruta de cambio de contraseña (requiere autenticación pero no el middleware de nueva contraseña)
+Route::get('/cambiar-contrasena', \App\Livewire\Auth\CambiarContrasena::class)
+    ->middleware('auth')
+    ->name('cambiar-contrasena');
+
+
+// Rutas protegidas (requieren autenticación y verificación de contraseña)
+Route::middleware(['auth', \App\Http\Middleware\RequiereNuevaContrasena::class])->group(function () {
     // Ruta raíz redirige al dashboard
     Route::get('/', function () {
         return redirect('/inicio');
@@ -103,15 +109,13 @@ Route::middleware('auth')->group(function () {
     // Rutas de Reportes y Bitácora
     Route::middleware('permission:reportes.acceder')->group(function () {
         Route::get('/reportes', \App\Livewire\GenerarReportes::class)->name('reportes');
+        Route::get('/aprobaciones', App\Livewire\Aprobaciones::class)->name('aprobaciones');
     });
     Route::middleware('permission:bitacora.acceder')->group(function () {
         Route::get('/bitacora', \App\Livewire\BitacoraSistema::class)->name('bitacora');
     });
 
-    // Rutas de Aprobaciones
-    Route::middleware('permission:aprobaciones.ver')->group(function () {
-        Route::get('/aprobaciones', \App\Livewire\AprobacionesPendientes::class)->name('aprobaciones');
-    });
+
 
     // Rutas de Configuración
     Route::middleware('permission:configuracion.acceder')->group(function () {

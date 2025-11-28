@@ -71,7 +71,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                     </svg>
                     <span class="font-medium">Filtros / Ajustes</span>
-                    @if($filterPuesto || $filterRol || $showInactive)
+                    @if($filterRol || $showInactive)
                         <span class="flex h-3 w-3 relative">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
@@ -120,8 +120,6 @@
                         </th>
                         <th class="py-3 px-6 text-left">Email</th>
                         <th class="py-3 px-6 text-left">Rol</th>
-
-                        <th class="py-3 px-6 text-left">Puesto</th>
                         <th class="py-3 px-6 text-center">Estado</th>
                         <th class="py-3 px-6 text-center">Acciones</th>
                     </tr>
@@ -141,11 +139,6 @@
                             <td class="py-3 px-6 text-left">
                                 <span class="bg-purple-100 text-purple-800 py-1 px-3 rounded-full text-xs font-semibold">
                                     {{ $usuario->rol ? $usuario->rol->nombre : 'Sin Rol' }}
-                                </span>
-                            </td>
-                            <td class="py-3 px-6 text-left">
-                                <span class="text-gray-700 font-medium text-sm">
-                                    {{ $usuario->puesto ? $usuario->puesto->nombre : 'Sin Puesto' }}
                                 </span>
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -178,7 +171,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-8 px-6 text-center text-gray-500">
+                            <td colspan="5" class="py-8 px-6 text-center text-gray-500">
                                 No se encontraron usuarios.
                             </td>
                         </tr>
@@ -304,23 +297,6 @@
                                     {{ $message }}
                                 </p>
                             @enderror
-                        </div>
-
-                        {{-- Puesto --}}
-                        <div>
-                            <x-searchable-select
-                                wire:key="puesto-select-{{ $modalKey }}"
-                                label="Puesto"
-                                placeholder="Seleccionar Puesto..."
-                                search-model="searchPuestoModal"
-                                :results="$this->puestoModalResults"
-                                :selected-value="$selectedPuestoModal ? $selectedPuestoModal['id'] : null"
-                                :selected-label="$selectedPuestoModal ? $selectedPuestoModal['nombre'] : null"
-                                on-select="selectPuestoModal"
-                                on-clear="clearPuestoModal"
-                                :required="true"
-                                :error="$errors->first('puestoId')"
-                            />
                         </div>
 
                         {{-- Rol --}}
@@ -494,28 +470,11 @@
                     </div>
                 </div>
 
-                {{-- Sección: Puesto y Estado --}}
+                {{-- Sección: Rol y Estado --}}
                 <div class="mb-6">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Configuración</h4>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Puesto --}}
-                        <div>
-                            <x-searchable-select
-                                wire:key="puesto-edit-{{ $modalKey }}"
-                                label="Puesto"
-                                placeholder="Seleccionar Puesto..."
-                                search-model="searchPuestoEdit"
-                                :results="$this->puestoEditResults"
-                                :selected-value="$selectedPuestoEdit ? $selectedPuestoEdit['id'] : null"
-                                :selected-label="$selectedPuestoEdit ? $selectedPuestoEdit['nombre'] : null"
-                                on-select="selectPuestoEdit"
-                                on-clear="clearPuestoEdit"
-                                :required="true"
-                                :error="$errors->first('puestoId')"
-                            />
-                        </div>
-
+                    <div class="grid grid-cols-1 gap-4">
                         {{-- Rol --}}
                         <div>
                             <x-searchable-select
@@ -534,7 +493,7 @@
                         </div>
 
                         {{-- Estado --}}
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
                             <div class="flex items-center mt-3">
                                 <input
@@ -682,7 +641,6 @@
                             'nombre_usuario' => 'Usuario',
                             'nombre_completo' => 'Nombre',
                             'rol' => 'Rol',
-                            'puesto' => 'Puesto',
                             'estado' => 'Estado'
                         ] as $field => $label)
                             <button
@@ -701,42 +659,6 @@
                 <div class="mb-6">
                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Filtrar por</h4>
                     
-                    {{-- Filtro Puesto --}}
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Puesto</label>
-                        <div class="relative">
-                            @if($selectedFilterPuesto)
-                                <div class="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-lg bg-blue-50">
-                                    <span class="font-medium text-sm text-blue-800">{{ $selectedFilterPuesto['nombre'] }}</span>
-                                    <button type="button" wire:click.prevent="clearFilterPuesto" class="text-blue-500 hover:text-blue-700">
-                                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </div>
-                            @else
-                                <div class="relative" x-data="{ open: @entangle('showFilterPuestoDropdown').live }" @click.outside="open = false">
-                                    <input
-                                        type="text"
-                                        wire:model.live.debounce.300ms="searchFilterPuesto"
-                                        @click="open = true"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                        placeholder="Buscar puesto...">
-                                    <div x-show="open"
-                                         x-transition
-                                         class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
-                                        <ul>
-                                            @foreach (array_slice($this->filterPuestoResults, 0, 10) as $puesto)
-                                                <li wire:click.prevent="selectFilterPuesto({{ $puesto['id'] }})"
-                                                    class="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm">
-                                                    {{ $puesto['nombre'] }}
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
                     {{-- Filtro Rol --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>

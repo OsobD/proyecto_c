@@ -17,8 +17,8 @@ class Usuario extends Authenticatable
         'contrasena',
         'id_persona',
         'id_rol',
-        'id_puesto',
         'estado',
+        'debe_cambiar_contrasena',
     ];
 
     protected $hidden = [
@@ -29,6 +29,7 @@ class Usuario extends Authenticatable
     protected $casts = [
         'estado' => 'boolean',
         'contrasena' => 'hashed',
+        'debe_cambiar_contrasena' => 'boolean',
     ];
 
     // Accessor para password (Laravel Auth)
@@ -60,10 +61,7 @@ class Usuario extends Authenticatable
         return $this->belongsTo(Rol::class, 'id_rol');
     }
 
-    public function puesto()
-    {
-        return $this->belongsTo(Puesto::class, 'id_puesto');
-    }
+
 
     public function compras()
     {

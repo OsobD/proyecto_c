@@ -6,6 +6,8 @@ use App\Models\Bodega;
 use App\Models\Compra;
 use App\Models\DetalleCompra;
 use App\Models\Proveedor;
+use App\Models\SolicitudAprobacion;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Livewire\Traits\TienePermisos;
@@ -289,18 +291,27 @@ class HistorialCompras extends Component
         if ($compra) {
             // Mapear productos y calcular total correctamente
             $productos = $compra->detalles->map(function($detalle) {
-                $subtotal = $detalle->cantidad * $detalle->precio_ingreso;
+                // Asumimos que precio_ingreso es CON IVA (basado en lógica anterior)
+                $precioConIva = $detalle->precio_ingreso;
+                $precioSinIva = $detalle->precio_ingreso / 1.12;
+                
+                $subtotalConIva = $detalle->cantidad * $precioConIva;
+                $subtotalSinIva = $detalle->cantidad * $precioSinIva;
+
                 return [
                     'codigo' => $detalle->id_producto,
                     'descripcion' => $detalle->producto->descripcion ?? 'N/A',
                     'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_ingreso,
-                    'subtotal' => $subtotal,
+                    'precio_con_iva' => $precioConIva,
+                    'precio_sin_iva' => $precioSinIva,
+                    'subtotal_con_iva' => $subtotalConIva,
+                    'subtotal_sin_iva' => $subtotalSinIva,
                 ];
             })->toArray();
 
-            // Calcular el total sumando todos los subtotales
-            $totalCalculado = array_sum(array_column($productos, 'subtotal'));
+            // Calcular totales
+            $totalConIva = array_sum(array_column($productos, 'subtotal_con_iva'));
+            $totalSinIva = array_sum(array_column($productos, 'subtotal_sin_iva'));
 
             $this->compraSeleccionada = [
                 'id' => $compra->id,
@@ -310,7 +321,8 @@ class HistorialCompras extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
+                'total_con_iva' => $totalConIva > 0 ? $totalConIva : $compra->total,
+                'total_sin_iva' => $totalSinIva > 0 ? $totalSinIva : ($compra->total / 1.12),
                 'productos' => $productos,
             ];
             $this->showModalVer = true;
@@ -334,19 +346,28 @@ class HistorialCompras extends Component
         if ($compra) {
             // Mapear productos con sus detalles para edición
             $productos = $compra->detalles->map(function($detalle) {
-                $subtotal = $detalle->cantidad * $detalle->precio_ingreso;
+                // Asumimos que precio_ingreso es CON IVA
+                $precioConIva = $detalle->precio_ingreso;
+                $precioSinIva = $detalle->precio_ingreso / 1.12;
+                
+                $subtotalConIva = $detalle->cantidad * $precioConIva;
+                $subtotalSinIva = $detalle->cantidad * $precioSinIva;
+
                 return [
                     'id_detalle' => $detalle->id,
                     'codigo' => $detalle->id_producto,
                     'descripcion' => $detalle->producto->descripcion ?? 'N/A',
                     'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_ingreso,
-                    'subtotal' => $subtotal,
+                    'precio_con_iva' => $precioConIva, // Este es el editable
+                    'precio_sin_iva' => $precioSinIva, // Solo visual
+                    'subtotal_con_iva' => $subtotalConIva,
+                    'subtotal_sin_iva' => $subtotalSinIva,
                 ];
             })->toArray();
 
-            // Calcular el total
-            $totalCalculado = array_sum(array_column($productos, 'subtotal'));
+            // Calcular totales
+            $totalConIva = array_sum(array_column($productos, 'subtotal_con_iva'));
+            $totalSinIva = array_sum(array_column($productos, 'subtotal_sin_iva'));
 
             $this->compraSeleccionada = [
                 'id' => $compra->id,
@@ -356,7 +377,8 @@ class HistorialCompras extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
+                'total_con_iva' => $totalConIva > 0 ? $totalConIva : $compra->total,
+                'total_sin_iva' => $totalSinIva > 0 ? $totalSinIva : ($compra->total / 1.12),
                 'productos' => $productos,
             ];
             $this->showModalEditar = true;
@@ -373,13 +395,26 @@ class HistorialCompras extends Component
     {
         // Recalcular el total antes de confirmar
         if ($this->compraSeleccionada && isset($this->compraSeleccionada['productos'])) {
-            $total = 0;
+            $totalConIva = 0;
+            $totalSinIva = 0;
+            
             foreach ($this->compraSeleccionada['productos'] as $index => $producto) {
-                $subtotal = $producto['cantidad'] * $producto['precio'];
-                $this->compraSeleccionada['productos'][$index]['subtotal'] = $subtotal;
-                $total += $subtotal;
+                $precioConIva = floatval($producto['precio_con_iva']);
+                $cantidad = intval($producto['cantidad']);
+                
+                $precioSinIva = $precioConIva / 1.12;
+                $subtotalConIva = $cantidad * $precioConIva;
+                $subtotalSinIva = $cantidad * $precioSinIva;
+                
+                $this->compraSeleccionada['productos'][$index]['precio_sin_iva'] = $precioSinIva;
+                $this->compraSeleccionada['productos'][$index]['subtotal_con_iva'] = $subtotalConIva;
+                $this->compraSeleccionada['productos'][$index]['subtotal_sin_iva'] = $subtotalSinIva;
+                
+                $totalConIva += $subtotalConIva;
+                $totalSinIva += $subtotalSinIva;
             }
-            $this->compraSeleccionada['total'] = $total;
+            $this->compraSeleccionada['total_con_iva'] = $totalConIva;
+            $this->compraSeleccionada['total_sin_iva'] = $totalSinIva;
         }
         $this->showModalConfirmarEdicion = true;
     }
@@ -391,7 +426,33 @@ class HistorialCompras extends Component
 
     public function guardarEdicion()
     {
+        if (!$this->compraSeleccionada) {
+            return;
+        }
+
         try {
+            // Verificar rol para aprobación
+            $user = Auth::user();
+            $rolNombre = $user->rol->nombre;
+            
+            // Si es colaborador (no admin ni jefe), crear solicitud
+            if (!in_array($rolNombre, ['Administrador TI', 'Jefe de Bodega', 'Administrador'])) {
+                SolicitudAprobacion::create([
+                    'tipo' => 'EDICION',
+                    'tabla' => 'compra',
+                    'registro_id' => $this->compraSeleccionada['id'],
+                    'datos' => $this->compraSeleccionada,
+                    'solicitante_id' => $user->id,
+                    'estado' => 'PENDIENTE',
+                    'observaciones' => 'Edición de compra solicitada por ' . $user->nombre_usuario
+                ]);
+
+                session()->flash('message', 'Solicitud de edición enviada para aprobación.');
+                $this->closeModalConfirmarEdicion();
+                $this->closeModalEditar();
+                return;
+            }
+
             $compra = Compra::find($this->compraSeleccionada['id']);
 
             if (!$compra) {
@@ -404,13 +465,13 @@ class HistorialCompras extends Component
                 $detalle = DetalleCompra::find($producto['id_detalle']);
                 if ($detalle) {
                     $detalle->cantidad = $producto['cantidad'];
-                    $detalle->precio_ingreso = $producto['precio'];
+                    $detalle->precio_ingreso = $producto['precio_con_iva'];
                     $detalle->save();
                 }
             }
 
             // Actualizar el total de la compra
-            $compra->total = $this->compraSeleccionada['total'];
+            $compra->total = $this->compraSeleccionada['total_con_iva'];
             $compra->save();
 
             session()->flash('message', 'Compra actualizada exitosamente.');
@@ -442,6 +503,27 @@ class HistorialCompras extends Component
     public function confirmarDesactivar()
     {
         try {
+            // Verificar rol para aprobación
+            $user = Auth::user();
+            $rolNombre = $user->rol->nombre;
+            
+            // Si es colaborador (no admin ni jefe), crear solicitud
+            if (!in_array($rolNombre, ['Administrador TI', 'Jefe de Bodega', 'Administrador'])) {
+                SolicitudAprobacion::create([
+                    'tipo' => 'DESACTIVACION',
+                    'tabla' => 'compra',
+                    'registro_id' => $this->compraIdDesactivar,
+                    'datos' => null,
+                    'solicitante_id' => $user->id,
+                    'estado' => 'PENDIENTE',
+                    'observaciones' => 'Desactivación de compra solicitada por ' . $user->nombre_usuario
+                ]);
+
+                session()->flash('message', 'Solicitud de desactivación enviada para aprobación.');
+                $this->closeModalConfirmarDesactivar();
+                return;
+            }
+
             $compra = Compra::find($this->compraIdDesactivar);
 
             if (!$compra) {

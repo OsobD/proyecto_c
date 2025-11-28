@@ -443,8 +443,9 @@
                                         <th class="py-2 px-3 text-left">Código</th>
                                         <th class="py-2 px-3 text-left">Descripción</th>
                                         <th class="py-2 px-3 text-center">Cantidad</th>
-                                        <th class="py-2 px-3 text-right">Precio Unit.</th>
-                                        <th class="py-2 px-3 text-right">Subtotal</th>
+                                        <th class="py-2 px-3 text-right">Precio Unit. (Con IVA)</th>
+                                        <th class="py-2 px-3 text-right">Precio Unit. (Sin IVA)</th>
+                                        <th class="py-2 px-3 text-right">Subtotal (Con IVA)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -454,8 +455,9 @@
                                                 <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                                 <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
                                                 <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
-                                                <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
-                                                <td class="py-2 px-3 text-right font-semibold">Q{{ number_format($producto['subtotal'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio_con_iva'], 4) }}</td>
+                                                <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio_sin_iva'], 4) }}</td>
+                                                <td class="py-2 px-3 text-right font-semibold">Q{{ number_format($producto['subtotal_con_iva'], 2) }}</td>
                                             </tr>
                                         @endforeach
                                     @else
@@ -470,9 +472,13 @@
 
                     {{-- Total --}}
                     <div class="bg-blue-50 p-4 rounded-md">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-md font-semibold text-gray-600">Total (Sin IVA):</span>
+                            <span class="text-xl font-bold text-gray-700">Q{{ number_format($compraSeleccionada['total_sin_iva'] ?? 0, 2) }}</span>
+                        </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-800">Total de la Compra (sin IVA):</span>
-                            <span class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total'] ?? 0, 2) }}</span>
+                            <span class="text-lg font-semibold text-gray-800">Total (Con IVA):</span>
+                            <span class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total_con_iva'] ?? 0, 2) }}</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
                             Total de productos: {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
@@ -558,8 +564,9 @@
                                         <th class="py-2 px-3 text-left">Código</th>
                                         <th class="py-2 px-3 text-left">Descripción</th>
                                         <th class="py-2 px-3 text-center">Cantidad</th>
-                                        <th class="py-2 px-3 text-right">Precio Unit.</th>
-                                        <th class="py-2 px-3 text-right">Subtotal</th>
+                                        <th class="py-2 px-3 text-right">Precio Unit. (Con IVA)</th>
+                                        <th class="py-2 px-3 text-right">Precio Unit. (Sin IVA)</th>
+                                        <th class="py-2 px-3 text-right">Subtotal (Con IVA)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -582,15 +589,18 @@
                                                         <span class="mr-1">Q</span>
                                                         <input
                                                             type="number"
-                                                            step="0.01"
-                                                            wire:model.blur="compraSeleccionada.productos.{{ $index }}.precio"
+                                                            step="0.0001"
+                                                            wire:model.blur="compraSeleccionada.productos.{{ $index }}.precio_con_iva"
                                                             min="0"
                                                             class="w-28 text-right border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold px-2 py-1"
                                                         >
                                                     </div>
                                                 </td>
+                                                <td class="py-2 px-3 text-right text-gray-600">
+                                                    Q{{ number_format($producto['precio_sin_iva'], 4) }}
+                                                </td>
                                                 <td class="py-2 px-3 text-right font-semibold">
-                                                    Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
+                                                    Q{{ number_format($producto['subtotal_con_iva'], 2) }}
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -606,10 +616,16 @@
 
                     {{-- Total actualizado --}}
                     <div class="bg-blue-50 p-4 rounded-md">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-md font-semibold text-gray-600">Total (Sin IVA):</span>
+                            <span class="text-xl font-bold text-gray-700">
+                                Q{{ number_format(collect($compraSeleccionada['productos'])->sum('subtotal_sin_iva'), 2) }}
+                            </span>
+                        </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-800">Total de la Compra (sin IVA):</span>
+                            <span class="text-lg font-semibold text-gray-800">Total (Con IVA):</span>
                             <span class="text-2xl font-bold text-blue-600">
-                                Q{{ number_format(collect($compraSeleccionada['productos'])->sum(function($p) { return $p['cantidad'] * $p['precio']; }), 2) }}
+                                Q{{ number_format(collect($compraSeleccionada['productos'])->sum('subtotal_con_iva'), 2) }}
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">

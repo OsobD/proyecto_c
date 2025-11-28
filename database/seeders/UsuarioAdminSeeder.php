@@ -43,9 +43,6 @@ class UsuarioAdminSeeder extends Seeder
             ]
         );
 
-        // Buscar el puesto de Administrador TI
-        $puestoAdmin = \App\Models\Puesto::where('nombre', 'Administrador TI')->first();
-
         // Crear o actualizar usuario administrador
         Usuario::updateOrCreate(
             ['nombre_usuario' => 'admin'],
@@ -53,8 +50,8 @@ class UsuarioAdminSeeder extends Seeder
                 'contrasena' => Hash::make('admin123'),
                 'id_persona' => $persona->id,
                 'id_rol' => $rolAdmin?->id,
-                'id_puesto' => $puestoAdmin?->id,
                 'estado' => true,
+                'debe_cambiar_contrasena' => false, // Admin no necesita cambiar contraseña
             ]
         );
     }

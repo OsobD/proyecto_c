@@ -29,7 +29,6 @@ class GestionUsuarios extends Component
 
     // Propiedades de búsqueda y filtrado
     public $search = '';
-    public $filterPuesto = '';
     public $sortField = 'nombre_usuario';  // 'nombre_usuario' o 'nombre_completo'
     public $sortDirection = 'asc';  // 'asc' o 'desc'
 
@@ -54,8 +53,7 @@ class GestionUsuarios extends Component
 
     // Datos de Usuario
     public $nombre_usuario = '';
-    public $puestoId = '';
-    public $rolId = ''; // Nuevo campo Rol
+    public $rolId = ''; // Campo Rol
     public $contrasena = '';
     public $estado = true;
 
@@ -63,33 +61,15 @@ class GestionUsuarios extends Component
     public $passwordGenerada = '';
     public $mostrarPassword = false;
 
-    // Propiedades para autocompletado de puesto
-    public $searchPuesto = '';
-    public $showPuestoDropdown = false;
-    public $selectedPuesto = null;
-
-    // Propiedades para filtro de puesto mejorado
-    public $searchFilterPuesto = '';
-    public $showFilterPuestoDropdown = false;
-    public $selectedFilterPuesto = null;
-
     // Propiedades para selección de persona existente
     public $searchPersona = '';
     public $showPersonaDropdown = false;
     public $selectedPersona = null;
     public $personaId = null;
 
-    // Propiedades para selección de puesto en modal de crear (searchable)
-    public $searchPuestoModal = '';
-    public $selectedPuestoModal = null;
-
     // Propiedades para selección de rol en modal de crear (searchable)
     public $searchRolModal = '';
     public $selectedRolModal = null;
-
-    // Propiedades para selección de puesto en modal de editar (searchable)
-    public $searchPuestoEdit = '';
-    public $selectedPuestoEdit = null;
 
     // Propiedades para selección de rol en modal de editar (searchable)
     public $searchRolEdit = '';
@@ -121,7 +101,6 @@ class GestionUsuarios extends Component
                 'telefono' => 'nullable|string|max:20',
                 'correo' => 'nullable|email|max:255',
                 'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
-                'puestoId' => 'required|exists:puesto,id',
                 'rolId' => 'required|exists:rol,id',
             ];
         }
@@ -129,7 +108,6 @@ class GestionUsuarios extends Component
         return [
             'personaId' => 'required|exists:persona,id',
             'nombre_usuario' => 'required|string|max:255|' . $usuarioIdRule,
-            'puestoId' => 'required|exists:puesto,id',
             'rolId' => 'required|exists:rol,id',
         ];
     }
@@ -147,8 +125,6 @@ class GestionUsuarios extends Component
         'correo.email' => 'El correo debe ser una dirección válida.',
         'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
-        'puestoId.required' => 'Debe seleccionar un puesto.',
-        'puestoId.exists' => 'El puesto seleccionado no es válido.',
         'rolId.required' => 'Debe seleccionar un rol.',
         'rolId.exists' => 'El rol seleccionado no es válido.',
         'personaId.required' => 'Debe seleccionar una persona.',
@@ -159,14 +135,6 @@ class GestionUsuarios extends Component
      * Resetea la paginación cuando cambia la búsqueda
      */
     public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    /**
-     * Resetea la paginación cuando cambia el filtro de puesto
-     */
-    public function updatingFilterPuesto()
     {
         $this->resetPage();
     }
@@ -193,105 +161,6 @@ class GestionUsuarios extends Component
         }
 
         $this->resetPage();
-    }
-
-    /**
-     * Actualiza cuando cambia la búsqueda de puesto
-     */
-    public function updatedSearchPuesto()
-    {
-        $this->showPuestoDropdown = true;
-    }
-
-    /**
-     * Obtiene puestos filtrados para el autocompletado
-     */
-    public function getPuestoResultsProperty()
-    {
-        $puestos = $this->puestos->toArray();
-
-        if (empty($this->searchPuesto)) {
-            return $puestos;
-        }
-
-        $search = strtolower(trim($this->searchPuesto));
-
-        return array_filter($puestos, function ($puesto) use ($search) {
-            return str_contains(strtolower($puesto['nombre']), $search);
-        });
-    }
-
-    /**
-     * Selecciona un puesto del autocompletado
-     */
-    public function selectPuesto($id)
-    {
-        $puesto = $this->puestos->firstWhere('id', $id);
-        if ($puesto) {
-            $this->selectedPuesto = [
-                'id' => $puesto->id,
-                'nombre' => $puesto->nombre,
-            ];
-            $this->puestoId = $puesto->id;
-            $this->showPuestoDropdown = false;
-            $this->searchPuesto = '';
-        }
-    }
-
-    /**
-     * Limpia la selección de puesto
-     */
-    public function clearPuesto()
-    {
-        $this->selectedPuesto = null;
-        $this->puestoId = "";
-    }
-
-    /**
-     * Obtiene los puestos filtrados para el filtro de búsqueda
-     */
-    public function getFilterPuestoResultsProperty()
-    {
-        $puestos = $this->puestos->toArray();
-
-        if (empty($this->searchFilterPuesto)) {
-            return $puestos;
-        }
-
-        $search = strtolower(trim($this->searchFilterPuesto));
-
-        return array_filter($puestos, function ($puesto) use ($search) {
-            return str_contains(strtolower($puesto['nombre']), $search);
-        });
-    }
-
-    /**
-     * Selecciona un puesto del filtro de búsqueda
-     */
-    public function selectFilterPuesto($id)
-    {
-        $puesto = $this->puestos->firstWhere('id', $id);
-        if ($puesto) {
-            $this->selectedFilterPuesto = [
-                'id' => $puesto->id,
-                'nombre' => $puesto->nombre,
-            ];
-            $this->filterPuesto = $puesto->id;
-            $this->showFilterPuestoDropdown = false;
-            $this->searchFilterPuesto = '';
-            $this->resetPage(); // Resetear paginación al filtrar
-        }
-    }
-
-    /**
-     * Limpia la selección del filtro de puesto
-     */
-    public function clearFilterPuesto()
-    {
-        $this->selectedFilterPuesto = null;
-        $this->filterPuesto = '';
-        $this->searchFilterPuesto = '';
-        $this->resetPage(); // Resetear paginación al limpiar filtro
     }
 
     /**
@@ -383,58 +252,6 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Limpia la selección de persona
-     */
-    public function clearPersona()
-    {
-        $this->selectedPersona = null;
-        $this->personaId = null;
-        $this->nombre_usuario = ''; // Limpiar usuario generado
-    }
-
-    /**
-     * Obtiene puestos filtrados para el modal de crear usuario
-     */
-    public function getPuestoModalResultsProperty()
-    {
-        $puestos = $this->puestos->toArray();
-
-        if (empty($this->searchPuestoModal)) {
-            return array_slice($puestos, 0, 10);
-        }
-
-        $search = strtolower(trim($this->searchPuestoModal));
-
-        return array_filter($puestos, function ($puesto) use ($search) {
-            return str_contains(strtolower($puesto['nombre']), $search);
-        });
-    }
-
-    /**
-     * Selecciona un puesto en el modal de crear
-     */
-    public function selectPuestoModal($id)
-    {
-        $puesto = $this->puestos->firstWhere('id', $id);
-        if ($puesto) {
-            $this->selectedPuestoModal = [
-                'id' => $puesto->id,
-                'nombre' => $puesto->nombre,
-            ];
-            $this->puestoId = $puesto->id;
-        }
-    }
-
-    /**
-     * Limpia la selección de puesto en modal
-     */
-    public function clearPuestoModal()
-    {
-        $this->selectedPuestoModal = null;
-        $this->puestoId = '';
-    }
-
-    /**
      * Obtiene roles filtrados para el modal de crear usuario
      */
     public function getRolModalResultsProperty()
@@ -477,45 +294,13 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Obtiene puestos filtrados para el modal de editar usuario
+     * Limpia la selección de persona
      */
-    public function getPuestoEditResultsProperty()
+    public function clearPersona()
     {
-        $puestos = $this->puestos->toArray();
-
-        if (empty($this->searchPuestoEdit)) {
-            return array_slice($puestos, 0, 10);
-        }
-
-        $search = strtolower(trim($this->searchPuestoEdit));
-
-        return array_filter($puestos, function ($puesto) use ($search) {
-            return str_contains(strtolower($puesto['nombre']), $search);
-        });
-    }
-
-    /**
-     * Selecciona un puesto en el modal de editar
-     */
-    public function selectPuestoEdit($id)
-    {
-        $puesto = $this->puestos->firstWhere('id', $id);
-        if ($puesto) {
-            $this->selectedPuestoEdit = [
-                'id' => $puesto->id,
-                'nombre' => $puesto->nombre,
-            ];
-            $this->puestoId = $puesto->id;
-        }
-    }
-
-    /**
-     * Limpia la selección de puesto en modal de editar
-     */
-    public function clearPuestoEdit()
-    {
-        $this->selectedPuestoEdit = null;
-        $this->puestoId = '';
+        $this->selectedPersona = null;
+        $this->personaId = null;
+        $this->nombre_usuario = ''; // Limpiar usuario generado
     }
 
     /**
@@ -661,9 +446,9 @@ class GestionUsuarios extends Component
                 'nombre_usuario' => $this->nombre_usuario,
                 'contrasena' => Hash::make($this->passwordGenerada),
                 'id_persona' => $persona->id,
-                'id_puesto' => $this->puestoId,
                 'id_rol' => $this->rolId, // Guardar Rol
                 'estado' => true,
+                'debe_cambiar_contrasena' => true, // Forzar cambio de contraseña en primer login
             ]);
 
             // 5. Registrar en bitácora
@@ -719,19 +504,8 @@ class GestionUsuarios extends Component
 
         // Cargar datos de usuario
         $this->nombre_usuario = $usuario->nombre_usuario;
-        $this->puestoId = "";
         $this->rolId = $usuario->id_rol; // Cargar Rol
         $this->estado = $usuario->estado;
-
-        // Cargar puesto seleccionado para el dropdown
-        $puesto = $this->puestos->firstWhere('id', $usuario->id_puesto);
-        if ($puesto) {
-            $this->selectedPuestoEdit = [
-                'id' => $puesto->id,
-                'nombre' => $puesto->nombre,
-            ];
-            $this->puestoId = $puesto->id;
-        }
 
         // Cargar rol seleccionado para el dropdown
         $rol = $this->roles->firstWhere('id', $usuario->id_rol);
@@ -770,7 +544,6 @@ class GestionUsuarios extends Component
 
             // Actualizar Usuario
             $usuario->update([
-                'id_puesto' => $this->puestoId,
                 'id_rol' => $this->rolId, // Actualizar Rol
                 'estado' => $this->estado,
             ]);
@@ -817,16 +590,12 @@ class GestionUsuarios extends Component
         $this->telefono = '';
         $this->correo = '';
         $this->nombre_usuario = '';
-        $this->puestoId = "";
         $this->rolId = ""; // Resetear Rol
         $this->contrasena = '';
         $this->estado = true;
         $this->usuarioId = null;
         $this->passwordGenerada = '';
         $this->mostrarPassword = false;
-        $this->selectedPuesto = null;
-        $this->searchPuesto = '';
-        $this->showPuestoDropdown = false;
 
         // Resetear campos de persona
         $this->searchPersona = '';
@@ -834,17 +603,9 @@ class GestionUsuarios extends Component
         $this->selectedPersona = null;
         $this->personaId = null;
 
-        // Resetear campos de puesto modal
-        $this->searchPuestoModal = '';
-        $this->selectedPuestoModal = null;
-
         // Resetear campos de rol modal
         $this->searchRolModal = '';
         $this->selectedRolModal = null;
-
-        // Resetear campos de puesto edit
-        $this->searchPuestoEdit = '';
-        $this->selectedPuestoEdit = null;
 
         // Resetear campos de rol edit
         $this->searchRolEdit = '';
@@ -872,9 +633,10 @@ class GestionUsuarios extends Component
         try {
             DB::beginTransaction();
 
-            // Actualizar contraseña
+            // Actualizar contraseña y marcar que debe cambiarla
             $usuario->update([
                 'contrasena' => Hash::make($this->passwordGenerada),
+                'debe_cambiar_contrasena' => true, // Forzar cambio de contraseña
             ]);
 
             // Registrar en bitácora
@@ -939,7 +701,7 @@ class GestionUsuarios extends Component
      */
     public function getUsuariosProperty()
     {
-        $query = Usuario::with(['persona', 'rol', 'puesto'])
+        $query = Usuario::with(['persona', 'rol'])
             ->whereHas('persona'); // Solo usuarios que tienen persona asignada
 
         // Lógica para mostrar/ocultar inactivos
@@ -959,11 +721,6 @@ class GestionUsuarios extends Component
             });
         }
 
-        // Aplicar filtro por puesto
-        if (!empty($this->filterPuesto)) {
-            $query->where('id_puesto', $this->filterPuesto);
-        }
-
         // Aplicar filtro por rol
         if (!empty($this->filterRol)) {
             $query->where('id_rol', $this->filterRol);
@@ -981,12 +738,6 @@ class GestionUsuarios extends Component
             case 'rol':
                 $query->join('rol', 'usuario.id_rol', '=', 'rol.id')
                     ->orderBy('rol.nombre', $this->sortDirection)
-                    ->select('usuario.*');
-                break;
-
-            case 'puesto':
-                $query->join('puesto', 'usuario.id_puesto', '=', 'puesto.id')
-                    ->orderBy('puesto.nombre', $this->sortDirection)
                     ->select('usuario.*');
                 break;
 
@@ -1015,19 +766,9 @@ class GestionUsuarios extends Component
 
     public function clearFilters()
     {
-        $this->filterPuesto = '';
-        $this->selectedFilterPuesto = null;
         $this->filterRol = '';
         $this->showInactive = false;
         $this->resetPage();
-    }
-
-    /**
-     * Obtiene la lista de puestos para el filtro
-     */
-    public function getPuestosProperty()
-    {
-        return Puesto::orderBy('nombre')->get();
     }
 
     /**
@@ -1045,7 +786,6 @@ class GestionUsuarios extends Component
     {
         return view('livewire.gestion-usuarios', [
             'usuarios' => $this->usuarios,
-            'puestos' => $this->puestos,
             'roles' => $this->roles,
         ]);
     }
