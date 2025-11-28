@@ -328,7 +328,6 @@
                             <th class="py-2 px-3 text-left">Descripción</th>
                             <th class="py-2 px-3 text-left">Documento</th>
                             <th class="py-2 px-3 text-center">Lote</th>
-                            <th class="py-2 px-3 text-left">Bodega</th>
                             <th class="py-2 px-3 text-right">Entrada</th>
                             <th class="py-2 px-3 text-right">Salida</th>
                             <th class="py-2 px-3 text-right">Saldo</th>
@@ -372,7 +371,6 @@
                                         <span class="text-gray-400 text-xs">-</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-3 text-left">{{ $movimiento['bodega'] }}</td>
                                 <td class="py-2 px-3 text-right {{ $movimiento['cantidad_entrada'] > 0 ? 'text-green-600 font-semibold' : '' }}">
                                     {{ $movimiento['cantidad_entrada'] > 0 ? number_format($movimiento['cantidad_entrada'], 0) : '-' }}
                                 </td>
@@ -397,7 +395,7 @@
                     </tbody>
                     <tfoot class="bg-gray-100 font-bold">
                         <tr>
-                            <td colspan="14" class="py-3 px-3 text-right text-sm">
+                            <td colspan="13" class="py-3 px-3 text-right text-sm">
                                 Total de movimientos: {{ count($datosKardex) }}
                             </td>
                         </tr>
