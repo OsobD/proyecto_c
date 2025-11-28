@@ -61,7 +61,10 @@ class KardexService
             'bodega',
             'usuario',
             'proveedor'
-        ])->where('activo', true);
+        ])->where(function($q) {
+            $q->where('activo', true)
+              ->orWhereNull('activo');
+        });
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
@@ -189,7 +192,10 @@ class KardexService
             'usuario',
             'tipoSalida',
             'persona'
-        ])->where('activo', true);
+        ])->where(function($q) {
+            $q->where('activo', true)
+              ->orWhereNull('activo');
+        });
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
@@ -255,7 +261,10 @@ class KardexService
             'bodegaDestino',
             'usuario',
             'persona'
-        ])->where('activo', true);
+        ])->where(function($q) {
+            $q->where('activo', true)
+              ->orWhereNull('activo');
+        });
 
         // Aplicar filtros
         if (isset($filtros['fecha_inicio'])) {
