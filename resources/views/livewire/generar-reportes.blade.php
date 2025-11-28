@@ -159,7 +159,7 @@
             @if($tabActivo === 'inventario')
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Reportes de Inventario</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label for="tipo_reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
                             <select
@@ -169,6 +169,19 @@
                                 <option value="">Seleccione un tipo</option>
                                 @foreach ($reportesInventario as $reporte)
                                     <option value="{{ $reporte['id'] }}">{{ $reporte['nombre'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="producto" class="block text-sm font-medium text-gray-700 mb-1">Producto (Opcional)</label>
+                            <select
+                                id="producto"
+                                wire:model="productoSeleccionado"
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                                <option value="">Todos los productos</option>
+                                @foreach ($productos as $producto)
+                                    <option value="{{ $producto['id'] }}">{{ $producto['nombre'] }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -200,7 +213,16 @@
                         </div>
 
                         <div>
-                            <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Corte</label>
+                            <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                            <input
+                                type="date"
+                                id="fecha_inicio"
+                                wire:model="fechaInicio"
+                                class="block w-full border-2 border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-400">
+                        </div>
+
+                        <div>
+                            <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
                             <input
                                 type="date"
                                 id="fecha_fin"
@@ -278,39 +300,129 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800">Resultado del Reporte</h2>
-            <div class="flex space-x-2">
-                <button
-                    wire:click="imprimir"
-                    class="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
-                    Imprimir
-                </button>
-                <button
-                    wire:click="exportarExcel"
-                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
-                    Exportar a XLS
-                </button>
-            </div>
+            @if(!empty($datosKardex))
+                <div class="flex space-x-2">
+                    <button
+                        wire:click="imprimir"
+                        class="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
+                        Imprimir
+                    </button>
+                    <button
+                        wire:click="exportarExcel"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
+                        Exportar a XLS
+                    </button>
+                </div>
+            @endif
         </div>
 
-        {{-- Tabla de Ejemplo --}}
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white">
-                <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                    <tr>
-                        <th class="py-3 px-6 text-left">Fecha</th>
-                        <th class="py-3 px-6 text-left">Descripción</th>
-                        <th class="py-3 px-6 text-left">Usuario</th>
-                        <th class="py-3 px-6 text-right">Cantidad / Monto</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 text-sm font-light">
-                    <tr class="border-b border-gray-200">
-                        <td colspan="4" class="py-8 text-center text-gray-500">
-                            Seleccione un tipo de reporte y haga clic en "Generar Reporte" para ver los resultados.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        {{-- Tabla de Kardex --}}
+        @if($tipoReporte === 'kardex' && !empty($datosKardex))
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white text-xs">
+                    <thead class="bg-blue-600 text-white uppercase text-xs leading-normal sticky top-0">
+                        <tr>
+                            <th class="py-2 px-3 text-left">Fecha</th>
+                            <th class="py-2 px-3 text-left">Código</th>
+                            <th class="py-2 px-3 text-left">Producto</th>
+                            <th class="py-2 px-3 text-left">Descripción</th>
+                            <th class="py-2 px-3 text-left">Documento</th>
+                            <th class="py-2 px-3 text-center">Lote</th>
+                            <th class="py-2 px-3 text-right">Entrada</th>
+                            <th class="py-2 px-3 text-right">Salida</th>
+                            <th class="py-2 px-3 text-right">Saldo</th>
+                            <th class="py-2 px-3 text-right">Costo</th>
+                            <th class="py-2 px-3 text-right">Costo Entrada</th>
+                            <th class="py-2 px-3 text-right">Costo Salida</th>
+                            <th class="py-2 px-3 text-right">Costo Inventario</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-xs">
+                        @foreach($datosKardex as $index => $movimiento)
+                            <tr class="border-b border-gray-200 hover:bg-gray-100 {{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
+                                <td class="py-2 px-3 text-left whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($movimiento['fecha'])->format('d/m/Y') }}
+                                </td>
+                                <td class="py-2 px-3 text-left">{{ $movimiento['codigo'] }}</td>
+                                <td class="py-2 px-3 text-left">
+                                    <div class="font-medium">{{ $movimiento['producto'] }}</div>
+                                    <div class="text-gray-500 text-xs">{{ $movimiento['categoria'] }}</div>
+                                </td>
+                                <td class="py-2 px-3 text-left whitespace-nowrap">
+                                    <span class="px-2 py-1 rounded text-xs font-semibold
+                                        @if(str_contains($movimiento['tipo_movimiento'], 'ENTRADA') || $movimiento['tipo_movimiento'] === 'COMPRA' || $movimiento['tipo_movimiento'] === 'DEVOLUCION')
+                                            bg-green-100 text-green-800
+                                        @elseif(str_contains($movimiento['tipo_movimiento'], 'SALIDA'))
+                                            bg-red-100 text-red-800
+                                        @else
+                                            bg-blue-100 text-blue-800
+                                        @endif
+                                    ">
+                                        {{ $movimiento['descripcion'] }}
+                                    </span>
+                                </td>
+                                <td class="py-2 px-3 text-left">{{ $movimiento['documento'] }}</td>
+                                <td class="py-2 px-3 text-center">
+                                    @if($movimiento['lote_id'])
+                                        <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-mono">
+                                            #{{ $movimiento['lote_id'] }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    @endif
+                                </td>
+                                <td class="py-2 px-3 text-right {{ $movimiento['cantidad_entrada'] > 0 ? 'text-green-600 font-semibold' : '' }}">
+                                    {{ $movimiento['cantidad_entrada'] > 0 ? number_format($movimiento['cantidad_entrada'], 0) : '-' }}
+                                </td>
+                                <td class="py-2 px-3 text-right {{ $movimiento['cantidad_salida'] > 0 ? 'text-red-600 font-semibold' : '' }}">
+                                    {{ $movimiento['cantidad_salida'] > 0 ? number_format($movimiento['cantidad_salida'], 0) : '-' }}
+                                </td>
+                                <td class="py-2 px-3 text-right font-bold {{ $movimiento['saldo'] > 0 ? 'text-blue-600' : 'text-gray-400' }}">
+                                    {{ number_format($movimiento['saldo'], 0) }}
+                                </td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap">Q {{ number_format($movimiento['costo_unitario'], 2) }}</td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap {{ $movimiento['costo_entrada'] > 0 ? 'text-green-600' : '' }}">
+                                    {{ $movimiento['costo_entrada'] > 0 ? 'Q ' . number_format($movimiento['costo_entrada'], 2) : '-' }}
+                                </td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap {{ $movimiento['costo_salida'] > 0 ? 'text-red-600' : '' }}">
+                                    {{ $movimiento['costo_salida'] > 0 ? 'Q ' . number_format($movimiento['costo_salida'], 2) : '-' }}
+                                </td>
+                                <td class="py-2 px-3 text-right whitespace-nowrap font-bold text-blue-700">
+                                    Q {{ number_format($movimiento['costo_inventario'], 2) }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-gray-100 font-bold">
+                        <tr>
+                            <td colspan="13" class="py-3 px-3 text-right text-sm">
+                                Total de movimientos: {{ count($datosKardex) }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        @else
+            {{-- Tabla de Placeholder cuando no hay datos --}}
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <tr>
+                            <th class="py-3 px-6 text-left">Fecha</th>
+                            <th class="py-3 px-6 text-left">Descripción</th>
+                            <th class="py-3 px-6 text-left">Usuario</th>
+                            <th class="py-3 px-6 text-right">Cantidad / Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm font-light">
+                        <tr class="border-b border-gray-200">
+                            <td colspan="4" class="py-8 text-center text-gray-500">
+                                Seleccione un tipo de reporte y haga clic en "Generar Reporte" para ver los resultados.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 </div>
