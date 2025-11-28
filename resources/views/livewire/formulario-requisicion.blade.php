@@ -172,7 +172,7 @@
                         <div x-show="open" x-transition @click.away="open = false"
                             class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto">
                             <ul>
-                                @foreach ($this->productoResults as $producto)
+                                @forelse ($this->productoResults as $producto)
                                     <li wire:click.prevent="selectProducto('{{ $producto['id'] }}')"
                                         class="px-3 py-2 cursor-pointer hover:bg-gray-100">
                                         <div class="flex items-center justify-between">
@@ -184,7 +184,20 @@
                                                 {{ $producto['cantidad_disponible'] }}</span>
                                         </div>
                                     </li>
-                                @endforeach
+                                @empty
+                                    <li class="px-3 py-2 text-sm text-gray-500 text-center">
+                                        @if(empty($searchProducto))
+                                            Escribe para buscar productos...
+                                        @else
+                                            No se encontraron productos
+                                        @endif
+                                    </li>
+                                @endforelse
+                                @if(empty($searchProducto) && count($this->productoResults) > 0)
+                                    <li class="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-200 text-center italic">
+                                        Mostrando {{ count($this->productoResults) }} productos. Escribe para buscar más...
+                                    </li>
+                                @endif
                             </ul>
                         </div>
                     </div>
@@ -229,11 +242,12 @@
                                     </td>
                                     <td class="py-3 px-6 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
                                     <td class="py-3 px-6 text-center">
-                                        <input type="number"
-                                            wire:model.live="productosSeleccionados.{{ $loop->index }}.cantidad"
-                                            wire:change="actualizarCantidad('{{ $producto['id'] }}', $event.target.value)"
-                                            min="1" max="{{ $producto['cantidad_disponible'] }}"
-                                            class="w-20 text-center border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent {{ $producto['cantidad'] > $producto['cantidad_disponible'] ? 'border-red-500' : '' }}">
+                                        <input
+                                            type="number"
+                                            wire:model.blur="productosSeleccionados.{{ $loop->index }}.cantidad"
+                                            min="1"
+                                            placeholder="0"
+                                            class="w-24 text-center border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold {{ $producto['cantidad'] > $producto['cantidad_disponible'] ? 'border-red-500' : '' }}">
                                     </td>
                                     <td class="py-3 px-6 text-center">
                                         <span
@@ -381,12 +395,12 @@
                                         <td class="py-2 px-3 text-center">
                                             @if($producto['es_consumible'] ?? false)
                                                 <span
-                                                    class="bg-amber-100 text-amber-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                                    class="bg-amber-100 text-amber-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                     Consumible
                                                 </span>
                                             @else
                                                 <span
-                                                    class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
+                                                    class="bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs font-semibold whitespace-nowrap">
                                                     No Consumible
                                                 </span>
                                             @endif

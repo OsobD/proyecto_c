@@ -41,6 +41,12 @@ class FormularioRequisicion extends Component
     /** @var string Término de búsqueda de producto */
     public $searchProducto = '';
 
+    /** @var int Cantidad temporal antes de agregar producto */
+    public $cantidadTemporal = 0;
+
+    /** @var string|null Producto seleccionado temporalmente */
+    public $selectedProductoTemp = null;
+
     /** @var array|null Bodega origen seleccionada */
     public $selectedOrigen = null;
 
@@ -221,6 +227,9 @@ class FormularioRequisicion extends Component
                 $q->where('descripcion', 'like', '%' . $search . '%')
                     ->orWhere('id', 'like', '%' . $search . '%');
             });
+        } else {
+            // Si no hay búsqueda, limitar a 5 resultados iniciales
+            $query->limit(5);
         }
 
         return $query->get()->map(function ($producto) {
@@ -376,7 +385,7 @@ class FormularioRequisicion extends Component
                 'descripcion' => $producto['descripcion'],
                 'es_consumible' => (bool)($producto['es_consumible'] ?? false),
                 'precio' => (float) $producto['precio'],
-                'cantidad' => 1,
+                'cantidad' => null,
                 'cantidad_disponible' => (int) $producto['cantidad_disponible'],
                 'lotes' => $producto['lotes']
             ];
@@ -466,6 +475,14 @@ class FormularioRequisicion extends Component
         }
 
         // Nota: No validamos si tiene tarjeta porque se crea automáticamente si no existe
+
+        // Validar que todos los productos tengan cantidad > 0
+        foreach ($this->productosSeleccionados as $producto) {
+            if (!isset($producto['cantidad']) || $producto['cantidad'] <= 0) {
+                session()->flash('error', "El producto '{$producto['descripcion']}' debe tener una cantidad mayor a 0.");
+                return;
+            }
+        }
 
         // Validar que ningún producto exceda el stock disponible
         foreach ($this->productosSeleccionados as $producto) {
