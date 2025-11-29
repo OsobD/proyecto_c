@@ -264,6 +264,7 @@ class HistorialTraslados extends Component
         // Cargar Requisiciones (Salidas tipo "Uso Interno") - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Requisición') {
             $salidas = Salida::with(['bodega', 'persona', 'tipo', 'usuario', 'detallesSalida.producto'])
+                ->where('activo', true) // Solo mostrar activos
                 ->whereHas('tipo', function ($q) {
                     $q->where('nombre', 'Salida por Uso Interno');
                 })
@@ -341,6 +342,7 @@ class HistorialTraslados extends Component
         // Cargar Traslados - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Traslado') {
             $traslados = Traslado::with(['bodegaOrigen', 'bodegaDestino', 'usuario', 'persona', 'detalles.producto'])
+                ->where('activo', true) // Solo mostrar activos
                 ->when($this->search, function ($q) {
                     $q->where(function ($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
@@ -425,6 +427,7 @@ class HistorialTraslados extends Component
         // Cargar Devoluciones - CON LÍMITE
         if (!$this->tipoFiltro || $this->tipoFiltro === 'Devolución') {
             $devoluciones = Devolucion::with(['bodega', 'persona', 'usuario'])
+                ->where('activo', true) // Solo mostrar activos
                 ->when($this->search, function ($q) {
                     $q->where(function ($query) {
                         $query->where('correlativo', 'like', '%' . $this->search . '%')
@@ -846,10 +849,13 @@ class HistorialTraslados extends Component
     public function solicitarEliminacion()
     {
         // Validar justificación
-        if (empty(trim($this->justificacionEliminacion))) {
-            session()->flash('error', 'Debe proporcionar una justificación para la eliminación.');
-            return;
-        }
+        $this->validate([
+            'justificacionEliminacion' => 'required|min:10|max:500'
+        ], [
+            'justificacionEliminacion.required' => 'La justificación es obligatoria',
+            'justificacionEliminacion.min' => 'La justificación debe tener al menos 10 caracteres',
+            'justificacionEliminacion.max' => 'La justificación no puede exceder 500 caracteres'
+        ]);
 
         try {
             $usuario = auth()->user();
@@ -859,67 +865,76 @@ class HistorialTraslados extends Component
                 return;
             }
 
-            // Determinar el modelo y obtener los datos
-            $modelo = null;
-            $datosActuales = [];
+            $rolNombre = $usuario->rol->nombre;
 
-            switch ($this->movimientoEliminarTipo) {
-                case 'salida':
-                    $registro = \App\Models\Salida::find($this->movimientoEliminarId);
-                    $modelo = 'Salida';
-                    if ($registro) {
-                        $datosActuales = $registro->toArray();
-                    }
-                    break;
+            // Determinar el modelo y tabla
+            $tabla = match ($this->movimientoEliminarTipo) {
+                'salida' => 'salida',
+                'traslado', 'requisicion' => 'traslado',
+                'devolucion' => 'devolucion',
+                default => null
+            };
 
-                case 'traslado':
-                case 'requisicion':
-                    $registro = \App\Models\Traslado::find($this->movimientoEliminarId);
-                    $modelo = 'Traslado';
-                    if ($registro) {
-                        $datosActuales = $registro->toArray();
-                    }
-                    break;
-
-                default:
-                    session()->flash('error', 'Tipo de movimiento no válido.');
-                    return;
+            if (!$tabla) {
+                session()->flash('error', 'Tipo de movimiento no válido.');
+                return;
             }
+
+            // Obtener el registro para verificar que existe y está activo
+            $registro = match ($this->movimientoEliminarTipo) {
+                'salida' => \App\Models\Salida::find($this->movimientoEliminarId),
+                'traslado', 'requisicion' => \App\Models\Traslado::find($this->movimientoEliminarId),
+                'devolucion' => \App\Models\Devolucion::find($this->movimientoEliminarId),
+                default => null
+            };
 
             if (!$registro) {
                 session()->flash('error', 'Registro no encontrado.');
                 return;
             }
 
-            // Verificar que no esté ya eliminado
-            if (!$registro->estaActivo()) {
-                session()->flash('error', 'Este registro ya está eliminado.');
+            // Si es colaborador, crear solicitud de aprobación
+            if (!in_array($rolNombre, ['Administrador TI', 'Jefe de Bodega', 'Administrador'])) {
+                \App\Models\SolicitudAprobacion::create([
+                    'tipo' => 'ELIMINACION',
+                    'tabla' => $tabla,
+                    'registro_id' => $this->movimientoEliminarId,
+                    'datos' => ['activo' => false],
+                    'solicitante_id' => $usuario->id,
+                    'estado' => 'PENDIENTE',
+                    'observaciones' => $this->justificacionEliminacion
+                ]);
+
+                // Registrar en bitácora
+                \App\Models\Bitacora::create([
+                    'accion' => 'Solicitar Eliminación',
+                    'modelo' => ucfirst($tabla),
+                    'modelo_id' => $this->movimientoEliminarId,
+                    'descripcion' => "Solicitó eliminación de {$tabla} ID {$this->movimientoEliminarId}",
+                    'id_usuario' => $usuario->id,
+                    'created_at' => now(),
+                ]);
+
+                session()->flash('success', 'Solicitud de eliminación enviada para aprobación.');
+                $this->closeModalEliminar();
                 return;
             }
 
-            // Crear solicitud de cambio pendiente
-            \App\Models\CambioPendiente::create([
-                'modelo' => $modelo,
-                'modelo_id' => $this->movimientoEliminarId,
-                'accion' => 'eliminar',
-                'datos_anteriores' => $datosActuales,
-                'datos_nuevos' => array_merge($datosActuales, ['activo' => false]),
-                'usuario_solicitante_id' => $usuario->id,
-                'estado' => 'pendiente',
-                'justificacion' => $this->justificacionEliminacion,
-            ]);
+            // Si es admin/jefe, ejecutar directamente
+            $registro->activo = false;
+            $registro->save();
 
             // Registrar en bitácora
             \App\Models\Bitacora::create([
-                'accion' => 'Solicitar Eliminación',
-                'modelo' => $modelo,
+                'accion' => 'Eliminar',
+                'modelo' => ucfirst($tabla),
                 'modelo_id' => $this->movimientoEliminarId,
-                'descripcion' => "Solicitó eliminación de {$modelo} ID {$this->movimientoEliminarId}",
+                'descripcion' => "Eliminó {$tabla} ID {$this->movimientoEliminarId}",
                 'id_usuario' => $usuario->id,
                 'created_at' => now(),
             ]);
 
-            session()->flash('success', 'Solicitud de eliminación enviada. Pendiente de aprobación por un administrador.');
+            session()->flash('success', 'Registro eliminado exitosamente.');
             $this->closeModalEliminar();
 
         } catch (\Exception $e) {
@@ -928,7 +943,7 @@ class HistorialTraslados extends Component
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            session()->flash('error', 'Error al solicitar eliminación: ' . $e->getMessage());
+            session()->flash('error', 'Error al procesar la solicitud: ' . $e->getMessage());
         }
     }
 

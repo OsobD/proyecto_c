@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\CambioPendiente;
+use App\Models\SolicitudAprobacion;
 use Livewire\Component;
 
 /**
@@ -19,13 +19,12 @@ class AprobacionesPendientes extends Component
     /** @var array Listado de elementos pendientes de aprobación */
     public $pendientes = [];
 
-    /** @var string Filtro por tipo (todos, requisiciones, traslados, compras) */
-    public $filtroTipo = 'todos';
+    /** @var string Filtro por tabla */
+    public $filtroTabla = '';
 
     /**
      * Inicializa el componente con datos de aprobaciones pendientes
      *
-     * @todo Conectar con BD: obtener requisiciones, traslados y compras con estado "pendiente"
      * @return void
      */
     public function mount()
@@ -40,64 +39,62 @@ class AprobacionesPendientes extends Component
      */
     public function cargarPendientes()
     {
-        // Cargar cambios pendientes de la base de datos
-        $cambiosPendientes = CambioPendiente::with(['usuarioSolicitante', 'usuarioAprobador'])
-            ->pendientes()
+        // Cargar solicitudes pendientes de la base de datos
+        $solicitudes = SolicitudAprobacion::with(['solicitante', 'aprobador'])
+            ->where('estado', 'PENDIENTE')
+            ->when($this->filtroTabla, function ($query) {
+                $query->where('tabla', $this->filtroTabla);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $this->pendientes = $cambiosPendientes->map(function ($cambio) {
+        $this->pendientes = $solicitudes->map(function ($solicitud) {
             // Determinar el tipo de acción y descripción
-            $tipoDescripcion = $this->obtenerDescripcionCambio($cambio);
+            $tipoDescripcion = $this->obtenerDescripcionSolicitud($solicitud);
 
             return [
-                'id' => $cambio->id,
-                'tipo' => strtolower($cambio->accion),
-                'modelo' => $cambio->modelo,
+                'id' => $solicitud->id,
+                'tipo' => strtolower($solicitud->tipo),
+                'tabla' => $solicitud->tabla,
                 'numero' => $tipoDescripcion['numero'],
-                'solicitante' => $cambio->usuarioSolicitante ? $cambio->usuarioSolicitante->name : 'Desconocido',
-                'fecha' => $cambio->created_at->format('Y-m-d'),
-                'fecha_completa' => $cambio->created_at->format('d/m/Y H:i'),
+                'solicitante' => $solicitud->solicitante ? $solicitud->solicitante->name : 'Desconocido',
+                'fecha' => $solicitud->created_at->format('Y-m-d'),
+                'fecha_completa' => $solicitud->created_at->format('d/m/Y H:i'),
                 'descripcion' => $tipoDescripcion['descripcion'],
-                'justificacion' => $cambio->justificacion,
-                'estado' => $cambio->estado,
-                'accion' => ucfirst($cambio->accion),
+                'observaciones' => $solicitud->observaciones,
+                'estado' => $solicitud->estado,
+                'accion' => $solicitud->tipo,
             ];
         })->toArray();
     }
 
     /**
-     * Obtiene la descripción del cambio según el modelo y acción
+     * Obtiene la descripción de la solicitud según la tabla y tipo
      *
-     * @param CambioPendiente $cambio
+     * @param SolicitudAprobacion $solicitud
      * @return array
      */
-    private function obtenerDescripcionCambio($cambio)
+    private function obtenerDescripcionSolicitud($solicitud)
     {
         $numero = '';
         $descripcion = '';
 
-        switch ($cambio->modelo) {
-            case 'Salida':
-                $numero = 'REQ-' . $cambio->modelo_id;
-                $descripcion = "Solicitud de {$cambio->accion} de Requisición (Salida)";
-                break;
+        $tablaLabel = match ($solicitud->tabla) {
+            'salida' => 'Requisición (Salida)',
+            'traslado' => 'Traslado/Requisición',
+            'compra' => 'Compra',
+            'devolucion' => 'Devolución',
+            'categoria' => 'Categoría',
+            'proveedor' => 'Proveedor',
+            'persona' => 'Persona',
+            'bodega' => 'Bodega',
+            'tarjeta_responsabilidad' => 'Tarjeta de Responsabilidad',
+            'producto' => 'Producto',
+            default => ucfirst($solicitud->tabla)
+        };
 
-            case 'Traslado':
-                $numero = 'TRA-' . $cambio->modelo_id;
-                $descripcion = "Solicitud de {$cambio->accion} de Traslado/Requisición";
-                break;
-
-            case 'Compra':
-                $numero = 'COM-' . $cambio->modelo_id;
-                $descripcion = "Solicitud de {$cambio->accion} de Compra";
-                break;
-
-            default:
-                $numero = $cambio->modelo . '-' . $cambio->modelo_id;
-                $descripcion = "Solicitud de {$cambio->accion} de {$cambio->modelo}";
-                break;
-        }
+        $numero = strtoupper(substr($solicitud->tabla, 0, 3)) . '-' . $solicitud->registro_id;
+        $descripcion = "Solicitud de {$solicitud->tipo} de {$tablaLabel}";
 
         return [
             'numero' => $numero,
@@ -106,18 +103,18 @@ class AprobacionesPendientes extends Component
     }
 
     /**
-     * Filtra las aprobaciones por tipo
+     * Filtra las aprobaciones por tabla
      *
      * @return array
      */
     public function getPendientesFiltradosProperty()
     {
-        if ($this->filtroTipo === 'todos') {
+        if (empty($this->filtroTabla)) {
             return $this->pendientes;
         }
 
         return array_filter($this->pendientes, function ($item) {
-            return $item['tipo'] === $this->filtroTipo;
+            return $item['tabla'] === $this->filtroTabla;
         });
     }
 
@@ -130,7 +127,7 @@ class AprobacionesPendientes extends Component
     public function aprobar($id)
     {
         try {
-            $cambio = CambioPendiente::findOrFail($id);
+            $solicitud = SolicitudAprobacion::findOrFail($id);
             $usuario = auth()->user();
 
             if (!$usuario) {
@@ -138,14 +135,30 @@ class AprobacionesPendientes extends Component
                 return;
             }
 
-            // Aprobar el cambio (esto aplicará automáticamente el cambio según el modelo)
-            $cambio->aprobar($usuario->id, 'Aprobado por el administrador');
+            // Ejecutar la acción según el tipo
+            $this->ejecutarAccion($solicitud);
+
+            // Actualizar estado de la solicitud
+            $solicitud->update([
+                'estado' => 'APROBADA',
+                'aprobador_id' => $usuario->id
+            ]);
+
+            // Registrar en bitácora
+            \App\Models\Bitacora::create([
+                'accion' => 'Aprobar Solicitud',
+                'modelo' => 'SolicitudAprobacion',
+                'modelo_id' => $solicitud->id,
+                'descripcion' => "Aprobó solicitud de {$solicitud->tipo} en {$solicitud->tabla} ID {$solicitud->registro_id}",
+                'id_usuario' => $usuario->id,
+                'created_at' => now(),
+            ]);
 
             session()->flash('success', 'Solicitud aprobada y aplicada exitosamente.');
             $this->cargarPendientes();
 
         } catch (\Exception $e) {
-            \Log::error('Error al aprobar cambio', [
+            \Log::error('Error al aprobar solicitud', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -163,7 +176,7 @@ class AprobacionesPendientes extends Component
     public function rechazar($id)
     {
         try {
-            $cambio = CambioPendiente::findOrFail($id);
+            $solicitud = SolicitudAprobacion::findOrFail($id);
             $usuario = auth()->user();
 
             if (!$usuario) {
@@ -171,19 +184,173 @@ class AprobacionesPendientes extends Component
                 return;
             }
 
-            // Rechazar el cambio
-            $cambio->rechazar($usuario->id, 'Rechazado por el administrador');
+            // Actualizar estado de la solicitud
+            $solicitud->update([
+                'estado' => 'RECHAZADA',
+                'aprobador_id' => $usuario->id
+            ]);
+
+            // Registrar en bitácora
+            \App\Models\Bitacora::create([
+                'accion' => 'Rechazar Solicitud',
+                'modelo' => 'SolicitudAprobacion',
+                'modelo_id' => $solicitud->id,
+                'descripcion' => "Rechazó solicitud de {$solicitud->tipo} en {$solicitud->tabla} ID {$solicitud->registro_id}",
+                'id_usuario' => $usuario->id,
+                'created_at' => now(),
+            ]);
 
             session()->flash('success', 'Solicitud rechazada exitosamente.');
             $this->cargarPendientes();
 
         } catch (\Exception $e) {
-            \Log::error('Error al rechazar cambio', [
+            \Log::error('Error al rechazar solicitud', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
             session()->flash('error', 'Error al rechazar la solicitud: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Ejecuta la acción de la solicitud aprobada
+     *
+     * @param SolicitudAprobacion $solicitud
+     * @return void
+     */
+    private function ejecutarAccion($solicitud)
+    {
+        $modelo = match ($solicitud->tabla) {
+            'salida' => \App\Models\Salida::class,
+            'traslado' => \App\Models\Traslado::class,
+            'compra' => \App\Models\Compra::class,
+            'devolucion' => \App\Models\Devolucion::class,
+            'categoria' => \App\Models\Categoria::class,
+            'proveedor' => \App\Models\Proveedor::class,
+            'persona' => \App\Models\Persona::class,
+            'bodega' => \App\Models\Bodega::class,
+            'tarjeta_responsabilidad' => \App\Models\TarjetaResponsabilidad::class,
+            'producto' => \App\Models\Producto::class,
+            default => null
+        };
+
+        if (!$modelo) {
+            throw new \Exception("Modelo no encontrado para tabla: {$solicitud->tabla}");
+        }
+
+        $registro = $modelo::find($solicitud->registro_id);
+
+        if (!$registro) {
+            throw new \Exception("Registro no encontrado: {$solicitud->tabla} ID {$solicitud->registro_id}");
+        }
+
+        switch ($solicitud->tipo) {
+            case 'ELIMINACION':
+            case 'DESACTIVACION':
+                // CRÍTICO: Devolver productos al inventario antes de eliminar
+                $this->devolverProductosAlInventario($solicitud->tabla, $registro);
+
+                // Marcar como inactivo
+                $registro->activo = false;
+                $registro->save();
+                break;
+
+            case 'EDICION':
+                // Actualizar con los datos de la solicitud
+                if (isset($solicitud->datos) && is_array($solicitud->datos)) {
+                    $registro->update($solicitud->datos);
+                }
+                break;
+
+            case 'CREACION':
+                // Para creación, los datos ya deberían estar en la solicitud
+                // Este caso es más complejo y depende del modelo
+                break;
+        }
+    }
+
+    /**
+     * Devuelve los productos al inventario cuando se elimina una transacción
+     *
+     * @param string $tabla
+     * @param mixed $registro
+     * @return void
+     */
+    private function devolverProductosAlInventario($tabla, $registro)
+    {
+        try {
+            switch ($tabla) {
+                case 'salida':
+                    // Requisición (Salida) - Devolver productos a la bodega
+                    $detalles = $registro->detallesSalida;
+                    foreach ($detalles as $detalle) {
+                        // Incrementar cantidad en lote_bodega
+                        $loteBodega = \App\Models\LoteBodega::where('id_lote', $detalle->id_lote)
+                            ->where('id_bodega', $registro->id_bodega)
+                            ->first();
+
+                        if ($loteBodega) {
+                            $loteBodega->cantidad += $detalle->cantidad;
+                            $loteBodega->save();
+                        }
+                    }
+                    break;
+
+                case 'traslado':
+                    // Traslado/Requisición - Devolver productos a bodega origen
+                    $detalles = $registro->detallesTraslado;
+                    foreach ($detalles as $detalle) {
+                        // Incrementar cantidad en bodega origen
+                        $loteBodega = \App\Models\LoteBodega::where('id_lote', $detalle->id_lote)
+                            ->where('id_bodega', $registro->id_bodega_origen)
+                            ->first();
+
+                        if ($loteBodega) {
+                            $loteBodega->cantidad += $detalle->cantidad;
+                            $loteBodega->save();
+                        }
+
+                        // Decrementar cantidad en bodega destino (si ya se trasladó)
+                        $loteBodegaDestino = \App\Models\LoteBodega::where('id_lote', $detalle->id_lote)
+                            ->where('id_bodega', $registro->id_bodega_destino)
+                            ->first();
+
+                        if ($loteBodegaDestino && $loteBodegaDestino->cantidad >= $detalle->cantidad) {
+                            $loteBodegaDestino->cantidad -= $detalle->cantidad;
+                            $loteBodegaDestino->save();
+                        }
+                    }
+                    break;
+
+                case 'devolucion':
+                    // Devolución - Decrementar en bodega (revertir la devolución)
+                    $detalles = $registro->detalles;
+                    foreach ($detalles as $detalle) {
+                        $loteBodega = \App\Models\LoteBodega::where('id_lote', $detalle->id_lote)
+                            ->where('id_bodega', $registro->id_bodega)
+                            ->first();
+
+                        if ($loteBodega && $loteBodega->cantidad >= $detalle->cantidad) {
+                            $loteBodega->cantidad -= $detalle->cantidad;
+                            $loteBodega->save();
+                        }
+                    }
+                    break;
+            }
+
+            \Log::info("Productos devueltos al inventario", [
+                'tabla' => $tabla,
+                'registro_id' => $registro->id
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Error al devolver productos al inventario", [
+                'tabla' => $tabla,
+                'registro_id' => $registro->id,
+                'error' => $e->getMessage()
+            ]);
+            // No lanzar excepción para no bloquear la eliminación
         }
     }
 

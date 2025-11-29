@@ -174,6 +174,7 @@ class NavigationService
             [
                 'label' => 'Aprobaciones',
                 'permission' => 'aprobaciones.ver',
+                'exclude_roles' => ['Colaborador de Bodega'], // Excluir explícitamente a colaboradores
                 'route_pattern' => ['aprobaciones'],
                 'children' => [
                     [
@@ -241,6 +242,11 @@ class NavigationService
         // (Evita navbar vacío en desarrollo)
         if (!$user->rol) {
             return true;
+        }
+
+        // Verificar si el rol está explícitamente excluido
+        if (isset($item['exclude_roles']) && in_array($user->rol->nombre, $item['exclude_roles'])) {
+            return false;
         }
 
         // Si no requiere permiso, todos tienen acceso
