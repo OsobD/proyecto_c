@@ -79,7 +79,7 @@ class ComprasHub extends Component
             ->orderBy('fecha', 'desc')
             ->limit(5)
             ->get()
-            ->map(function($compra) {
+            ->map(function ($compra) {
                 return [
                     'id' => $compra->id,
                     'numero_factura' => $compra->no_factura ?? 'N/A',
@@ -99,19 +99,26 @@ class ComprasHub extends Component
 
         if ($compra) {
             // Mapear productos y calcular total correctamente
-            $productos = $compra->detalles->map(function($detalle) {
-                $subtotal = $detalle->cantidad * $detalle->precio_ingreso;
+            $productos = $compra->detalles->map(function ($detalle) {
+                // Redondear a 4 decimales para evitar problemas de precisión
+                $precioConIva = round($detalle->precio_ingreso * 1.12, 4);
+                $subtotalSinIva = $detalle->cantidad * $detalle->precio_ingreso;
+                $subtotalConIva = $detalle->cantidad * $precioConIva;
+
                 return [
                     'codigo' => $detalle->id_producto,
                     'descripcion' => $detalle->producto->descripcion ?? 'N/A',
                     'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_ingreso,
-                    'subtotal' => $subtotal,
+                    'precio_sin_iva' => $detalle->precio_ingreso,
+                    'precio_con_iva' => $precioConIva,
+                    'subtotal_sin_iva' => $subtotalSinIva,
+                    'subtotal_con_iva' => $subtotalConIva,
                 ];
             })->toArray();
 
-            // Calcular el total sumando todos los subtotales
-            $totalCalculado = array_sum(array_column($productos, 'subtotal'));
+            // Calcular los totales
+            $totalSinIva = array_sum(array_column($productos, 'subtotal_sin_iva'));
+            $totalConIva = array_sum(array_column($productos, 'subtotal_con_iva'));
 
             $this->compraSeleccionada = [
                 'id' => $compra->id,
@@ -120,7 +127,8 @@ class ComprasHub extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
+                'total_sin_iva' => $totalSinIva,
+                'total_con_iva' => $totalConIva,
                 'productos' => $productos,
             ];
             $this->showModalVer = true;
@@ -143,20 +151,27 @@ class ComprasHub extends Component
 
         if ($compra) {
             // Mapear productos con sus detalles para edición
-            $productos = $compra->detalles->map(function($detalle) {
-                $subtotal = $detalle->cantidad * $detalle->precio_ingreso;
+            $productos = $compra->detalles->map(function ($detalle) {
+                // Redondear a 4 decimales para evitar problemas de precisión
+                $precioConIva = round($detalle->precio_ingreso * 1.12, 4);
+                $subtotalSinIva = $detalle->cantidad * $detalle->precio_ingreso;
+                $subtotalConIva = $detalle->cantidad * $precioConIva;
+
                 return [
                     'id_detalle' => $detalle->id,
                     'codigo' => $detalle->id_producto,
                     'descripcion' => $detalle->producto->descripcion ?? 'N/A',
                     'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_ingreso,
-                    'subtotal' => $subtotal,
+                    'precio_sin_iva' => $detalle->precio_ingreso,
+                    'precio_con_iva' => $precioConIva,
+                    'subtotal_sin_iva' => $subtotalSinIva,
+                    'subtotal_con_iva' => $subtotalConIva,
                 ];
             })->toArray();
 
-            // Calcular el total
-            $totalCalculado = array_sum(array_column($productos, 'subtotal'));
+            // Calcular los totales
+            $totalSinIva = array_sum(array_column($productos, 'subtotal_sin_iva'));
+            $totalConIva = array_sum(array_column($productos, 'subtotal_con_iva'));
 
             $this->compraSeleccionada = [
                 'id' => $compra->id,
@@ -165,7 +180,8 @@ class ComprasHub extends Component
                 'fecha' => $compra->fecha->format('Y-m-d H:i'),
                 'proveedor' => $compra->proveedor->nombre ?? 'Sin proveedor',
                 'bodega' => $compra->bodega->nombre ?? 'Sin bodega',
-                'total' => $totalCalculado > 0 ? $totalCalculado : ($compra->total / 1.12),
+                'total_sin_iva' => $totalSinIva,
+                'total_con_iva' => $totalConIva,
                 'productos' => $productos,
             ];
             $this->showModalEditar = true;
@@ -213,13 +229,14 @@ class ComprasHub extends Component
                 $detalle = DetalleCompra::find($producto['id_detalle']);
                 if ($detalle) {
                     $detalle->cantidad = $producto['cantidad'];
-                    $detalle->precio_ingreso = $producto['precio'];
+                    // Convertir precio con IVA a precio sin IVA para guardar en BD
+                    $detalle->precio_ingreso = $producto['precio_con_iva'] / 1.12;
                     $detalle->save();
                 }
             }
 
-            // Actualizar el total de la compra
-            $compra->total = $this->compraSeleccionada['total'];
+            // Actualizar el total de la compra (sin IVA)
+            $compra->total = $this->compraSeleccionada['total_sin_iva'];
             $compra->save();
 
             session()->flash('message', 'Compra actualizada exitosamente.');

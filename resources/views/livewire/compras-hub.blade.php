@@ -1,6 +1,6 @@
 {{--
-    Vista: Hub de Compras
-    Descripción: Dashboard del módulo de compras con estadísticas del mes y accesos rápidos
+Vista: Hub de Compras
+Descripción: Dashboard del módulo de compras con estadísticas del mes y accesos rápidos
 --}}
 <div>
     {{-- Navegación de migas de pan --}}
@@ -38,7 +38,8 @@
                 </div>
                 <div class="bg-eemq-horizon-100 p-3 rounded-full">
                     <svg class="w-8 h-8 text-eemq-horizon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                     </svg>
                 </div>
             </div>
@@ -48,11 +49,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 font-medium">Monto Total</p>
-                    <p class="text-2xl xl:text-3xl font-bold text-gray-800 mt-1">Q{{ number_format($this->estadisticas['monto_total_mes'], 2) }}</p>
+                    <p class="text-2xl xl:text-3xl font-bold text-gray-800 mt-1">
+                        Q{{ number_format($this->estadisticas['monto_total_mes'], 2) }}</p>
                 </div>
                 <div class="bg-eemq-horizon-50 p-3 rounded-full">
                     <svg class="w-8 h-8 text-eemq-horizon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
                     </svg>
                 </div>
             </div>
@@ -62,11 +66,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 font-medium">Proveedores Activos</p>
-                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $this->estadisticas['proveedores_activos'] }}</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">{{ $this->estadisticas['proveedores_activos'] }}
+                    </p>
                 </div>
                 <div class="bg-eemq-chambray-50 p-3 rounded-full">
                     <svg class="w-8 h-8 text-eemq-chambray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
                     </svg>
                 </div>
             </div>
@@ -75,7 +82,8 @@
 
     {{-- Accesos Rápidos --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 mt-12">
-        <a href="{{ route('compras.nueva') }}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon">
+        <a href="{{ route('compras.nueva') }}"
+            class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon">
             <div class="flex items-center gap-4">
                 <div class="bg-eemq-horizon-100 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-eemq-horizon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,11 +97,14 @@
             </div>
         </a>
 
-        <a href="{{ route('compras.historial') }}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon-500">
+        <a href="{{ route('compras.historial') }}"
+            class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-horizon-500">
             <div class="flex items-center gap-4">
                 <div class="bg-eemq-horizon-50 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-eemq-horizon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
                     </svg>
                 </div>
                 <div>
@@ -103,11 +114,14 @@
             </div>
         </a>
 
-        <a href="{{ route('proveedores') }}" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-chambray">
+        <a href="{{ route('proveedores') }}"
+            class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border-t-4 border-eemq-chambray">
             <div class="flex items-center gap-4">
                 <div class="bg-eemq-chambray-50 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-eemq-chambray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
                     </svg>
                 </div>
                 <div>
@@ -122,7 +136,8 @@
     <div class="bg-white p-6 rounded-lg shadow-md">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800">Compras Recientes</h2>
-            <a href="{{ route('compras.historial') }}" class="text-eemq-horizon hover:text-blue-800 text-sm font-medium">
+            <a href="{{ route('compras.historial') }}"
+                class="text-eemq-horizon hover:text-blue-800 text-sm font-medium">
                 Ver todas →
             </a>
         </div>
@@ -144,7 +159,8 @@
                         <tr class="border-b border-gray-200 hover:bg-gray-50 {{ !$compra['activa'] ? 'opacity-50' : '' }}">
                             <td class="py-3 px-6 text-left font-medium">{{ $compra['numero_factura'] }}</td>
                             <td class="py-3 px-6 text-left">{{ $compra['proveedor'] }}</td>
-                            <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($compra['fecha'])->format('d/m/Y') }}</td>
+                            <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($compra['fecha'])->format('d/m/Y') }}
+                            </td>
                             <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra['monto'], 2) }}</td>
                             <td class="py-3 px-6 text-center">
                                 @if($compra['estado'] === 'Completada')
@@ -159,25 +175,17 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <x-action-button
-                                        type="view"
-                                        title="Ver detalle"
+                                    <x-action-button type="view" title="Ver detalle"
                                         wire:click="verDetalle({{ $compra['id'] }})" />
 
                                     @if($compra['activa'])
-                                        <x-action-button
-                                            type="edit"
-                                            title="Editar"
+                                        <x-action-button type="edit" title="Editar"
                                             wire:click="editarCompra({{ $compra['id'] }})" />
 
-                                        <x-action-button
-                                            type="delete"
-                                            title="Desactivar"
+                                        <x-action-button type="delete" title="Desactivar"
                                             wire:click="abrirModalDesactivar({{ $compra['id'] }})" />
                                     @else
-                                        <x-action-button
-                                            type="activate"
-                                            title="Activar"
+                                        <x-action-button type="activate" title="Activar"
                                             wire:click="activarCompra({{ $compra['id'] }})" />
                                     @endif
                                 </div>
@@ -193,22 +201,21 @@
     <div x-data="{
             show: @entangle('showModalVer').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalVer">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalVer">
         <div class="relative p-6 border w-full max-w-3xl shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-900">Detalle de Compra</h3>
                 <button wire:click="closeModalVer" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -236,7 +243,9 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Fecha de Compra:</p>
-                                <p class="font-semibold">{{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}</p>
+                                <p class="font-semibold">
+                                    {{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -251,7 +260,8 @@
                                         <th class="py-2 px-3 text-left">Código</th>
                                         <th class="py-2 px-3 text-left">Descripción</th>
                                         <th class="py-2 px-3 text-center">Cantidad</th>
-                                        <th class="py-2 px-3 text-right">Precio Unit.</th>
+                                        <th class="py-2 px-3 text-right">Precio con IVA</th>
+                                        <th class="py-2 px-3 text-right">Precio sin IVA</th>
                                         <th class="py-2 px-3 text-right">Subtotal</th>
                                     </tr>
                                 </thead>
@@ -262,13 +272,18 @@
                                                 <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                                 <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
                                                 <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
-                                                <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio'], 2) }}</td>
-                                                <td class="py-2 px-3 text-right font-semibold">Q{{ number_format($producto['subtotal'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right">
+                                                    Q{{ number_format($producto['precio_con_iva'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right text-gray-600">
+                                                    Q{{ number_format($producto['precio_sin_iva'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right font-semibold">
+                                                    Q{{ number_format($producto['subtotal_con_iva'], 2) }}</td>
                                             </tr>
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en esta compra</td>
+                                            <td colspan="6" class="py-4 text-center text-gray-500">No hay productos en esta
+                                                compra</td>
                                         </tr>
                                     @endif
                                 </tbody>
@@ -277,20 +292,26 @@
                     </div>
 
                     {{-- Total --}}
-                    <div class="bg-blue-50 p-4 rounded-md">
+                    <div class="bg-blue-50 p-4 rounded-md space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-800">Total de la Compra (sin IVA):</span>
-                            <span class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total'] ?? 0, 2) }}</span>
+                            <span class="text-base font-semibold text-gray-700">Total sin IVA:</span>
+                            <span
+                                class="text-xl font-bold text-gray-800">Q{{ number_format($compraSeleccionada['total_sin_iva'] ?? 0, 2) }}</span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            Total de productos: {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
+                        <div class="flex justify-between items-center border-t pt-3">
+                            <span class="text-lg font-semibold text-gray-800">Total con IVA:</span>
+                            <span
+                                class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total_con_iva'] ?? 0, 2) }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 pt-2 border-t">
+                            Total de productos:
+                            {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
                         </p>
                     </div>
 
                     {{-- Botón de cerrar --}}
                     <div class="flex justify-end mt-6">
-                        <button
-                            wire:click="closeModalVer"
+                        <button wire:click="closeModalVer"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg">
                             Cerrar
                         </button>
@@ -304,129 +325,142 @@
     <div x-data="{
             show: @entangle('showModalEditar').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalEditar">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalEditar">
         <div class="relative p-6 border w-full max-w-4xl shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-900">Editar Compra</h3>
                 <button wire:click="closeModalEditar" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
             @if($compraSeleccionada)
-                <div class="space-y-4">
-                    {{-- Información de la compra --}}
-                    <div class="bg-gray-50 p-4 rounded-md">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-600">Bodega Destino:</p>
-                                <p class="font-semibold">{{ $compraSeleccionada['bodega'] ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Proveedor:</p>
-                                <p class="font-semibold">{{ $compraSeleccionada['proveedor'] ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Número de Factura:</p>
-                                <p class="font-semibold">{{ $compraSeleccionada['numero_factura'] ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Correlativo / Serie:</p>
-                                <p class="font-semibold">{{ $compraSeleccionada['correlativo'] ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Fecha de Compra:</p>
-                                <p class="font-semibold">{{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}</p>
+                    <div class="space-y-4">
+                        {{-- Información de la compra --}}
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Bodega Destino:</p>
+                                    <p class="font-semibold">{{ $compraSeleccionada['bodega'] ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Proveedor:</p>
+                                    <p class="font-semibold">{{ $compraSeleccionada['proveedor'] ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Número de Factura:</p>
+                                    <p class="font-semibold">{{ $compraSeleccionada['numero_factura'] ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Correlativo / Serie:</p>
+                                    <p class="font-semibold">{{ $compraSeleccionada['correlativo'] ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Fecha de Compra:</p>
+                                    <p class="font-semibold">
+                                        {{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Tabla editable de productos --}}
-                    <div>
-                        <h4 class="font-semibold text-gray-800 mb-2">Editar Precios de Productos:</h4>
-                        <div class="overflow-x-auto max-h-96 overflow-y-auto border rounded-md">
-                            <table class="min-w-full bg-white text-sm">
-                                <thead class="bg-gray-100 sticky top-0">
-                                    <tr>
-                                        <th class="py-2 px-3 text-left">Código</th>
-                                        <th class="py-2 px-3 text-left">Descripción</th>
-                                        <th class="py-2 px-3 text-center">Cantidad</th>
-                                        <th class="py-2 px-3 text-right">Precio Unit.</th>
-                                        <th class="py-2 px-3 text-right">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if(isset($compraSeleccionada['productos']) && count($compraSeleccionada['productos']) > 0)
-                                        @foreach($compraSeleccionada['productos'] as $index => $producto)
-                                            <tr class="border-t hover:bg-gray-50">
-                                                <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
-                                                <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
-                                                <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
-                                                <td class="py-2 px-3 text-right">
-                                                    <div class="flex items-center justify-end">
-                                                        <span class="mr-1">Q</span>
-                                                        <input
-                                                            type="number"
-                                                            step="0.01"
-                                                            wire:model.blur="compraSeleccionada.productos.{{ $index }}.precio"
-                                                            min="0"
-                                                            class="w-28 text-right border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold px-2 py-1"
-                                                        >
-                                                    </div>
-                                                </td>
-                                                <td class="py-2 px-3 text-right font-semibold">
-                                                    Q{{ number_format($producto['cantidad'] * $producto['precio'], 2) }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @else
+                        {{-- Tabla editable de productos --}}
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">Editar Precios de Productos:</h4>
+                            <div class="overflow-x-auto max-h-96 overflow-y-auto border rounded-md">
+                                <table class="min-w-full bg-white text-sm">
+                                    <thead class="bg-gray-100 sticky top-0">
                                         <tr>
-                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en esta compra</td>
+                                            <th class="py-2 px-3 text-left">Código</th>
+                                            <th class="py-2 px-3 text-left">Descripción</th>
+                                            <th class="py-2 px-3 text-center">Cantidad</th>
+                                            <th class="py-2 px-3 text-right">Precio con IVA</th>
+                                            <th class="py-2 px-3 text-right">Precio sin IVA</th>
+                                            <th class="py-2 px-3 text-right">Subtotal</th>
                                         </tr>
-                                    @endif
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @if(isset($compraSeleccionada['productos']) && count($compraSeleccionada['productos']) > 0)
+                                            @foreach($compraSeleccionada['productos'] as $index => $producto)
+                                                <tr class="border-t hover:bg-gray-50">
+                                                    <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
+                                                    <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
+                                                    <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
+                                                    <td class="py-2 px-3 text-right">
+                                                        <div class="flex items-center justify-end">
+                                                            <span class="mr-1">Q</span>
+                                                            <input type="number" step="0.0001"
+                                                                wire:model.live="compraSeleccionada.productos.{{ $index }}.precio_con_iva"
+                                                                min="0"
+                                                                class="w-32 text-right border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold px-2 py-1">
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-2 px-3 text-right">
+                                                        <span class="text-gray-600 font-medium">
+                                                            Q{{ number_format($producto['precio_con_iva'] / 1.12, 2) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-2 px-3 text-right font-semibold">
+                                                        Q{{ number_format($producto['cantidad'] * $producto['precio_con_iva'], 2) }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="6" class="py-4 text-center text-gray-500">No hay productos en esta
+                                                    compra</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        {{-- Total actualizado --}}
+                        <div class="bg-blue-50 p-4 rounded-md space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-base font-semibold text-gray-700">Total sin IVA:</span>
+                                <span class="text-xl font-bold text-gray-800">
+                                    Q{{ number_format(collect($compraSeleccionada['productos'])->sum(function ($p) {
+                return $p['cantidad'] * ($p['precio_con_iva'] / 1.12); }), 2) }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center border-t pt-3">
+                                <span class="text-lg font-semibold text-gray-800">Total con IVA:</span>
+                                <span class="text-2xl font-bold text-blue-600">
+                                    Q{{ number_format(collect($compraSeleccionada['productos'])->sum(function ($p) {
+                return $p['cantidad'] * $p['precio_con_iva']; }), 2) }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 pt-2 border-t">
+                                Total de productos:
+                                {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
+                            </p>
+                        </div>
+
+                        {{-- Botones de acción --}}
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button wire:click="closeModalEditar"
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg">
+                                Cancelar
+                            </button>
+                            <button wire:click="abrirModalConfirmarEdicion"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                                Guardar Cambios
+                            </button>
                         </div>
                     </div>
-
-                    {{-- Total actualizado --}}
-                    <div class="bg-blue-50 p-4 rounded-md">
-                        <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold text-gray-800">Total de la Compra (sin IVA):</span>
-                            <span class="text-2xl font-bold text-blue-600">
-                                Q{{ number_format(collect($compraSeleccionada['productos'])->sum(function($p) { return $p['cantidad'] * $p['precio']; }), 2) }}
-                            </span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            Total de productos: {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
-                        </p>
-                    </div>
-
-                    {{-- Botones de acción --}}
-                    <div class="flex justify-end gap-3 mt-6">
-                        <button
-                            wire:click="closeModalEditar"
-                            class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg">
-                            Cancelar
-                        </button>
-                        <button
-                            wire:click="abrirModalConfirmarEdicion"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
-                            Guardar Cambios
-                        </button>
-                    </div>
-                </div>
             @endif
         </div>
     </div>
@@ -435,23 +469,22 @@
     <div x-data="{
             show: @entangle('showModalConfirmarEdicion').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
-         style="z-index: 9999 !important;"
-         :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
-         wire:click.self="closeModalConfirmarEdicion">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
+        style="z-index: 9999 !important;"
+        :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
+        wire:click.self="closeModalConfirmarEdicion">
         <div class="relative p-6 border w-full max-w-md shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900">Confirmar Cambios</h3>
                 <button wire:click="closeModalConfirmarEdicion" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -464,12 +497,15 @@
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                    clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-yellow-700">
-                                Esta acción modificará los registros de la compra. Los cambios no se pueden deshacer automáticamente.
+                                Esta acción modificará los registros de la compra. Los cambios no se pueden deshacer
+                                automáticamente.
                             </p>
                         </div>
                     </div>
@@ -477,20 +513,21 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button
-                    wire:click="closeModalConfirmarEdicion"
+                <button wire:click="closeModalConfirmarEdicion"
                     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
                     Cancelar
                 </button>
-                <button
-                    wire:click="guardarEdicion"
-                    wire:loading.attr="disabled"
+                <button wire:click="guardarEdicion" wire:loading.attr="disabled"
                     class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="guardarEdicion">Confirmar</span>
                     <span wire:loading wire:target="guardarEdicion">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
                         </svg>
                         Guardando...
                     </span>
@@ -502,22 +539,21 @@
     <div x-data="{
             show: @entangle('showModalConfirmarDesactivar').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalConfirmarDesactivar">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalConfirmarDesactivar">
         <div class="relative p-6 border w-full max-w-md shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900">Confirmar Desactivación</h3>
                 <button wire:click="closeModalConfirmarDesactivar" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -530,12 +566,15 @@
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-red-700">
-                                Esta compra quedará desactivada y aparecerá con opacidad en el listado. Podrá activarla nuevamente cuando lo desee.
+                                Esta compra quedará desactivada y aparecerá con opacidad en el listado. Podrá activarla
+                                nuevamente cuando lo desee.
                             </p>
                         </div>
                     </div>
@@ -543,20 +582,21 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button
-                    wire:click="closeModalConfirmarDesactivar"
+                <button wire:click="closeModalConfirmarDesactivar"
                     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
                     Cancelar
                 </button>
-                <button
-                    wire:click="confirmarDesactivar"
-                    wire:loading.attr="disabled"
+                <button wire:click="confirmarDesactivar" wire:loading.attr="disabled"
                     class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="confirmarDesactivar">Desactivar</span>
                     <span wire:loading wire:target="confirmarDesactivar">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
                         </svg>
                         Desactivando...
                     </span>
@@ -576,6 +616,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -586,6 +627,7 @@
                 transform: translateY(-20px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -597,6 +639,7 @@
             from {
                 opacity: 1;
             }
+
             to {
                 opacity: 0;
             }
@@ -607,6 +650,7 @@
                 transform: translateY(0);
                 opacity: 1;
             }
+
             to {
                 transform: translateY(20px);
                 opacity: 0;

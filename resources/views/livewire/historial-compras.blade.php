@@ -8,7 +8,8 @@
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Historial de Compras</h1>
-        <a href="{{ route('compras.nueva') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+        <a href="{{ route('compras.nueva') }}"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
             + Nueva Compra
         </a>
     </div>
@@ -34,10 +35,7 @@
             {{-- Búsqueda general --}}
             <div>
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
-                <input
-                    type="text"
-                    id="search"
-                    wire:model.live.debounce.300ms="search"
+                <input type="text" id="search" wire:model.live.debounce.300ms="search"
                     class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
                     placeholder="No. Factura o Proveedor...">
             </div>
@@ -48,24 +46,20 @@
                 <div class="relative">
                     @if($selectedProveedorFiltro)
                         <div wire:click="clearProveedorFiltro"
-                             class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                            class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
                             <span class="font-medium text-gray-800">{{ $selectedProveedorFiltro['nombre'] }}</span>
                             <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
                         </div>
                     @else
-                        <div class="relative" x-data="{ open: @entangle('showProveedorDropdown').live }" @click.outside="open = false">
-                            <input
-                                type="text"
-                                wire:model.live.debounce.300ms="searchProveedorFiltro"
-                                @click="open = true"
+                        <div class="relative" x-data="{ open: @entangle('showProveedorDropdown').live }"
+                            @click.outside="open = false">
+                            <input type="text" wire:model.live.debounce.300ms="searchProveedorFiltro" @click="open = true"
                                 class="block w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
                                 placeholder="Buscar proveedor...">
-                            <div x-show="open"
-                                 x-transition
-                                 class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                            <div x-show="open" x-transition
+                                class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
                                 <ul>
-                                    <li wire:click.prevent="clearProveedorFiltro"
-                                        @click="open = false"
+                                    <li wire:click.prevent="clearProveedorFiltro" @click="open = false"
                                         class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
                                         Todos los proveedores
                                     </li>
@@ -89,30 +83,25 @@
                 <div class="relative">
                     @if($selectedBodegaFiltro)
                         <div wire:click="clearBodegaFiltro"
-                             class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
+                            class="flex items-center justify-between w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm cursor-pointer hover:border-blue-400 transition-all duration-200 bg-blue-50">
                             <span class="font-medium text-gray-800">{{ $selectedBodegaFiltro['nombre'] }}</span>
                             <span class="text-gray-400 text-xl hover:text-gray-600">⟲</span>
                         </div>
                     @else
-                        <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }" @click.outside="open = false">
-                            <input
-                                type="text"
-                                wire:model.live.debounce.300ms="searchBodegaFiltro"
-                                @click="open = true"
+                        <div class="relative" x-data="{ open: @entangle('showBodegaDropdown').live }"
+                            @click.outside="open = false">
+                            <input type="text" wire:model.live.debounce.300ms="searchBodegaFiltro" @click="open = true"
                                 class="block w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
                                 placeholder="Buscar bodega...">
-                            <div x-show="open"
-                                 x-transition
-                                 class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
+                            <div x-show="open" x-transition
+                                class="absolute z-10 w-full bg-white border-2 border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
                                 <ul>
-                                    <li wire:click.prevent="clearBodegaFiltro"
-                                        @click="open = false"
+                                    <li wire:click.prevent="clearBodegaFiltro" @click="open = false"
                                         class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 text-gray-600 font-medium border-b border-gray-200">
                                         Todas las bodegas
                                     </li>
                                     @foreach (array_slice($this->bodegaResults, 0, 8) as $bodega)
-                                        <li wire:click.prevent="selectBodegaFiltro({{ $bodega['id'] }})"
-                                            @click="open = false"
+                                        <li wire:click.prevent="selectBodegaFiltro({{ $bodega['id'] }})" @click="open = false"
                                             class="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors duration-150">
                                             {{ $bodega['nombre'] }}
                                         </li>
@@ -173,21 +162,17 @@
                         this.fechaActual = '';
                     }
                 }
-            }"
-            x-init="initFlatpickr()"
-            @limpiar-filtros.window="resetPicker()">
+            }" x-init="initFlatpickr()" @limpiar-filtros.window="resetPicker()">
                 <label for="fecha_inicio" class="block text-sm font-medium text-gray-700 mb-2">
-                    <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
                     </svg>
                     Fecha Inicio
                 </label>
-                <input
-                    x-ref="fechaInicio"
-                    type="text"
-                    id="fecha_inicio"
-                    placeholder="Seleccionar fecha..."
-                    readonly
+                <input x-ref="fechaInicio" type="text" id="fecha_inicio" placeholder="Seleccionar fecha..." readonly
                     class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer bg-white">
             </div>
 
@@ -240,32 +225,28 @@
                         this.fechaActual = '';
                     }
                 }
-            }"
-            x-init="initFlatpickr()"
-            @limpiar-filtros.window="resetPicker()">
+            }" x-init="initFlatpickr()" @limpiar-filtros.window="resetPicker()">
                 <label for="fecha_fin" class="block text-sm font-medium text-gray-700 mb-2">
-                    <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <svg class="inline w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
                     </svg>
                     Fecha Fin
                 </label>
-                <input
-                    x-ref="fechaFin"
-                    type="text"
-                    id="fecha_fin"
-                    placeholder="Seleccionar fecha..."
-                    readonly
+                <input x-ref="fechaFin" type="text" id="fecha_fin" placeholder="Seleccionar fecha..." readonly
                     class="block w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 cursor-pointer bg-white">
             </div>
 
             {{-- Botón Limpiar Filtros --}}
             <div class="flex items-end">
-                <button
-                    wire:click="limpiarFiltros"
-                    @click="$dispatch('limpiar-filtros')"
+                <button wire:click="limpiarFiltros" @click="$dispatch('limpiar-filtros')"
                     class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
                     <svg class="inline w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
                     </svg>
                     Limpiar Filtros
                 </button>
@@ -279,12 +260,12 @@
             <h2 class="text-xl font-semibold text-gray-800">
                 Compras encontradas: <span class="text-blue-600">{{ $comprasFiltradas->total() }}</span>
             </h2>
-            
+
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-600 font-medium">Mostrar:</span>
                     <select wire:model.live="perPage"
-                            class="border-2 border-gray-300 rounded-lg text-sm shadow-sm py-1.5 px-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
+                        class="border-2 border-gray-300 rounded-lg text-sm shadow-sm py-1.5 px-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400">
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="15">15</option>
@@ -293,9 +274,10 @@
                         <option value="100">100</option>
                     </select>
                 </div>
-                
+
                 <p class="text-sm text-gray-600">
-                    Mostrando {{ $comprasFiltradas->firstItem() ?? 0 }} - {{ $comprasFiltradas->lastItem() ?? 0 }} de {{ $comprasFiltradas->total() }}
+                    Mostrando {{ $comprasFiltradas->firstItem() ?? 0 }} - {{ $comprasFiltradas->lastItem() ?? 0 }} de
+                    {{ $comprasFiltradas->total() }}
                 </p>
             </div>
         </div>
@@ -328,7 +310,8 @@
                                     {{ $compra->detalles->count() }}
                                 </span>
                             </td>
-                            <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra->total / 1.12, 2) }}</td>
+                            <td class="py-3 px-6 text-right font-semibold">Q{{ number_format($compra->total / 1.12, 2) }}
+                            </td>
                             <td class="py-3 px-6 text-center">
                                 <span class="bg-green-200 text-green-800 py-1 px-3 rounded-full text-xs font-semibold">
                                     Completada
@@ -336,25 +319,17 @@
                             </td>
                             <td class="py-3 px-6 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <x-action-button
-                                        type="view"
-                                        title="Ver detalle"
+                                    <x-action-button type="view" title="Ver detalle"
                                         wire:click="verDetalle({{ $compra->id }})" />
 
                                     @if($compra->activo)
-                                        <x-action-button
-                                            type="edit"
-                                            title="Editar"
+                                        <x-action-button type="edit" title="Editar"
                                             wire:click="editarCompra({{ $compra->id }})" />
 
-                                        <x-action-button
-                                            type="delete"
-                                            title="Desactivar"
+                                        <x-action-button type="delete" title="Desactivar"
                                             wire:click="abrirModalDesactivar({{ $compra->id }})" />
                                     @else
-                                        <x-action-button
-                                            type="activate"
-                                            title="Activar"
+                                        <x-action-button type="activate" title="Activar"
                                             wire:click="activarCompra({{ $compra->id }})" />
                                     @endif
                                 </div>
@@ -381,22 +356,21 @@
     <div x-data="{
             show: @entangle('showModalVer').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalVer">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalVer">
         <div class="relative p-6 border w-full max-w-3xl shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-900">Detalle de Compra</h3>
                 <button wire:click="closeModalVer" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -428,7 +402,9 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Fecha de Compra:</p>
-                                <p class="font-semibold">{{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}</p>
+                                <p class="font-semibold">
+                                    {{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -455,14 +431,18 @@
                                                 <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                                 <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
                                                 <td class="py-2 px-3 text-center">{{ $producto['cantidad'] }}</td>
-                                                <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio_con_iva'], 4) }}</td>
-                                                <td class="py-2 px-3 text-right">Q{{ number_format($producto['precio_sin_iva'], 4) }}</td>
-                                                <td class="py-2 px-3 text-right font-semibold">Q{{ number_format($producto['subtotal_con_iva'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right">
+                                                    Q{{ number_format($producto['precio_con_iva'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right text-gray-600">
+                                                    Q{{ number_format($producto['precio_sin_iva'], 2) }}</td>
+                                                <td class="py-2 px-3 text-right font-semibold">
+                                                    Q{{ number_format($producto['subtotal_con_iva'], 2) }}</td>
                                             </tr>
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en esta compra</td>
+                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en esta
+                                                compra</td>
                                         </tr>
                                     @endif
                                 </tbody>
@@ -474,21 +454,23 @@
                     <div class="bg-blue-50 p-4 rounded-md">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-md font-semibold text-gray-600">Total (Sin IVA):</span>
-                            <span class="text-xl font-bold text-gray-700">Q{{ number_format($compraSeleccionada['total_sin_iva'] ?? 0, 2) }}</span>
+                            <span
+                                class="text-xl font-bold text-gray-700">Q{{ number_format($compraSeleccionada['total_sin_iva'] ?? 0, 2) }}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-lg font-semibold text-gray-800">Total (Con IVA):</span>
-                            <span class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total_con_iva'] ?? 0, 2) }}</span>
+                            <span
+                                class="text-2xl font-bold text-blue-600">Q{{ number_format($compraSeleccionada['total_con_iva'] ?? 0, 2) }}</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
-                            Total de productos: {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
+                            Total de productos:
+                            {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
                         </p>
                     </div>
 
                     {{-- Botón de cerrar --}}
                     <div class="flex justify-end mt-6">
-                        <button
-                            wire:click="closeModalVer"
+                        <button wire:click="closeModalVer"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg">
                             Cerrar
                         </button>
@@ -502,22 +484,21 @@
     <div x-data="{
             show: @entangle('showModalEditar').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalEditar">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalEditar">
         <div class="relative p-6 border w-full max-w-4xl shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-900">Editar Compra</h3>
                 <button wire:click="closeModalEditar" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -549,7 +530,9 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Fecha de Compra:</p>
-                                <p class="font-semibold">{{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}</p>
+                                <p class="font-semibold">
+                                    {{ \Carbon\Carbon::parse($compraSeleccionada['fecha'] ?? now())->format('d/m/Y H:i') }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -576,28 +559,21 @@
                                                 <td class="py-2 px-3 font-mono">{{ $producto['codigo'] }}</td>
                                                 <td class="py-2 px-3">{{ $producto['descripcion'] }}</td>
                                                 <td class="py-2 px-3 text-center">
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        wire:model.blur="compraSeleccionada.productos.{{ $index }}.cantidad"
-                                                        min="1"
-                                                        class="w-20 text-center border-2 border-green-300 bg-green-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-semibold px-2 py-1"
-                                                    >
+                                                    <input type="number" step="1"
+                                                        wire:model.blur="compraSeleccionada.productos.{{ $index }}.cantidad" min="1"
+                                                        class="w-20 text-center border-2 border-green-300 bg-green-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-semibold px-2 py-1">
                                                 </td>
                                                 <td class="py-2 px-3 text-right">
                                                     <div class="flex items-center justify-end">
                                                         <span class="mr-1">Q</span>
-                                                        <input
-                                                            type="number"
-                                                            step="0.0001"
-                                                            wire:model.blur="compraSeleccionada.productos.{{ $index }}.precio_con_iva"
+                                                        <input type="number" step="0.0001"
+                                                            wire:model.live="compraSeleccionada.productos.{{ $index }}.precio_con_iva"
                                                             min="0"
-                                                            class="w-28 text-right border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold px-2 py-1"
-                                                        >
+                                                            class="w-32 text-right border-2 border-blue-300 bg-blue-50 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold px-2 py-1">
                                                     </div>
                                                 </td>
                                                 <td class="py-2 px-3 text-right text-gray-600">
-                                                    Q{{ number_format($producto['precio_sin_iva'], 4) }}
+                                                    Q{{ number_format($producto['precio_con_iva'] / 1.12, 2) }}
                                                 </td>
                                                 <td class="py-2 px-3 text-right font-semibold">
                                                     Q{{ number_format($producto['subtotal_con_iva'], 2) }}
@@ -606,7 +582,8 @@
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en esta compra</td>
+                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay productos en esta
+                                                compra</td>
                                         </tr>
                                     @endif
                                 </tbody>
@@ -629,19 +606,18 @@
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
-                            Total de productos: {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
+                            Total de productos:
+                            {{ isset($compraSeleccionada['productos']) ? count($compraSeleccionada['productos']) : 0 }}
                         </p>
                     </div>
 
                     {{-- Botones de acción --}}
                     <div class="flex justify-end gap-3 mt-6">
-                        <button
-                            wire:click="closeModalEditar"
+                        <button wire:click="closeModalEditar"
                             class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg">
                             Cancelar
                         </button>
-                        <button
-                            wire:click="abrirModalConfirmarEdicion"
+                        <button wire:click="abrirModalConfirmarEdicion"
                             class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
                             Guardar Cambios
                         </button>
@@ -655,23 +631,22 @@
     <div x-data="{
             show: @entangle('showModalConfirmarEdicion').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
-         style="z-index: 9999 !important;"
-         :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
-         wire:click.self="closeModalConfirmarEdicion">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center"
+        style="z-index: 9999 !important;"
+        :style="(!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')) + ' z-index: 9999 !important;'"
+        wire:click.self="closeModalConfirmarEdicion">
         <div class="relative p-6 border w-full max-w-md shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900">Confirmar Cambios</h3>
                 <button wire:click="closeModalConfirmarEdicion" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -684,12 +659,15 @@
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                    clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-yellow-700">
-                                Esta acción modificará los registros de la compra. Los cambios no se pueden deshacer automáticamente.
+                                Esta acción modificará los registros de la compra. Los cambios no se pueden deshacer
+                                automáticamente.
                             </p>
                         </div>
                     </div>
@@ -697,20 +675,21 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button
-                    wire:click="closeModalConfirmarEdicion"
+                <button wire:click="closeModalConfirmarEdicion"
                     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
                     Cancelar
                 </button>
-                <button
-                    wire:click="guardarEdicion"
-                    wire:loading.attr="disabled"
+                <button wire:click="guardarEdicion" wire:loading.attr="disabled"
                     class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="guardarEdicion">Confirmar</span>
                     <span wire:loading wire:target="guardarEdicion">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
                         </svg>
                         Guardando...
                     </span>
@@ -723,22 +702,21 @@
     <div x-data="{
             show: @entangle('showModalConfirmarDesactivar').live,
             animatingOut: false
-         }"
-         x-show="show || animatingOut"
-         x-cloak
-         x-init="$watch('show', value => { if (!value) animatingOut = true; })"
-         @animationend="if (!show) animatingOut = false"
-         class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
-         wire:click.self="closeModalConfirmarDesactivar">
+         }" x-show="show || animatingOut" x-cloak
+        x-init="$watch('show', value => { if (!value) animatingOut = true; })"
+        @animationend="if (!show) animatingOut = false"
+        class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+        :style="!show && animatingOut ? 'animation: fadeOut 0.2s ease-in;' : (show ? 'animation: fadeIn 0.2s ease-out;' : '')"
+        wire:click.self="closeModalConfirmarDesactivar">
         <div class="relative p-6 border w-full max-w-md shadow-xl rounded-lg bg-white"
-             :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
-             @click.stop>
+            :style="!show && animatingOut ? 'animation: slideUp 0.2s ease-in;' : (show ? 'animation: slideDown 0.3s ease-out;' : '')"
+            @click.stop>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900">Confirmar Desactivación</h3>
                 <button wire:click="closeModalConfirmarDesactivar" class="text-gray-400 hover:text-gray-600">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -751,12 +729,15 @@
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clip-rule="evenodd" />
                             </svg>
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-red-700">
-                                Esta compra quedará desactivada y aparecerá con opacidad en el listado. Podrá activarla nuevamente cuando lo desee.
+                                Esta compra quedará desactivada y aparecerá con opacidad en el listado. Podrá activarla
+                                nuevamente cuando lo desee.
                             </p>
                         </div>
                     </div>
@@ -764,20 +745,21 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button
-                    wire:click="closeModalConfirmarDesactivar"
+                <button wire:click="closeModalConfirmarDesactivar"
                     class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg">
                     Cancelar
                 </button>
-                <button
-                    wire:click="confirmarDesactivar"
-                    wire:loading.attr="disabled"
+                <button wire:click="confirmarDesactivar" wire:loading.attr="disabled"
                     class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="confirmarDesactivar">Desactivar</span>
                     <span wire:loading wire:target="confirmarDesactivar">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
                         </svg>
                         Desactivando...
                     </span>
@@ -797,6 +779,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -807,6 +790,7 @@
                 transform: translateY(-20px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -818,6 +802,7 @@
             from {
                 opacity: 1;
             }
+
             to {
                 opacity: 0;
             }
@@ -828,6 +813,7 @@
                 transform: translateY(0);
                 opacity: 1;
             }
+
             to {
                 transform: translateY(20px);
                 opacity: 0;
@@ -898,7 +884,7 @@
             background-size: 10px !important;
             padding-right: 30px !important;
             flex-shrink: 0 !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
 
         .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
@@ -975,7 +961,7 @@
             min-height: 38px !important;
             box-sizing: border-box !important;
             display: block !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
 
         .flatpickr-current-month .numInputWrapper:hover input,
